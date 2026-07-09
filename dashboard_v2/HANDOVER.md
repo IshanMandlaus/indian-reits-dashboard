@@ -1,19 +1,24 @@
 # Indian REITs Dashboard v2 — Session Handover
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
-> Last updated: 2026-07-09 (**Phase E DONE** — npm-only live refresh via a Vite plugin +
-> one global refresh button; v2 no longer needs Python/serve.py/v1). Update the **Status**
-> and **Changelog** sections as you go.
+> Last updated: 2026-07-09 (**Phase E DONE + shipped** — npm-only live refresh via a Vite
+> plugin + one global refresh button; v2 no longer needs Python/serve.py/v1. Also: chart
+> date labels now show the day. Committed on `v2` as `18a6348`). Update the **Status** and
+> **Changelog** sections as you go.
 
 ---
 
 ## 1. TL;DR
 
-We are rebuilding the Indian REITs dashboard as **v2**: same functionality as v1,
-new implementation. v1 is a static multi-page vanilla-JS + Chart.js app; v2 is a
-modern React SPA. The scaffold, design system, and routed page skeletons are done.
-The **data layer and real page/chart wiring are not yet built** — that's the bulk of
-the remaining work.
+We rebuilt the Indian REITs dashboard as **v2**: same functionality as v1, new
+implementation. v1 is a static multi-page vanilla-JS + Chart.js app; v2 is a modern
+React SPA. **v2 is now feature-complete, production-ready, AND self-contained:** all
+four pages are wired to real data (Phases A–C), the refresh pipeline is done, and as
+of Phase E it runs **npm-only** — one ⟳ Refresh data button in the top nav pulls live
+NSE/BSE/Yahoo data through a Vite plugin (`POST /api/refresh`); no Python, no serve.py,
+no v1 needed. **Nothing is outstanding.** Phase D2 is a deliberate won't-do (volume
+chart stays on workbook data by design). Read §10 Changelog top-to-bottom for the full
+build history; §6 Phase E for the refresh server.
 
 - **Repo:** https://github.com/IshanMandlaus/indian-reits-dashboard (private)
 - **Branch:** `v2` (v1 stays on `main`, untouched, as the source of truth)
@@ -70,28 +75,30 @@ There is a `.claude/launch.json` at repo root with two configs: **`v2-dashboard`
 
 ## 5. Current state (what exists)
 
+> ⚠️ This section described the *initial scaffold*. It is now historical — **every page
+> is fully wired to real data and there are no placeholders left.** See §6 (all phases
+> ✅) and §10 Changelog for the real, current structure. Key runtime layout today:
+
 ```
-dashboard_v2/src/
-  main.tsx                      # RouterProvider
-  router.tsx                    # 4 routes under AppShell; "/" → /domestic
-  index.css                     # Tailwind v4 + refined-dark @theme tokens (SEE §7)
-  components/layout/AppShell.tsx# sticky top nav + <Outlet/>
-  components/ui/
-    Card.tsx                    # panel primitive (title/note/actions/body)
-    Badge.tsx                   # tones: pos/neg/accent/warn/neutral
-    PageHeader.tsx              # page title + subtitle + actions
-    ChartPlaceholder.tsx        # dashed "wiring in progress" box (temporary)
-  lib/format.ts                 # inr, inrCr, pct, pctRaw, fmtMonth
-  pages/
-    DomesticReitsPage.tsx       # tab bar + KPI header + 9-card bento (placeholders)
-    MarketPage.tsx              # snapshot cards + 7 chart slots (placeholders)
-    InvitsPage.tsx              # 3 snapshot cards + 4 chart slots (placeholders)
-    GlobalPage.tsx              # 2 pies + country panels + cases (placeholders)
+dashboard_v2/
+  server/                       # Phase E — npm-only refresh (Node/TS, Vite plugin)
+    refreshPlugin.ts            #   POST /api/refresh on dev + preview
+    index.ts                    #   runAll() — two-lane fetch orchestration
+    lib/{io,nse,yahoo,types}.ts #   fs + NSE session + yahoo-finance2 wrapper
+    fetchers/{prices,holdings,market,global}.ts  # ports of the 4 refresh_*.py
+  src/
+    components/layout/AppShell.tsx   # top nav + ONE global ⟳ Refresh data button
+    components/{domestic,market,invit,global,charts}/  # all real, wired charts
+    lib/{data,useDataset,bench,invit,global,reit,chartSetup,format,svgExport}.ts
+    pages/{Domestic,Market,Invits,Global}Page.tsx   # all fully wired to real data
+    types/data.ts
+  public/data/*.json            # 15 datasets; the 4 *-live + holdings refresh live
+  scripts/{convert-data,check-assets}.mjs
 ```
 
-**Everything on the pages is placeholder** (`ChartPlaceholder`, hardcoded demo
-values). No real data is loaded yet. Design/layout/nav are real and verified in the
-browser.
+Original scaffold note (historical): the pages once shipped with `ChartPlaceholder`
+boxes and demo values — all replaced across Phases A–C. `ChartPlaceholder.tsx` may
+still exist but is unused.
 
 ---
 
@@ -489,7 +496,15 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
-- **2026-07-09** — **Phase E DONE — npm-only live refresh (Node-in-Vite) + ONE global button.**
+- **2026-07-09** — **Chart date labels now show the day (finance fix).** Daily time-series were
+  labelling only month+year ("Jul 26"), ambiguous across ~22 trading days. `fmtM` (axis ticks)
+  now includes the day ("08 Jul 26") and a new `fmtDay` ("08 Jul 2026") drives the **tooltips**,
+  across all daily charts (Chart1 price/NAV, Chart2 issuances, market Benchmarks/Volume, InvIT
+  charts). FY/quarterly bar charts (distributions, NDCF, yield) keep their `FYxxxx` labels — not
+  daily. SecurityModal chart already showed full ISO dates (untouched). Verified in browser.
+  **Design rule:** daily finance charts must identify the exact trading day, not just the month.
+- **2026-07-09** — **Phase E DONE + committed (`18a6348`) — npm-only live refresh (Node-in-Vite)
+  + ONE global button.** *(Same commit also carries the date-label fix above.)*
   Ported all four `dashboard/refresh_*.py` fetchers to Node/TS under `dashboard_v2/server/`,
   wired as a Vite plugin exposing `POST /api/refresh` on dev **and** preview; Yahoo via
   `yahoo-finance2`, NSE via cookie-primed `fetch`. Replaced the four per-page refresh buttons
