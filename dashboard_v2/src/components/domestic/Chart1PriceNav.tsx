@@ -3,8 +3,8 @@ import type { ReitData, ReitKey, LivePrices } from '../../types/data'
 import { CHART, baseOptions, zoomOptions, rescaleY, type ChartWithRange, type RangeConfig } from '../../lib/chartSetup'
 import { navSteps, navAt, dTs, perTs, fyTs, fmtM } from '../../lib/reit'
 import { inr, pct } from '../../lib/format'
-import { useChartCanvas } from './useChartCanvas'
-import { RangeBar } from './RangeBar'
+import { useChartCanvas } from '../charts/useChartCanvas'
+import { RangeBar } from '../charts/RangeBar'
 import type { ChartConfiguration } from 'chart.js'
 
 export function Chart1PriceNav({

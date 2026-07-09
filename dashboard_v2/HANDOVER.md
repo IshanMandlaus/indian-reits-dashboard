@@ -136,14 +136,49 @@ All 9 sections wired to real data + verified in browser. Files:
   (Embassy image mode / others page-image + extracted text with real tables),
   structure PNG, links. tsc + oxlint clean; zero console errors.
 
-### Phase C — Market, InvITs, Global
-- Reusable **`<TimeSeriesChart>`** (range bar 6M/1Y/3Y/5Y/All + zoom/pan + y-rescale).
-- Reusable **`<SecurityModal>`** — unify v1's duplicated `secmodal.js` and page-2
-  `#smodal` into ONE component (range buttons, gradient line, metrics grid, profile).
-- Market: snapshot cards + sparklines, combined-vs-benchmark charts, area, volume, dist-vs-FD.
+### Phase C — Market ✅ DONE (2026-07-09) · InvITs + Global still TODO
+**Market page (`src/pages/MarketPage.tsx`) is wired + verified.** Shared components
+extracted to `src/components/charts/`:
+- **`<TimeSeriesChart>`** — raw canvas (`useChartCanvas`) + optional windowing range
+  bar (`RangeBar`, both relocated here from `domestic/`) + zoom/pan + y-rescale +
+  dbl-click reset + caption. `build` closure returns a `RangeConfig` (linear x, `{x,y}`
+  datasets, `_xmin/_xmax`). `rangeBar` off = window driven externally via `deps`.
+- **`<SecurityModal>`** — config-driven, unifies `secmodal.js` + page-2 `#smodal`.
+  Takes a `SecModalData` (`{title,codes,ccy,series,livePrice,liveTag,mkt[],profile[]}`);
+  renders header + big price/chg + range buttons (1M…Max) + gradient line + 2 stat grids.
+- **`<Sparkline>`** — DPR-aware gradient sparkline on a 2D canvas.
+- Market domain layer: **`src/lib/bench.ts`** (`makeBenchCtx` live-merge + ffill calendar,
+  `combinedPts`/`rebase`/`fdPts`/`gsecPts` series, `volumeSeries`, `buildSnapRows`,
+  `buildReitSecModal`). Market chart components in `src/components/market/`.
+- Snapshot cards + sparklines · Levels/Rebased/Veterans benchmark charts (shared **Time
+  window** filter 1Y/3Y/5Y/Max drives all time-series) · Area · Volume (VOL INDEX + 20d MA)
+  · Distributions-vs-FD · click a snapshot → `<SecurityModal>`.
+
+**⚠️ Data-accuracy fix baked in (was wrong in v1 too):** the source of truth is
+`REIT_Tableau_Ready_1.xlsx` + `Indian REITs - Visualizaed.docx` (7 Tableau exhibit
+screenshots). `bench.json` prices/turnover/overview are a **byte-for-byte match** to
+that workbook (verified: 0 mismatches; block-deal VOL INDEX = 4,513 ≈ the "4,514"
+Tableau label). The bug: v1 (and my first pass) **merged `bench-live` `turnover_updates`**
+into the turnover series — but that live turnover is **broken-scale** (NIFTY 50 live ≈609
+vs workbook ≈20,549 ₹cr; REIT turnover re-pulled back to 2019), which **collapsed the
+NIFTY 50 / NIFTY REALTY moving-average lines to ~0–10**. Fix in `makeBenchCtx`: keep
+merging live **prices + SENSEX** (scale-consistent, keeps price charts current), **do NOT
+merge live turnover**. Volume rebase + 20d MA now recompute **dynamically against the
+selected window** (re-anchor to window start = Tableau table-calc behaviour). Re-enable a
+per-security turnover merge only once Phase D emits turnover on the workbook's basis.
+
+**Not ported from the docx (deliberate, per user — "v1 took only some, that's fine"):**
+Exhibit 7 (30-day ADTV bar: 6 REITs combined ₹90cr vs NIFTY Realty ₹1,059cr) — a real gap
+if a future session wants full docx parity; data is in `Volume Summary`/`Trading Volume`.
+The Rebased chart intentionally keeps v1's extra FD/G-Sec/SENSEX lines (live-sourced, user
+approved) beyond the 3 Tableau series.
+
 - InvITs: snapshot cards, unit price, rebased (basket ↔ own-life toggle), yield, EV.
 - Global: two pies with slice drilldown (market cap → top REITs; AUM → sectors),
   country panels with live quotes, case studies, Temasek deep-dive.
+- **Reuse for InvITs/Global:** `<TimeSeriesChart>`, `<SecurityModal>` (InvITs & Global were
+  v1's `secmodal.js` callers — see `dashboard/invits.html:241`, `dashboard/global.html:220`
+  for the exact config shape), `<Sparkline>`, and `src/lib/bench.ts` patterns.
 
 ### Phase D — Refresh pipeline
 - Adapt `refresh_prices.py` / `refresh_market.py` / `refresh_global.py` to also emit
@@ -252,3 +287,17 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
   `<SecurityModal>` here (the domestic charts already establish the patterns to lift).
   Note: `.claude/launch.json` gained a `v2-dashboard-alt` config (port 5280) for
   running a second dev server when 5273 is busy.
+- **2026-07-09** — **Phase C — Market page done.** Extracted shared `charts/`
+  (`TimeSeriesChart`, `SecurityModal`, `Sparkline`; relocated `useChartCanvas` +
+  `RangeBar` here and updated domestic imports). Built `src/lib/bench.ts` + all Market
+  chart components; rewrote `MarketPage.tsx` (snapshot cards, benchmark trio, area,
+  volume, distributions, security modal). **Found & fixed a real data bug (present in
+  v1):** merging `bench-live` broken-scale `turnover_updates` collapsed the NIFTY 50 /
+  REALTY moving-average lines — now uses clean workbook turnover, verified against
+  `REIT_Tableau_Ready_1.xlsx` (prices/turnover a 0-mismatch match) and the docx exhibit
+  screenshots (block-deal VOL INDEX 4,513 ≈ Tableau's 4,514; MA lines now match). Volume
+  rebase + 20d MA recompute dynamically on the shared **Time window** filter. tsc + oxlint
+  clean; verified in browser (fresh load, 7 charts + 6 sparklines, 0 console errors).
+  Added `v2-dashboard-alt2` launch config (port 5286). **Next:** Phase C — InvITs + Global
+  (reuse `TimeSeriesChart`/`SecurityModal`/`Sparkline`); then Phase D refresh pipeline
+  (and re-enabling a scale-consistent live-turnover merge).

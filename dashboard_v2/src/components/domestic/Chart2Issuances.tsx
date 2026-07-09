@@ -8,8 +8,8 @@ import type { ReitData, ReitKey, ReitValHy, BlocksLive } from '../../types/data'
 import { CHART, baseOptions, zoomOptions, rescaleY, type ChartWithRange, type RangeConfig } from '../../lib/chartSetup'
 import { navSteps, navAt, fyTs, fmtM } from '../../lib/reit'
 import { inr, pct } from '../../lib/format'
-import { useChartCanvas } from './useChartCanvas'
-import { RangeBar } from './RangeBar'
+import { useChartCanvas } from '../charts/useChartCanvas'
+import { RangeBar } from '../charts/RangeBar'
 import type { ChartConfiguration, Plugin } from 'chart.js'
 
 const DAY = 864e5

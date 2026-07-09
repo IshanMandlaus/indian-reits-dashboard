@@ -7,7 +7,7 @@ import { useState } from 'react'
 import type { ReitData, ReitKey } from '../../types/data'
 import { CHART, baseOptions } from '../../lib/chartSetup'
 import { inr } from '../../lib/format'
-import { useChartCanvas } from './useChartCanvas'
+import { useChartCanvas } from '../charts/useChartCanvas'
 import type { ChartConfiguration } from 'chart.js'
 
 export function Chart4Ndcf({ D, k }: { D: ReitData; k: ReitKey }) {
