@@ -136,7 +136,7 @@ All 9 sections wired to real data + verified in browser. Files:
   (Embassy image mode / others page-image + extracted text with real tables),
   structure PNG, links. tsc + oxlint clean; zero console errors.
 
-### Phase C — Market ✅ DONE (2026-07-09) · InvITs + Global still TODO
+### Phase C — Market + InvITs + Global ✅ ALL DONE (2026-07-09)
 **Market page (`src/pages/MarketPage.tsx`) is wired + verified.** Shared components
 extracted to `src/components/charts/`:
 - **`<TimeSeriesChart>`** — raw canvas (`useChartCanvas`) + optional windowing range
@@ -173,16 +173,49 @@ if a future session wants full docx parity; data is in `Volume Summary`/`Trading
 The Rebased chart intentionally keeps v1's extra FD/G-Sec/SENSEX lines (live-sourced, user
 approved) beyond the 3 Tableau series.
 
-- InvITs: snapshot cards, unit price, rebased (basket ↔ own-life toggle), yield, EV.
-- Global: two pies with slice drilldown (market cap → top REITs; AUM → sectors),
-  country panels with live quotes, case studies, Temasek deep-dive.
-- **Reuse for InvITs/Global:** `<TimeSeriesChart>`, `<SecurityModal>` (InvITs & Global were
-  v1's `secmodal.js` callers — see `dashboard/invits.html:241`, `dashboard/global.html:220`
-  for the exact config shape), `<Sparkline>`, and `src/lib/bench.ts` patterns.
+**InvITs page (`src/pages/InvitsPage.tsx`) done + verified.** Domain layer
+`src/lib/invit.ts`; components in `src/components/invit/` (`InvitSnapshotCard`,
+`InvitCharts` = price / rebased / yield / EV). Reuses `makeBenchCtx` — the 3 InvIT
+daily price series live **only** in `bench-live.json` `updates` ("NHIT InvIT" /
+"Raajmarg InvIT" / "PGInvIT"; `bench.json` has none), and `makeBenchCtx` already
+merges those scale-consistent live prices + forward-fills them. **No live-turnover
+pitfall here:** the only turnover use in v1 was the modal's ADTV fallback, and
+`ctx.adtvUnits` (from `bench-live` `adtv_units`) already carries all 3 InvITs
+directly (NHIT 50k / RIIT 38,374 / PGInvIT 1.7M units) — so the InvIT page never
+touches the broken turnover. Combined-REIT FY26 yield bar computed from reit-data
+the Market way (replacing v1's hard-coded 5.9% placeholder). Rebased chart has the
+basket ↔ own-life toggle. Verified: 3 snapshot cards + sparklines, 4 charts painted,
+toggle, modal (EV/NAV/premium/yield/ADTV all correct), 0 console errors.
 
-### Phase D — Refresh pipeline
+**Global page (`src/pages/GlobalPage.tsx`) done + verified.** Domain layer
+`src/lib/global.ts`; components in `src/components/global/` (`PieDrilldown`,
+`CountryPanels`). Two country pies with per-country **slice drilldown** (market cap →
+top listed REITs + "Others" remainder; AUM → sectors), country panels with live
+Yahoo quotes (`global-live.json`, keyed by ticker), case studies + Temasek deep-dive.
+`top5` rows are `[name, ticker, sector, quoteOverride|null, manager]` (element [3] is
+a quote-symbol override, always null in current data → falls back to the ticker).
+Verified: both pies paint, slice-click drills + back returns, all 35 country rows
+with live prices, row-click modal (Prologis $141 live, $131.5bn, 10.1% of US, 1Y
++12.4%), cases + Temasek render, 0 console errors.
+
+**⚠️ Fixed a real bug uncovered here:** `src/lib/chartSetup.ts` registered
+`DoughnutController` but **not `PieController`** — Global's `type:'pie'` charts threw
+`"pie" is not a registered controller` and the whole route hit the error boundary.
+Added `PieController` to the registration list. (Domestic §6 uses doughnut, so this
+gap only surfaced on Global.)
+
+**Drilldown click:** per the §6 gotcha, `PieDrilldown` hit-tests slices via
+`chart.getElementsAtEventForMode(e.nativeEvent, 'nearest', {intersect:true}, false)`
+on a real DOM click, **not** Chart.js `options.onClick`.
+
+- **Reuse pattern (for future pages):** `<TimeSeriesChart>`, `<SecurityModal>`,
+  `<Sparkline>`, and `src/lib/bench.ts` / `makeBenchCtx`.
+
+### Phase D — Refresh pipeline (NEXT — all 4 pages now wired)
 - Adapt `refresh_prices.py` / `refresh_market.py` / `refresh_global.py` to also emit
   JSON into `public/data/`, or add a tiny endpoint the React refresh buttons call.
+- Re-enable a **scale-consistent** live-turnover merge in `makeBenchCtx` (currently
+  live turnover is intentionally not merged — see the Market data-accuracy note).
 
 ### Shared building blocks to extract early
 `<TimeSeriesChart>`, `<SecurityModal>`, `<DataTable>` (sortable), `<Sparkline>`,
@@ -287,6 +320,18 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
   `<SecurityModal>` here (the domestic charts already establish the patterns to lift).
   Note: `.claude/launch.json` gained a `v2-dashboard-alt` config (port 5280) for
   running a second dev server when 5273 is busy.
+- **2026-07-09** — **Phase C — InvITs + Global pages done (Phase C complete).**
+  InvITs: `src/lib/invit.ts` + `src/components/invit/*` (snapshot cards, unit-price,
+  rebased basket↔own-life toggle, yield, EV) — reuses `makeBenchCtx`; InvIT prices
+  come only from `bench-live` `updates`, ADTV from `adtv_units`, so no live-turnover
+  pitfall. Global: `src/lib/global.ts` + `src/components/global/*` (two pies with
+  slice drilldown, country panels with live quotes, cases, Temasek). **Fixed a real
+  bug:** `chartSetup.ts` didn't register `PieController` → Global's pies crashed the
+  route; added it. Pie slice clicks hit-test via `getElementsAtEventForMode`, not
+  `options.onClick`. tsc + oxlint clean; both pages verified end-to-end in the browser
+  (charts paint, drilldown + back, all modals with correct values, 0 live console
+  errors). **Next: Phase D** — refresh pipeline (adapt `refresh_*.py` to emit JSON;
+  re-enable a scale-consistent live-turnover merge in `makeBenchCtx`).
 - **2026-07-09** — **Phase C — Market page done.** Extracted shared `charts/`
   (`TimeSeriesChart`, `SecurityModal`, `Sparkline`; relocated `useChartCanvas` +
   `RangeBar` here and updated domestic imports). Built `src/lib/bench.ts` + all Market
