@@ -240,8 +240,11 @@ without moving the window base, then re-verify against `REIT_Tableau_Ready_1.xls
 the docx exhibit (block-deal VOL INDEX ≈4,514). **Low value / high risk:** it only
 extends ONE chart family (volume/VOL-INDEX) past the workbook asof while prices are
 already live, and risks corrupting the workbook-verified volume charts. **User decided
-(2026-07-09): leave D2 disabled** — do not re-raise unless they ask for live volume
-charts. With D1 shipped and D2 intentionally deferred, **Phase D is complete.**
+(2026-07-09): live data everywhere EXCEPT the trading-volume chart.** That is exactly
+the shipped state — D1 makes prices/benchmarks/rebased/InvIT/global all live; only the
+volume/VOL-INDEX turnover stays on workbook data by design. **Do NOT re-enable live
+turnover** (the user explicitly does not want the volume chart live). Phase D is
+**complete** as intended — treat D2 as won't-do, not deferred.
 
 ### Shared building blocks to extract early
 `<TimeSeriesChart>`, `<SecurityModal>`, `<DataTable>` (sortable), `<Sparkline>`,
