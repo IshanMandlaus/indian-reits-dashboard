@@ -1,0 +1,1 @@
+window.BLOCKS_LIVE = {"asof":"08 Jul 2026 15:24","blocks":{"embassy":[],"mindspace":[],"brookfield":[],"nexus":[],"krt":[],"bagmane":[]}};

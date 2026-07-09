@@ -1,0 +1,38 @@
+# ─────────────────────────────────────────────────────────────
+# Large source-data inputs — kept on local disk, NOT in git.
+# (These are static regulatory filings; some exceed GitHub's 100 MB
+#  per-file limit, and together they're ~2.5 GB. The dashboard's
+#  derived data/images ARE committed, so the app works from a clone.)
+# ─────────────────────────────────────────────────────────────
+/Embassy/
+/MindSpace/
+/Brookfield/
+/Nexus/
+/KRT/
+/Bagmane/
+
+# Old/heavyweight copies & archives
+dashboard.zip
+/dashboard_v2/
+
+# Raw slide/source assets (the derived PNGs under dashboard/img ARE tracked)
+*.key
+*.pptx
+
+# ─────────────────────────────────────────────────────────────
+# OS / Python / editor cruft
+# ─────────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# ─────────────────────────────────────────────────────────────
+# Scratch / diagnostic files created while iterating (not part of the app)
+# ─────────────────────────────────────────────────────────────
+dashboard/_regen.py
+dashboard/img/_*.png
+dashboard/img/_*.jpg
+dashboard/img/annex/**/_*.png

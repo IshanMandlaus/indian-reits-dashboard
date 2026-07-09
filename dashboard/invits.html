@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indian InvITs — NHIT · Raajmarg · PGInvIT</title>
+<script src="chart.umd.min.js"></script>
+<script>if (typeof Chart==='undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>');</script>
+<script src="chartjs-plugin-zoom.min.js"></script>
+<script>if (typeof ChartZoom==='undefined' && !(window.Chart && Chart.registry && Chart.registry.plugins.get('zoom'))) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"><\/script>');</script>
+<script src="bench.js"></script>
+<script src="bench_live.js" onerror="void 0"></script>
+<script src="invit_data.js"></script>
+<script src="secmodal.js"></script>
+<style>
+:root{
+  --bg:#131a26; --panel:#1a2332; --panel2:#223046; --line:#2f415c;
+  --txt:#f1faee; --mut:#a8b8c4; --acc:#45b5b5; --gold:#a8dadc;
+  --grn:#4fd1a5; --red:#f07d7d; --pur:#7fb4d9; --org:#e8a86a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.5 'DejaVu Sans','Segoe UI',Verdana,Geneva,sans-serif;padding:18px}
+h1{font-size:20px;font-weight:650;margin-bottom:2px}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.sub{color:var(--mut);font-size:12px;margin-bottom:14px}
+.refreshbtn{background:var(--acc);color:#0d1520;border:0;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:650;cursor:pointer;white-space:nowrap}
+.refreshbtn:disabled{opacity:.5;cursor:wait}
+.pagenav{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.pagenav a{padding:9px 16px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:13px;font-weight:550;color:var(--mut);text-decoration:none}
+.pagenav a.active{background:var(--acc);color:#0d1520;border-color:var(--acc)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px 10px}
+.card.full{grid-column:1/-1}
+.card h3{font-size:13.5px;font-weight:650;margin-bottom:2px}
+.card .note{font-size:11px;color:var(--mut);margin-bottom:8px}
+.ch{position:relative;height:300px}
+.ch.tall{height:360px}
+.snapgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.snap{border-radius:10px;padding:13px 15px;border:1px solid var(--line);background:var(--panel2);cursor:pointer}
+.snap:hover{border-color:var(--acc)}
+.snap .nm{font-size:14.5px;font-weight:700;margin-bottom:5px}
+.snap .row{display:flex;justify-content:space-between;font-size:12px;padding:1.5px 0;gap:10px}
+.snap .row .l{color:var(--mut);white-space:nowrap}
+.snap .row span:last-child{text-align:right}
+.snap .mc{font-size:17px;font-weight:700;color:var(--gold)}
+.snap .desc{font-size:11.5px;color:var(--mut);margin:6px 0 4px;line-height:1.45}
+.snap canvas.spark{width:100%;height:44px;display:block;margin:4px 0 6px}
+.snap .pxrow{display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 1px}
+.snap .px{font-size:13px;font-weight:650}
+.snap .chg{font-size:11.5px;font-weight:650}
+.snap .chg.up{color:var(--grn)}.snap .chg.dn{color:var(--red)}
+.warn{background:rgba(232,168,106,.12);border:1px solid rgba(232,168,106,.4);border-radius:8px;padding:9px 13px;font-size:12px;color:var(--gold);margin-bottom:14px}
+@media(max-width:1100px){.snapgrid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div><h1>Indian InvITs — Highways & Power Transmission</h1>
+  <div class="sub" id="asof">NHIT · Raajmarg · PGInvIT</div></div>
+  <button class="refreshbtn" id="refbtn" onclick="refreshLive()">⟳ Refresh live (NSE)</button>
+</div>
+<div class="pagenav">
+  <a href="dashboard.html">1 · Domestic REITs</a>
+  <a href="market.html">2 · INDIAN REITs Market</a>
+  <a href="invits.html" class="active">3 · InvITs</a>
+  <a href="global.html">4 · Global Markets</a>
+</div>
+
+<div class="warn" id="nodata" style="display:none">
+  No InvIT price history loaded yet — hit <b>⟳ Refresh live</b> (with <code>python3 serve.py</code> running) to pull up to ~400 trading days of NHIT / RIIT / PGINVIT prices and turnover from NSE. Snapshot fundamentals below are pre-loaded.
+</div>
+
+<div class="card full" style="margin-bottom:14px">
+  <h3>Snapshot of listed InvITs tracked</h3>
+  <div class="note">Government-sponsored infrastructure trusts — NHAI's two road InvITs and PowerGrid's transmission InvIT</div>
+  <div class="snapgrid" id="snapgrid"></div>
+</div>
+
+<div class="grid">
+  <div class="card full"><h3>Unit price — NHIT vs RIIT vs PGInvIT</h3>
+    <div class="note">Daily closes from NSE (populated by Refresh) · wheel to zoom, double-click resets</div>
+    <div class="ch tall"><canvas id="c_px"></canvas></div></div>
+
+  <div class="card"><h3>InvITs vs NIFTY 50 vs FD — rebased to 100 <span id="rbtoggle" style="float:right"></span></h3>
+    <div class="note" id="rbnote">Total-InvITs basket (equal-weight, growing as each lists) vs NIFTY 50 · SBI 1-yr FD · a flat 7% p.a. FD — price return only, excludes their high distributions</div>
+    <div class="ch"><canvas id="c_rb"></canvas></div></div>
+
+  <div class="card"><h3>Trailing cash yield comparison</h3>
+    <div class="note">InvIT DPU ÷ price vs Indian REITs combined distribution yield (FY26) vs SBI 1-yr FD & a flat 7% p.a. FD — InvITs are return-OF-capital heavy: yields are not directly comparable to coupon</div>
+    <div class="ch"><canvas id="c_yield"></canvas></div></div>
+
+  <div class="card full"><h3>Enterprise value (₹ cr)</h3>
+    <div class="note">Latest disclosed valuations — NHIT FY26 valuation ₹56,988 cr dwarfs the newer vehicles</div>
+    <div class="ch" style="height:220px"><canvas id="c_ev"></canvas></div></div>
+</div>
+
+<script>
+const B=window.BENCH, L=window.BENCH_LIVE||null, IV=window.INVIT;
+if(L){ for(const [s,upd] of Object.entries(L.updates||{})) (B.prices[s]=B.prices[s]||{}), Object.assign(B.prices[s],upd);
+       for(const [s,upd] of Object.entries(L.turnover_updates||{})) (B.turnover_cr[s]=B.turnover_cr[s]||{}), Object.assign(B.turnover_cr[s],upd); }
+Chart.defaults.color='#a8b8c4';Chart.defaults.borderColor='rgba(47,65,92,.55)';Chart.defaults.font.size=11;
+const zoomOpt={zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x'},pan:{enabled:true,mode:'x',modifierKey:'shift'}};
+const fmtIN=(v,d=2)=>v==null?'–':Number(v).toLocaleString('en-IN',{maximumFractionDigits:d});
+// InvIT series live in bench_live updates under their trust names
+const SEC=t=>({nhit:'NHIT InvIT',riit:'Raajmarg InvIT',pginvit:'PGInvIT'})[t.key];
+const px=t=>B.prices[SEC(t)]||{};
+const lastPx=t=>{const s=px(t);const d=Object.keys(s).sort();return d.length?s[d[d.length-1]]:t.px_ref;};
+const anyData=IV.trusts.some(t=>Object.keys(px(t)).length>1);
+if(!anyData)document.getElementById('nodata').style.display='block';
+
+// snapshot cards
+(function(){
+  let h='';
+  for(const t of IV.trusts){
+    const p=lastPx(t), y=t.dpu_fy26&&p?(t.dpu_fy26/p*100).toFixed(1)+'%':'–';
+    h+=`<div class="snap" style="border-top:3px solid ${t.color}" onclick="openTrust('${t.key}')">
+      <div class="nm">${t.name}</div>
+      <div class="mc">EV ₹${fmtIN(t.ev_cr,0)} cr</div>
+      <div class="pxrow" id="pxrow_${t.key}"><span class="px">₹${fmtIN(p)}</span></div>
+      <canvas class="spark" id="spark_${t.key}"></canvas>
+      <div class="row"><span class="l">Sponsor</span><span>${t.sponsor}</span></div>
+      <div class="row"><span class="l">Sector</span><span>${t.sector}</span></div>
+      <div class="row"><span class="l">Assets</span><span>${t.assets}</span></div>
+      <div class="row"><span class="l">NAV / unit</span><span>₹${fmtIN(t.nav)}</span></div>
+      <div class="row"><span class="l">FY26 DPU · yield</span><span>${t.dpu_fy26?'₹'+t.dpu_fy26+' · '+y:'–'}</span></div>
+      <div class="row"><span class="l">Last distribution</span><span>${t.last_dpu}</span></div>
+      <div class="row"><span class="l">Listed · NSE</span><span>${t.listed} · ${t.nse}</span></div>
+      <div class="desc">${t.note}</div></div>`;
+  }
+  document.getElementById('snapgrid').innerHTML=h;
+  // sparklines from live-fetched history
+  for(const t of IV.trusts){
+    const s=px(t), dates=Object.keys(s).sort(); if(dates.length<2)continue;
+    const pts=dates.map(d=>s[d]);
+    const chg=(pts[pts.length-1]/pts[0]-1)*100;
+    document.getElementById('pxrow_'+t.key).innerHTML=
+      `<span class="px">₹${fmtIN(pts[pts.length-1])}</span><span class="chg ${chg>=0?'up':'dn'}">${chg>=0?'▲':'▼'} ${Math.abs(chg).toFixed(1)}%</span>`;
+    const cv=document.getElementById('spark_'+t.key), dpr=window.devicePixelRatio||1, W=cv.clientWidth||300, H=44;
+    cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+    const mn=Math.min(...pts),mx=Math.max(...pts);
+    const X=i=>i/(pts.length-1)*(W-2), Y=v=>H-3-(v-mn)/((mx-mn)||1)*(H-6);
+    const col=chg>=0?'#4fd1a5':'#f07d7d';
+    ctx.beginPath();ctx.moveTo(X(0),Y(pts[0]));
+    for(let i=1;i<pts.length;i++)ctx.lineTo(X(i),Y(pts[i]));
+    ctx.strokeStyle=col;ctx.lineWidth=1.4;ctx.stroke();
+  }
+})();
+
+// price chart + rebased basket
+(function(){
+  const all=IV.trusts.map(t=>({t,s:px(t)}));
+  const dset=new Set(); all.forEach(({s})=>Object.keys(s).forEach(d=>dset.add(d)));
+  const days=[...dset].sort();
+  if(days.length<2)return;
+  mk('c_px',{type:'line',data:{labels:days,datasets:all.map(({t,s})=>({label:t.nse,data:days.map(d=>s[d]??null),borderColor:t.color,borderWidth:1.7,pointRadius:0,spanGaps:true}))},
+    options:{scales:{x:{ticks:{maxTicksLimit:12}},y:{title:{display:true,text:'₹ / unit'}}}}});
+  // rebased chart: toggle between the total InvITs basket and the 3 InvITs on their own life
+  const from=days[0];
+  const nifty=B.prices['NIFTY 50']||{};
+  const ncal=Object.keys(nifty).filter(d=>d>=from).sort();
+  const nb=nifty[ncal[0]];
+  const rateAt=d=>{let r=B.fd_steps[0][1];for(const [sd,sr] of B.fd_steps){if(sd<=d)r=sr;else break;}return r;};
+  const fdIdx=rateFn=>{let idx=100,out=[],prev=null;for(const d of ncal){if(prev){const g=(new Date(d)-new Date(prev))/864e5;idx*=Math.pow(1+rateFn(d)/100,g/365);}out.push(idx);prev=d;}return out;};
+  const fdSbi=fdIdx(rateAt), fd7=fdIdx(()=>7);
+  const GSEC_STEPS=[["2020-07-01",5.85],["2021-01-01",5.95],["2021-07-01",6.20],["2022-01-01",6.55],["2022-06-01",7.45],["2022-11-01",7.30],["2023-09-01",7.20],["2024-07-01",6.95],["2025-01-01",6.80],["2025-07-01",6.55],["2026-01-01",6.50]];
+  const gsecRateAt=d=>{let r=GSEC_STEPS[0][1];for(const [sd,sr] of GSEC_STEPS){if(sd<=d)r=sr;else break;}return r;};
+  const gsec=fdIdx(gsecRateAt);
+  // basket: equal-weight of trusts, each rebased to the common start (grows as each lists)
+  const rebCommon=t=>{const s=px(t);const dd=Object.keys(s).sort();const b=s[dd.find(d=>d>=from)];return d=>{const last=dd.filter(x=>x<=d).pop();return last&&b?s[last]/b*100:null;};};
+  const cf=IV.trusts.map(rebCommon);
+  const basket=ncal.map(d=>{const vs=cf.map(f=>f(d)).filter(v=>v!=null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;});
+  // individual: each rebased to its OWN first close (own life)
+  const ownLine=t=>{const s=px(t);const dd=Object.keys(s).sort();if(!dd.length)return ncal.map(()=>null);const b=s[dd[0]];return ncal.map(d=>{const last=dd.filter(x=>x<=d).pop();return last?s[last]/b*100:null;});};
+  const bench=()=>[
+    {label:'NIFTY 50',data:ncal.map(d=>nifty[d]?nifty[d]/nb*100:null),borderColor:'#e8a86a',borderWidth:1.5,pointRadius:0},
+    {label:'SBI 1-yr FD',data:fdSbi,borderColor:'#a8b8c4',borderDash:[5,4],borderWidth:1.4,pointRadius:0},
+    {label:'FD @ 7% p.a.',data:fd7,borderColor:'#a8dadc',borderDash:[2,3],borderWidth:1.4,pointRadius:0},
+    {label:'GoI 10Y G-Sec (indicative)',data:gsec,borderColor:'#b088d9',borderDash:[6,3],borderWidth:1.5,pointRadius:0}];
+  let rbMode='basket';
+  function drawRB(){
+    const ds=rbMode==='basket'
+      ? [{label:'Total InvITs basket (equal-wt, price only)',data:basket,borderColor:'#45b5b5',borderWidth:2,pointRadius:0},...bench()]
+      : [...IV.trusts.map(t=>({label:t.nse+' (own life)',data:ownLine(t),borderColor:t.color,borderWidth:1.7,pointRadius:0,spanGaps:true})),...bench()];
+    if(window._rbChart)window._rbChart.destroy();
+    window._rbChart=mk('c_rb',{type:'line',data:{labels:ncal,datasets:ds},
+      options:{scales:{x:{ticks:{maxTicksLimit:10}},y:{title:{display:true,text:'rebased = 100'}}}}});
+    const btn=document.getElementById('rbbtn'); if(btn)btn.textContent=rbMode==='basket'?'show individual (own life)':'show basket';
+    document.getElementById('rbnote').textContent=rbMode==='basket'
+      ? 'Total-InvITs basket (equal-weight, growing as each lists) vs NIFTY 50 · SBI 1-yr FD · a flat 7% p.a. FD — price return only, excludes their high distributions'
+      : 'Each InvIT rebased to 100 at its OWN listing (own life) — PGInvIT May-21, NHIT Nov-21, RIIT Mar-26 — vs NIFTY 50 & the two FDs (price return only)';
+  }
+  document.getElementById('rbtoggle').innerHTML='<button id="rbbtn" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer"></button>';
+  document.getElementById('rbbtn').onclick=()=>{rbMode=rbMode==='basket'?'own':'basket';drawRB();};
+  drawRB();
+})();
+
+// yield comparison
+(function(){
+  const reitYield=(()=>{ // Indian REITs combined FY26 dist yield from bench overview mcaps is on page 2; approximate via metrics
+    return 5.9; })(); // placeholder refined below if data.js present
+  const bars=IV.trusts.filter(t=>t.dpu_fy26).map(t=>({l:t.nse,v:+(t.dpu_fy26/lastPx(t)*100).toFixed(2),c:t.color}));
+  bars.push({l:'Indian REITs (combined FY26)',v:reitYield,c:'#a8dadc'});
+  const fdNow=B.fd_steps[B.fd_steps.length-1][1];
+  bars.push({l:'SBI 1-yr FD',v:fdNow,c:'#a8b8c4'});
+  bars.push({l:'FD @ 7% p.a.',v:7,c:'#a8dadc'});
+  mk('c_yield',{type:'bar',data:{labels:bars.map(b=>b.l),datasets:[{data:bars.map(b=>b.v),backgroundColor:bars.map(b=>b.c)}]},
+    options:{plugins:{legend:{display:false},zoom:false},scales:{y:{title:{display:true,text:'% p.a.'}}}}});
+})();
+
+// EV bar
+mk('c_ev',{type:'bar',data:{labels:IV.trusts.map(t=>t.nse),datasets:[{data:IV.trusts.map(t=>t.ev_cr),backgroundColor:IV.trusts.map(t=>t.color)}]},
+  options:{indexAxis:'y',plugins:{legend:{display:false},zoom:false},scales:{x:{title:{display:true,text:'₹ cr'}}}}});
+
+function mk(id,cfg){
+  cfg.options=Object.assign({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{}},cfg.options||{});
+  if(cfg.options.plugins.zoom===undefined)cfg.options.plugins.zoom=zoomOpt;
+  cfg.options.plugins.legend=Object.assign({labels:{boxWidth:14,boxHeight:3}},cfg.options.plugins.legend||{});
+  const c=new Chart(document.getElementById(id),cfg);
+  document.getElementById(id).ondblclick=()=>c.resetZoom();
+  return c;
+}
+function openTrust(key){
+  const t=IV.trusts.find(x=>x.key===key);
+  const series=px(t);
+  const dates=Object.keys(series).sort();
+  const lastP=dates.length?series[dates[dates.length-1]]:t.px_ref;
+  // 52wk
+  const cut=dates.length?(()=>{const c=new Date(dates[dates.length-1]);c.setFullYear(c.getFullYear()-1);return c.toISOString().slice(0,10);})():null;
+  const yr=cut?dates.filter(d=>d>=cut).map(d=>series[d]):[];
+  const hi=yr.length?Math.max(...yr):null, lo=yr.length?Math.min(...yr):null;
+  // ADTV 30d — traded VOLUME (units), NSE+BSE from live refresh (fallback: turnover÷price)
+  let adtvUnits=(L&&L.adtv_units&&L.adtv_units[SEC(t)])||null;
+  let adtvSrc='NSE+BSE';
+  if(adtvUnits==null){
+    const ps=px(t), tks=Object.keys(B.turnover_cr[SEC(t)]||{}).sort().slice(-30);
+    const us=tks.map(d=>{const tv=B.turnover_cr[SEC(t)][d];const pd=Object.keys(ps).filter(x=>x<=d).pop();const p=pd?ps[pd]:null;return (tv!=null&&p)?tv*1e7/p:null;}).filter(v=>v!=null);
+    if(us.length){adtvUnits=us.reduce((a,b)=>a+b,0)/us.length;adtvSrc='approx · Refresh for NSE+BSE';}
+  }
+  const yld=t.dpu_fy26&&lastP?(t.dpu_fy26/lastP*100).toFixed(2)+'%':null;
+  const pd=t.nav&&lastP?((lastP/t.nav-1)*100).toFixed(1)+'%':null;
+  openSecModal({
+    title:t.name, codes:'NSE: '+t.nse+' · listed '+t.listed, ccy:'INR',
+    series, livePrice:null, liveTag:dates.length?'to '+dates[dates.length-1]:'',
+    mkt:[['Enterprise value','₹'+fmtIN(t.ev_cr,0)+' cr'],['NAV / unit','₹'+fmtIN(t.nav)],
+         ['Premium/(disc.) to NAV',pd],['FY26 DPU',t.dpu_fy26?'₹'+t.dpu_fy26:null],
+         ['Trailing cash yield',yld],['Last distribution',t.last_dpu],
+         ['52-wk high',hi?'₹'+fmtIN(hi):null],['52-wk low',lo?'₹'+fmtIN(lo):null],
+         ['ADTV (30d)',adtvUnits!=null?fmtIN(adtvUnits/1e5,1)+' lakh units ('+adtvSrc+')':null]],
+    profile:[['Sponsor',t.sponsor],['Sector',t.sector],['Assets',t.assets]],
+    profileTitle:'Trust profile'});
+}
+async function refreshLive(){
+  const b=document.getElementById('refbtn');b.disabled=true;b.textContent='Refreshing…';
+  try{const r=await fetch('/refresh-market',{method:'POST'});const j=await r.json();
+    if(j.error)throw new Error(j.error);location.reload();
+  }catch(e){b.textContent='⟳ Refresh failed — run via serve.py';b.disabled=false;
+    alert('Refresh needs the local server: run `python3 serve.py` in the dashboard folder.\n'+e.message);}
+}
+</script>
+</body>
+</html>

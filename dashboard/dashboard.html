@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indian REITs — Domestic Market</title>
+<script src="chart.umd.min.js"></script>
+<script>if (typeof Chart==='undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>');</script>
+<script src="chartjs-plugin-zoom.min.js"></script>
+<script>if (typeof ChartZoom==='undefined' && !(window.Chart && Chart.registry && Chart.registry.plugins.get('zoom'))) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"><\/script>');</script>
+<script src="data.js"></script>
+<script src="prices.js"></script>
+<script src="structures.js"></script>
+<script src="annexures.js"></script>
+<script src="annexdata.js"></script>
+<script src="annex_images.js"></script>
+<script src="blocks_live.js" onerror="void 0"></script>
+<script src="val_hy.js" onerror="void 0"></script>
+<script src="links.js"></script>
+<style>
+:root{
+  /* Ocean Depths theme */
+  --bg:#131a26; --panel:#1a2332; --panel2:#223046; --line:#2f415c;
+  --txt:#f1faee; --mut:#a8b8c4; --acc:#45b5b5; --gold:#a8dadc;
+  --grn:#4fd1a5; --red:#f07d7d; --pur:#7fb4d9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.5 'DejaVu Sans','Segoe UI',Verdana,Geneva,sans-serif;padding:18px}
+h1{font-size:20px;font-weight:650;margin-bottom:2px}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.sub{color:var(--mut);font-size:12px;margin-bottom:14px}
+.refreshbtn{background:var(--acc);color:#0d1520;border:0;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:650;cursor:pointer;white-space:nowrap}
+.refreshbtn:disabled{opacity:.5;cursor:wait}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tab{padding:9px 16px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;font-size:13px;font-weight:550;color:var(--mut)}
+.tab.active{background:var(--acc);color:#0d1520;border-color:var(--acc)}
+.head{display:flex;gap:26px;flex-wrap:wrap;align-items:baseline;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:14px}
+.head .nm{font-size:17px;font-weight:650}
+.head .cd{color:var(--mut);font-size:12px}
+.kpi{display:flex;flex-direction:column}
+.kpi .v{font-size:16px;font-weight:650}
+.kpi .l{font-size:11px;color:var(--mut)}
+.badge{padding:3px 10px;border-radius:999px;font-size:12px;font-weight:650}
+.badge.prem{background:rgba(79,209,165,.15);color:var(--grn)}
+.badge.disc{background:rgba(240,125,125,.15);color:var(--red)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px 10px}
+.card.full{grid-column:1/-1}
+.card h3{font-size:13.5px;font-weight:650;margin-bottom:2px}
+.card .note{font-size:11px;color:var(--mut);margin-bottom:8px}
+.ch{position:relative;height:300px}
+.ch.tall{height:340px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{color:var(--mut);text-align:left;font-weight:600;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid rgba(47,65,92,.55)}
+tr.assetrow{cursor:pointer}
+tr.assetrow:hover{background:var(--panel2)}
+tr.total td{font-weight:700;border-top:2px solid var(--line)}
+td.spvcell{border-right:1px solid var(--line);vertical-align:top;background:rgba(34,48,70,.45);max-width:210px}
+td.spvcell b{display:block;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.spvcell .spvsub{color:var(--mut);font-size:11px;font-weight:400;margin-top:3px}
+td.assetname{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.r,th.r{text-align:right}
+.backbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;margin-bottom:6px;display:none}
+.hint{font-size:11px;color:var(--mut);margin-top:6px}
+.zoomhint{font-size:10.5px;color:var(--mut);opacity:.8;text-align:right;margin-top:2px}
+.rangebar{float:right;display:inline-flex;gap:4px}
+.rangebar button{background:var(--panel2);border:1px solid var(--line);color:var(--mut);border-radius:6px;padding:2px 10px;font-size:11px;cursor:pointer;font-weight:600}
+.rangebar button.on{background:var(--acc);color:#0d1520;border-color:var(--acc)}
+/* structure diagram — explicit 3-level hierarchy */
+.st-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0}
+.st-lvl{display:flex;align-items:center;gap:10px;width:100%;margin:2px 0 6px}
+.st-lvl .cap{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.09em;white-space:nowrap;min-width:150px;text-align:right}
+.st-lvl .caprule{flex:1;height:1px;background:var(--line);opacity:.5}
+.st-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:stretch;width:100%}
+.st-box{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 16px;text-align:center;font-size:12px;position:relative}
+.st-box .t{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.st-box .stk{display:inline-block;margin-top:5px;background:rgba(79,209,165,.15);color:var(--grn);border-radius:999px;padding:1px 9px;font-size:10.5px;font-weight:700}
+.st-box.exited{opacity:.65;border-style:dashed}
+.st-box .stk.ex{background:rgba(240,125,125,.15);color:var(--red)}
+.st-box .exnote{font-size:9.5px;color:var(--mut);margin-top:3px;font-style:italic;max-width:200px}
+.st-box.trust{background:rgba(69,181,181,.14);border-color:var(--acc);font-weight:700;font-size:15px;padding:14px 34px;box-shadow:0 0 24px rgba(69,181,181,.15)}
+.st-side{background:rgba(168,218,220,.07);border-color:rgba(168,218,220,.35);max-width:230px}
+.st-side .rel{font-size:9.5px;color:var(--gold);margin-top:3px;font-style:italic}
+.st-conn{display:flex;flex-direction:column;align-items:center;margin:2px 0}
+.st-conn .stem{width:2px;height:14px;background:var(--acc);opacity:.7}
+.st-conn .arrow{color:var(--acc);font-size:13px;line-height:.6;opacity:.9}
+.st-conn .lab{font-size:10px;color:var(--mut);margin:3px 0;font-style:italic}
+.st-mid{display:flex;align-items:center;gap:0;justify-content:center;width:100%}
+.st-link{height:1px;flex:0 0 34px;border-top:2px dashed rgba(168,218,220,.5)}
+.st-spvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:8px;width:100%;margin-top:2px;border:1px dashed var(--line);border-radius:10px;padding:12px}
+.st-spv{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11.5px;border-top:3px solid var(--acc)}
+.st-spv.part{border-top-color:var(--gold)}
+.st-spv .nm{font-weight:650;font-size:12px;display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+.st-stake{color:#0d1520;background:var(--acc);border-radius:999px;padding:1px 8px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.st-stake.part{background:var(--gold)}
+.st-via{color:var(--gold);font-size:10px;margin-top:1px}
+.st-assets{color:var(--mut);margin-top:4px;line-height:1.5;border-top:1px solid rgba(47,65,92,.5);padding-top:4px}
+.st-assets::before{content:'assets: ';color:var(--mut);opacity:.7;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em}
+.st-note{font-size:11px;color:var(--mut);margin-top:10px;text-align:center;max-width:860px}
+/* links */
+.lgroup{margin-bottom:10px}
+.lgroup .gt{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px}
+a.plink{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;margin:3px 6px 3px 0;color:var(--txt);text-decoration:none;font-size:12.5px}
+a.plink:hover{border-color:var(--acc)}
+a.plink .latest{background:var(--grn);color:#0d1520;font-size:9.5px;font-weight:800;border-radius:999px;padding:1px 7px;letter-spacing:.04em}
+/* annexure modal */
+.modal{position:fixed;inset:0;background:rgba(5,8,15,.82);display:none;z-index:50;align-items:center;justify-content:center}
+.modal.open{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(1060px,94vw);height:92vh;display:flex;flex-direction:column;overflow:hidden}
+.mhead{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.mhead .ttl{font-weight:650;font-size:15px}
+.mhead .src{color:var(--mut);font-size:11.5px}
+.mclose{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px}
+.mstats{display:flex;gap:20px;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid var(--line);font-size:12px}
+.mstats .dl{color:var(--mut);font-size:10.5px}
+.mstats .dv{font-weight:650}
+.mbody{overflow-y:auto;padding:18px 24px;background:#101722;flex:1}
+.annexpages{display:grid;gap:16px;margin-bottom:22px}
+.annexpage{background:#0b111a;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.annexpage .pgcap{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--panel2);border-bottom:1px solid var(--line);padding:7px 11px;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.annexpage img{display:block;width:100%;height:auto;background:#fff}
+.annexnote{font-size:12px;color:var(--mut);background:rgba(69,181,181,.08);border:1px solid rgba(69,181,181,.28);border-radius:8px;padding:10px 12px;margin:0 0 14px}
+.extracthead{margin:22px 0 8px;color:var(--gold);font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.08em}
+.mbody h4{font-size:12px;font-weight:700;color:var(--acc);margin:22px 0 8px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line);padding-bottom:5px}
+.mbody p{font-size:12.5px;color:var(--mut);margin:7px 0;line-height:1.6;max-width:900px}
+.twrap{overflow-x:auto;margin:10px 0 16px;border:1px solid var(--line);border-radius:8px}
+.mbody table{margin:0;font-size:12px;border-collapse:collapse;width:100%}
+.mbody th{background:var(--panel2);color:var(--txt);font-weight:650;position:sticky;top:0}
+.mbody td{vertical-align:top;border-bottom:1px solid rgba(47,65,92,.4);padding:7px 10px}
+.mbody tr:nth-child(even) td{background:rgba(34,48,70,.25)}
+.mbody tr.sub td{font-weight:700;color:var(--gold);background:rgba(168,218,220,.06)!important;border-bottom:1px solid var(--line)}
+.mbody table.def td:first-child{color:var(--mut);width:230px;min-width:170px;font-weight:600}
+.mbody table.wide{font-size:10.5px;white-space:nowrap}
+.mbody table.wide td:first-child,.mbody table.wide th:first-child{position:sticky;left:0;background:var(--panel);min-width:150px;white-space:normal}
+.mbody td{max-width:420px;overflow-wrap:break-word}
+.mbody pre.numrun{font:11px/1.6 ui-monospace,Menlo,monospace;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;white-space:pre-wrap;color:var(--txt);max-width:900px}
+.defrow{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:8px;padding:9px 13px;margin:8px 0;max-width:900px}
+.defrow .dl2{display:block;color:var(--acc);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.defrow .clamp{font-size:12.5px;color:var(--txt);line-height:1.55}
+.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;position:relative}
+.clamp::after{content:'⌄ more';color:var(--acc);font-size:10px;position:absolute;right:0;bottom:0;background:linear-gradient(90deg,transparent,var(--panel) 30%);padding-left:18px}
+.clamp.open{-webkit-line-clamp:unset}
+.clamp.open::after{content:'⌃ less'}
+.mpg{color:var(--mut);font-size:10px;margin:22px 0 4px;text-align:center;letter-spacing:.08em;text-transform:uppercase}
+.mpg::before,.mpg::after{content:'———';margin:0 10px;opacity:.4}
+.missing{color:var(--mut);font-size:13px;padding:30px;text-align:center}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div><h1>Indian REITs — Domestic Market</h1><div class="sub" id="asof"></div></div>
+  <button class="refreshbtn" id="refreshbtn" title="Pull live NSE/BSE prices">⟳ Refresh live prices</button>
+</div>
+<div class="pagenav" style="display:flex;gap:6px;margin-bottom:12px">
+  <a href="dashboard.html" style="padding:8px 15px;border-radius:8px;background:var(--acc);color:#0d1520;font-size:13px;font-weight:550;text-decoration:none">1 · Domestic REITs</a>
+  <a href="market.html" style="padding:8px 15px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:13px;font-weight:550;color:var(--mut);text-decoration:none">2 · INDIAN REITs Market</a>
+  <a href="invits.html" style="padding:8px 15px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:13px;font-weight:550;color:var(--mut);text-decoration:none">3 · InvITs</a>
+  <a href="global.html" style="padding:8px 15px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:13px;font-weight:550;color:var(--mut);text-decoration:none">4 · Global Markets</a>
+</div>
+<div class="tabs" id="tabs"></div>
+<div id="content"></div>
+
+<div class="modal" id="modal">
+  <div class="mbox">
+    <div class="mhead">
+      <div><div class="ttl" id="mttl"></div><div class="src" id="msrc"></div></div>
+      <button class="mclose" id="mclose">✕ Close (Esc)</button>
+    </div>
+    <div class="mstats" id="mstats"></div>
+    <div class="mbody" id="mbody"></div>
+  </div>
+</div>
+
+<script>
+const D = window.REIT_DATA;
+const LIVE = window.LIVE_PRICES || {};
+const STRUCT = window.REIT_STRUCTURES || {};
+const ANNEX = window.ANNEXDATA || {};
+const LINKS = window.REIT_LINKS || {};
+const KEYS = ['embassy','mindspace','brookfield','nexus','krt','bagmane'];
+const SHORT = {embassy:'Embassy',mindspace:'Mindspace',brookfield:'Brookfield',nexus:'Nexus',krt:'Knowledge (KRT)',bagmane:'Bagmane'};
+const VALREP = {embassy:'Embassy full valuation report, Mar 2026 (iVAS)',mindspace:'Mindspace detailed valuation report, Q4 FY26 (KVPL)',brookfield:'Brookfield summary valuation report, Mar 2026',nexus:'Nexus detailed valuation report, Q4 FY26 (C&W)',krt:'KRT detailed valuation report, Mar 2026 (iVAS)',bagmane:'Bagmane valuation report (IPO, values as at Dec 2025)'};
+const C = {acc:'#45b5b5',gold:'#a8dadc',grn:'#4fd1a5',red:'#f07d7d',pur:'#7fb4d9',mut:'#a8b8c4',line:'#2f415c'};
+Chart.defaults.color = C.mut; Chart.defaults.borderColor = 'rgba(47,65,92,.6)';
+Chart.defaults.font.family = "'DejaVu Sans','Segoe UI',Verdana,Geneva,sans-serif";
+const HASZOOM = !!(Chart.registry && Chart.registry.plugins.get('zoom'));
+
+const fyTs = fy => new Date(+fy.slice(2,6), 2, 31).getTime();
+const dTs  = d  => new Date(d).getTime();
+const inr  = (v,dec=0) => v==null?'–':'₹'+v.toLocaleString('en-IN',{maximumFractionDigits:dec});
+const pct  = v => v==null?'–':(v>=0?'+':'')+(100*v).toFixed(1)+'%';
+const fmtM = ts => new Date(ts).toLocaleDateString('en-IN',{month:'short',year:'2-digit'});
+let charts = [], curKey='embassy';
+
+const perTs = per => new Date(+per.slice(0,4), +per.slice(5,7)-1, 28).getTime(); // '2022-09' -> ~quarter end
+function navSteps(k){
+  const f=D.fin[k];
+  const pts=f.years.map((y,i)=>({ts:fyTs(y),nav:f.nav[i]})).filter(p=>p.nav!=null);
+  (f.q||[]).forEach(x=>{ if(x.nav!=null && !pts.some(p=>Math.abs(p.ts-perTs(x.per))<40*864e5)) pts.push({ts:perTs(x.per),nav:x.nav}); });
+  return pts.sort((a,b)=>a.ts-b.ts);
+}
+function navAt(k,ts){ const s=navSteps(k); if(!s.length) return null; let last=null; for(const p of s){ if(p.ts<=ts) last=p.nav; } return last!=null?last:s[0].nav; }
+function lastPrice(k){
+  if(LIVE[k] && LIVE[k].price) return {price:LIVE[k].price, asof:LIVE[k].asof||'live', live:true};
+  const p=D.prices[k]; if(p&&p.length) return {price:p[p.length-1][1], asof:p[p.length-1][0], live:false};
+  return {price:null, asof:'', live:false};
+}
+function zoomOpts(xIsTime){
+  if(!HASZOOM) return {};
+  return {zoom:{
+    zoom:{wheel:{enabled:true,modifierKey:null},pinch:{enabled:true},drag:{enabled:true,modifierKey:'shift',backgroundColor:'rgba(69,181,181,.18)'},mode:'x',
+      onZoomComplete:({chart})=>{ if(chart._xmin!==undefined){ rescaleY(chart); chart.update('none'); } }},
+    pan:{enabled:true,mode:'x',modifierKey:'ctrl',
+      onPanComplete:({chart})=>{ if(chart._xmin!==undefined){ rescaleY(chart); chart.update('none'); } }},
+    limits:{x:{min:'original',max:'original'}}
+  }};
+}
+function wireReset(ch){ ch.canvas.addEventListener('dblclick',()=>{ if(ch.resetZoom) ch.resetZoom();
+  if(ch._xmin!==undefined){ ch.options.scales.x.min=ch._xmin; ch.options.scales.x.max=ch._xmax; rescaleY(ch); ch.update(); } }); }
+
+/* ---------- layout ---------- */
+const tabsEl = document.getElementById('tabs');
+KEYS.forEach((k,i)=>{
+  const b=document.createElement('div'); b.className='tab'+(i===0?' active':''); b.textContent=SHORT[k];
+  b.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));b.classList.add('active');render(k);};
+  tabsEl.appendChild(b);
+});
+function setAsof(){
+  document.getElementById('asof').textContent =
+    'Data compiled '+D.built+' from BSE/NSE price history, financial statements & valuation reports. '+
+    (LIVE._asof? 'Live prices: '+LIVE._asof : 'Use the Refresh button (via serve.py) or run refresh_prices.py.');
+}
+setAsof();
+
+/* ---------- refresh button ---------- */
+document.getElementById('refreshbtn').onclick = async function(){
+  const b=this;
+  if(location.protocol==='http:' || location.protocol==='https:'){
+    b.disabled=true; b.textContent='⟳ Refreshing…';
+    try{
+      const r = await fetch('/refresh',{method:'POST'});
+      const j = await r.json();
+      if(j.error) throw new Error(j.error);
+      Object.assign(LIVE, j);
+      setAsof(); render(curKey);
+      b.textContent='✓ Updated '+(j._asof||'');
+    }catch(e){ b.textContent='✕ Refresh failed — is serve.py running?'; }
+    setTimeout(()=>{b.disabled=false;b.textContent='⟳ Refresh live prices';}, 2500);
+  } else {
+    alert('Live refresh needs the local helper.\n\nEither:\n  • double-click / run  serve.py  in the dashboard folder (opens this page with a working Refresh button), or\n  • run  python3 refresh_prices.py  and reload this page.');
+  }
+};
+
+function render(k){
+  curKey=k;
+  charts.forEach(c=>c.destroy()); charts=[];
+  const m=D.meta[k], f=D.fin[k], lp=lastPrice(k), nav=navAt(k,Date.now());
+  const pd = (lp.price&&nav)? lp.price/nav-1 : null;
+  const el=document.getElementById('content');
+  el.innerHTML = `
+  <div class="head">
+    <div><div class="nm">${m.name}</div><div class="cd">NSE: ${m.nse} · BSE: ${m.bse} · Listed ${m.listed} · Sponsor: ${m.sponsor}</div></div>
+    <div class="kpi"><span class="v">${inr(lp.price,2)}</span><span class="l">${lp.live?'live price':'price'} (${lp.asof})</span></div>
+    <div class="kpi"><span class="v">${inr(nav,2)}</span><span class="l">latest reported NAV/unit</span></div>
+    ${pd!=null?`<div class="badge ${pd>=0?'prem':'disc'}">${pct(pd)} vs NAV</div>`:''}
+  </div>
+  <div class="grid">
+    <div class="card full"><h3>1 · Price vs NAV & Distributions <span class="rangebar" data-chart="1"></span></h3>
+      <div class="note">Traded price (NSE/BSE) against reported NAV per unit; bars = distribution per unit. Premium/discount in tooltip.</div>
+      <div class="ch tall"><canvas id="c1"></canvas></div><div class="zoomhint">scroll = zoom · shift-drag = box zoom · ctrl-drag = pan · double-click = reset</div></div>
+    <div class="card full"><h3>2 · New Issuances vs NAV <span class="rangebar" data-chart="2"></span></h3>
+      <div class="note">NAV/unit (gold) with issuance (diamonds) &amp; block-deal (triangles) markers vs NAV. The teal <b>fair value/unit (GAV)</b> vs dashed <b>book value/unit (acquisition cost)</b> lines — and the shaded gap between them — show the real accretion story: assets enter at cost and lag fair value, so the embedded revaluation gain widens with each acquisition (a unit trading above NAV, e.g. Brookfield, is a price effect, not the asset signal).</div>
+      <div class="ch"><canvas id="c2"></canvas></div><div class="zoomhint">scroll = zoom · double-click = reset</div></div>
+    <div class="card"><h3>3 · AUM — Fair Value vs Book Value</h3>
+      <div class="note">FV = valuer GAV; BV = investment property + IPUD + PP&E + CWIP (consolidated BS).</div>
+      <div class="ch"><canvas id="c3"></canvas></div></div>
+    <div class="card"><h3>4 · NDCF vs Revenue <span id="c4toggle" style="float:right"></span></h3>
+      <div class="note" id="c4note">FY: rental + maintenance income (FS revenue note) vs NDCF. Quarterly: revenue from operations vs NDCF.</div>
+      <div class="ch"><canvas id="c4"></canvas></div></div>
+    <div class="card"><h3>5 · Distribution Yield on AUM (NDCF / GAV) <span id="c5toggle" style="float:right"></span></h3>
+      <div class="note">Quarterly annualised (4× quarterly NDCF ÷ latest reported GAV) where quarterly filings are loaded; annual otherwise.</div>
+      <div class="ch"><canvas id="c5"></canvas></div></div>
+    <div class="card"><h3>6 · Capital Structure (consolidated)</h3>
+      <div class="note">Latest FY debt vs unitholders&#39; equity — click the chart for the year-by-year split.</div>
+      <button class="backbtn" id="capback">← back to pie</button>
+      <div class="ch"><canvas id="c6"></canvas></div></div>
+    <div class="card full"><h3>7 · SPVs & Assets — value share of portfolio</h3>
+      <div class="note">Click any row to open the full annexure (valuation-report pages) for that asset.</div>
+      <div id="spvtbl"></div></div>
+    <div class="card full"><h3>8 · REIT Structure</h3>
+      <div class="note">Recreated from the trust&#39;s own structure chart (${k==='bagmane'?'RHP':'annual/half-yearly report'}).</div>
+      <div id="structwrap"></div></div>
+    <div class="card full"><h3>9 · Reports & Filings — direct PDF links</h3>
+      <div class="note">Opens the PDF hosted on the REIT&#39;s own website/CDN. Green tag = latest available of its kind.</div>
+      <div id="linkswrap"></div></div>
+  </div>`;
+  chart1(k); chart2(k); chart3(k); chart4(k); chart5(k); chart6(k); spvTable(k); structure(k); linksSection(k);
+  wireRangeBars();
+}
+
+/* ---------- range selector for charts 1 & 2 ---------- */
+const rangeCharts={};   // '1' -> chart instance
+function rescaleY(ch){
+  // fit primary y-axis to data visible in current x window (kills dead vertical space)
+  const x=ch.options.scales.x;
+  const lo=x.min??ch._xmin, hi=x.max??ch._xmax;
+  let mn=Infinity, mx=-Infinity;
+  ch.data.datasets.forEach((d,di)=>{
+    if(d.yAxisID&&d.yAxisID!=='y') return;
+    (d.data||[]).forEach(p=>{
+      if(p&&typeof p==='object'&&p.x!=null&&p.y!=null&&p.x>=lo&&p.x<=hi){
+        if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y;
+      }});
+  });
+  if(mn===Infinity){ delete ch.options.scales.y.min; delete ch.options.scales.y.max; return; }
+  const pad=Math.max((mx-mn)*0.09,(mx||1)*0.02);
+  ch.options.scales.y.min=Math.max(0,mn-pad);
+  ch.options.scales.y.max=mx+pad;
+}
+function wireRangeBars(){
+  document.querySelectorAll('.rangebar').forEach(bar=>{
+    bar.innerHTML='';
+    ['6M','1Y','3Y','5Y','All'].forEach(lbl=>{
+      const b=document.createElement('button');
+      b.textContent=lbl; if(lbl==='All') b.classList.add('on');
+      b.onclick=()=>{
+        bar.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on');
+        const ch=rangeCharts[bar.dataset.chart]; if(!ch) return;
+        const x=ch.options.scales.x;
+        if(lbl==='All'){ x.min=ch._xmin; x.max=ch._xmax; }
+        else{
+          const months={'6M':6,'1Y':12,'3Y':36,'5Y':60}[lbl];
+          x.max=ch._xmax;
+          x.min=Math.max(ch._xmin, ch._xmax-months*30.44*864e5);
+        }
+        rescaleY(ch);
+        ch.update();
+      };
+      bar.appendChild(b);
+    });
+  });
+}
+
+/* ---------- chart 1 ---------- */
+function chart1(k){
+  const f=D.fin[k];
+  const price=(D.prices[k]||[]).map(p=>({x:dTs(p[0]),y:p[1]}));
+  if(LIVE[k]&&LIVE[k].price) price.push({x:Date.now(),y:LIVE[k].price});
+  const nav=navSteps(k).map(p=>({x:p.ts,y:p.nav}));
+  const hasQ=(f.q||[]).some(x=>x.dpu!=null);
+  const dpu=hasQ
+    ? f.q.filter(x=>x.dpu!=null).map(x=>({x:perTs(x.per),y:x.dpu,q:x.q}))
+    : f.years.map((y,i)=>({x:fyTs(y),y:f.dpu[i]})).filter(p=>p.y!=null);
+  const xmin=Math.min(...price.map(p=>p.x),...nav.map(p=>p.x));
+  const ch=new Chart(c('c1'),{data:{datasets:[
+    {type:'line',label:'Price',data:price,borderColor:C.acc,borderWidth:1.8,pointRadius:0,yAxisID:'y'},
+    {type:'line',label:'NAV / unit',data:nav,borderColor:C.gold,borderWidth:2,stepped:'before',pointRadius:3,pointBackgroundColor:C.gold,yAxisID:'y'},
+    {type:'bar',label:hasQ?'DPU (quarter)':'DPU (FY)',data:dpu,backgroundColor:'rgba(127,180,217,.5)',barThickness:hasQ?5:14,yAxisID:'y2'}]},
+   options:{...base(), scales:{
+     x:{type:'linear',min:xmin,ticks:{callback:v=>fmtM(v),maxTicksLimit:12},grid:{display:false}},
+     y:{title:{display:true,text:'₹ / unit'},grace:'5%'},
+     y2:{position:'right',title:{display:true,text:'DPU ₹'},grid:{display:false},beginAtZero:true,suggestedMax:Math.max(...dpu.map(p=>p.y||0))*3||10}},
+   plugins:{...base().plugins, ...zoomOpts(true), tooltip:{callbacks:{
+     title:it=>fmtM(it[0].parsed.x),
+     label:it=>{
+       if(it.dataset.label==='Price'){const n=navAt(k,it.parsed.x);
+         return ['Price: '+inr(it.parsed.y,2), n?('vs NAV '+inr(n,2)+' → '+pct(it.parsed.y/n-1)):''];}
+       return it.dataset.label+': '+inr(it.parsed.y,2);}}}}}});
+  ch._xmin=xmin; ch._xmax=Math.max(...price.map(p=>p.x),...nav.map(p=>p.x),Date.now());
+  rangeCharts['1']=ch;
+  wireReset(ch); charts.push(ch);
+}
+
+/* ---------- chart 2 ---------- */
+function chart2(k){
+  const nav=navSteps(k).map(p=>({x:p.ts,y:p.nav}));
+  const iss=(D.issuances[k]||[]).map(e=>{
+    const ts=new Date(e.date+'-15').getTime(), n=navAt(k,ts);
+    return {x:ts,y:e.price,e,pd:n?e.price/n-1:null,nav:n};
+  });
+  // merge curated blocks (data.js) with live NSE/BSE block+bulk deals (blocks_live.js)
+  const curatedBlk=(D.blocks||{})[k]||[];
+  const liveBlk=(window.BLOCKS_LIVE&&BLOCKS_LIVE.blocks&&BLOCKS_LIVE.blocks[k])||[];
+  const seenBlk=new Set(curatedBlk.map(e=>e.date.slice(0,7)+':'+Math.round(e.units_mn||0)));
+  const allBlk=curatedBlk.concat(liveBlk.filter(e=>!seenBlk.has(e.date.slice(0,7)+':'+Math.round(e.units_mn||0))));
+  const blk=allBlk.map(e=>{
+    const ts=new Date(e.date.length>7?e.date:e.date+'-15').getTime(), n=navAt(k,ts);
+    return {x:ts,y:e.price,b:e,pd:n?e.price/n-1:null,nav:n};
+  });
+  // Fair-value/unit (GAV ÷ units) vs Book-value/unit (RE assets at cost ÷ units).
+  // Acquisitions enter at cost (book) and lag fair value; the shaded gap = embedded
+  // revaluation gain that widens with each new asset — the real accretion signal.
+  const f2=D.fin[k], bvd=D.bv[k]||{};
+  // units outstanding at an arbitrary date (uses that Indian-FY's unit count)
+  const unitsAtDate=ts=>{const dt=new Date(ts);const yy=dt.getMonth()>=3?dt.getFullYear()+1:dt.getFullYear();let i=f2.years.indexOf('FY'+yy);if(i<0)i=f2.years.length-1;for(let j=i;j>=0;j--)if(f2.units_mn[j]!=null)return f2.units_mn[j];for(let j=i+1;j<f2.years.length;j++)if(f2.units_mn[j]!=null)return f2.units_mn[j];return null;};
+  const HY=(window.REIT_VAL_HY&&REIT_VAL_HY[k])||null;
+  let fvpu=[];
+  if(HY&&HY.length){   // half-yearly GAV from valuation reports → finer fair-value/unit line
+    fvpu=HY.map(v=>{const ts=new Date(v.d).getTime(),u=unitsAtDate(ts);return u?{x:ts,y:+(v.gav*10/u).toFixed(1)}:null;}).filter(Boolean);
+  } else {
+    f2.years.forEach((y,i)=>{const u=f2.units_mn[i];if(u&&f2.gav[i]!=null)fvpu.push({x:fyTs(y),y:+(f2.gav[i]*10/u).toFixed(1)});});
+  }
+  const bvpu=[];
+  f2.years.forEach((y,i)=>{const u=f2.units_mn[i];if(!u)return;const r=bvd[y];if(r){const t=(r.inv_prop||0)+(r.ipud||0)+(r.ppe||0)+(r.cwip||0);if(t)bvpu.push({x:fyTs(y),y:+(t*10/u).toFixed(1)});}});
+  // Embassy only: single-asset accretion — Embassy TechVillage fair value (₹cr) vs its Dec-2020 acquisition cost
+  const etvHY=(HY||[]).filter(v=>v.tv!=null);
+  const etvCost=9782, etvAcqTs=new Date('2020-12-15').getTime();
+  const etvFV=etvHY.length?[{x:etvAcqTs,y:etvCost}].concat(etvHY.map(v=>({x:new Date(v.d).getTime(),y:v.tv}))):[];
+  const etvCostLine=etvFV.length?[{x:etvAcqTs,y:etvCost},{x:etvFV[etvFV.length-1].x,y:etvCost}]:[];
+  const pts=[...nav.map(p=>p.x),...iss.map(p=>p.x),...blk.map(p=>p.x),...fvpu.map(p=>p.x)];
+  const ch=new Chart(c('c2'),{data:{datasets:[
+    {type:'line',label:'NAV / unit',data:nav,borderColor:C.gold,borderWidth:2,stepped:'before',pointRadius:3,pointBackgroundColor:C.gold,order:2},
+    {type:'scatter',label:'Issuance @ issue price',data:iss,pointRadius:7,pointHoverRadius:9,pointStyle:'rectRot',order:1,
+     pointBackgroundColor:iss.map(p=>p.pd==null?'#888':(p.pd>=0?C.grn:C.red))},
+    {type:'scatter',label:'Block deal (secondary, no new units)',data:blk,pointRadius:6,pointHoverRadius:8,pointStyle:'triangle',order:1,
+     pointBackgroundColor:'rgba(127,180,217,.9)',pointBorderColor:'rgba(127,180,217,.9)'},
+    {type:'line',label:'Book value / unit (acquisition cost)',data:bvpu,borderColor:'#8fa0b8',borderWidth:1.5,borderDash:[5,4],stepped:'before',pointRadius:0,order:4},
+    {type:'line',label:'Fair value / unit (GAV)',data:fvpu,borderColor:C.acc,borderWidth:1.6,stepped:'before',pointRadius:0,fill:3,backgroundColor:'rgba(79,209,165,.13)',order:4},
+    ...(etvFV.length?[
+      {type:'line',label:'Embassy TechVillage — fair value (₹cr)',data:etvFV,borderColor:'#e8a86a',borderWidth:2,pointRadius:3,pointBackgroundColor:'#e8a86a',yAxisID:'y2',order:3},
+      {type:'line',label:'TechVillage acquisition cost (Dec-2020)',data:etvCostLine,borderColor:'#e8a86a',borderDash:[4,4],borderWidth:1.2,pointRadius:0,yAxisID:'y2',order:3}
+    ]:[])]},
+   options:{...base(),scales:{
+     x:{type:'linear',min:Math.min(...pts)-90*864e5,max:Math.max(...pts)+120*864e5,ticks:{callback:v=>fmtM(v),maxTicksLimit:10},grid:{display:false}},
+     y:{title:{display:true,text:'₹ / unit'},grace:'12%'},
+     ...(etvFV.length?{y2:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'TechVillage FV (₹ cr)'},grace:'10%'}}:{})},
+   plugins:{...base().plugins,...zoomOpts(true),tooltip:{callbacks:{
+     title:it=>fmtM(it[0].parsed.x),
+     label:it=>{
+       if(it.raw.b){const b=it.raw.b;
+         return ['Block deal @ '+inr(b.price,2)+' — '+b.seller,
+                 b.units_mn+' mn units (secondary sale, no new units)',
+                 it.raw.pd!=null?('vs NAV '+inr(it.raw.nav,2)+' → '+pct(it.raw.pd)+(it.raw.pd>=0?' premium':' discount')):'',
+                 b.note];}
+       const p=it.raw.e; if(!p) return it.dataset.label+': '+inr(it.parsed.y,2)+((it.datasetIndex===3||it.datasetIndex===4)&&bvpu.length&&fvpu.length?' · FV/BV premium '+pct((fvpu[fvpu.length-1].y/bvpu[bvpu.length-1].y)-1):'');
+       return [p.type+' @ '+inr(p.price,2),
+               p.units_mn+' mn units · '+inr(p.proceeds_cr)+' cr',
+               it.raw.pd!=null?('vs NAV '+inr(it.raw.nav,2)+' → '+pct(it.raw.pd)+(it.raw.pd>=0?' premium':' discount')):'',
+               p.note];}}}}},
+   plugins:[{id:'lbl',afterDatasetsDraw(ch){
+     const ctx=ch.ctx;
+     ctx.save();ctx.font='600 10px sans-serif';ctx.textAlign='center';
+     ch.getDatasetMeta(1).data.forEach((el,i)=>{const p=iss[i];if(p&&p.pd!=null){
+       ctx.fillStyle=p.pd>=0?C.grn:C.red;
+       ctx.fillText(pct(p.pd),el.x,el.y-12);}});
+     ch.getDatasetMeta(2).data.forEach((el,i)=>{const p=blk[i];if(p&&p.pd!=null){
+       ctx.fillStyle='rgba(127,180,217,.9)';
+       ctx.fillText(pct(p.pd),el.x,el.y-11);}});
+     ctx.restore();}}]});
+  ch._xmin=Math.min(...pts)-90*864e5; ch._xmax=Math.max(...pts)+120*864e5;
+  rangeCharts['2']=ch;
+  wireReset(ch); charts.push(ch);
+}
+
+/* ---------- chart 3 ---------- */
+function chart3(k){
+  const f=D.fin[k],bv=D.bv[k]||{};
+  const yrs=f.years.filter((y,i)=>f.gav[i]!=null||bv[y]);
+  const fv=yrs.map(y=>f.gav[f.years.indexOf(y)]);
+  const b=yrs.map(y=>{const r=bv[y];if(!r)return null;
+    return Math.round(((r.inv_prop||0)+(r.ipud||0)+(r.ppe||0)+(r.cwip||0))*10)/10;});
+  const ch=new Chart(c('c3'),{type:'bar',data:{labels:yrs.map(y=>y.replace('20','')),datasets:[
+    {label:'Fair value (GAV)',data:fv,backgroundColor:C.acc},
+    {label:'Book value (RE assets)',data:b,backgroundColor:'rgba(147,160,184,.55)'}]},
+   options:{...base(),scales:{x:{grid:{display:false}},y:{title:{display:true,text:'₹ crore'}}},
+   plugins:{...base().plugins,tooltip:{callbacks:{label:it=>it.dataset.label+': '+inr(it.parsed.y)+' cr'}}}}});
+  charts.push(ch);
+}
+
+/* ---------- chart 4 ---------- */
+let c4mode='fy', c4chart=null;
+function chart4(k){
+  const f=D.fin[k];
+  const hasQ=(f.q||[]).some(x=>x.ndcf!=null||x.rev!=null);
+  const tg=document.getElementById('c4toggle');
+  if(hasQ){
+    tg.innerHTML=`<button class="backbtn" style="display:inline-block;margin:0" id="c4btn">${c4mode==='fy'?'switch to quarterly':'switch to FY'}</button>`;
+    document.getElementById('c4btn').onclick=()=>{c4mode=c4mode==='fy'?'q':'fy';drawC4(k);};
+  } else { tg.innerHTML=''; c4mode='fy'; }
+  drawC4(k);
+}
+function drawC4(k){
+  const f=D.fin[k];
+  if(c4chart){c4chart.destroy();charts=charts.filter(x=>x!==c4chart);}
+  const btn=document.getElementById('c4btn'); if(btn) btn.textContent=c4mode==='fy'?'switch to quarterly':'switch to FY';
+  if(c4mode==='q'&&(f.q||[]).length){
+    const qs=f.q.filter(x=>x.ndcf!=null||x.rev_ops!=null||x.rev!=null||x.pat!=null);
+    c4chart=new Chart(c('c4'),{type:'bar',data:{labels:qs.map(x=>x.q),datasets:[
+      {label:'Revenue from operations (qtr)',data:qs.map(x=>x.rev_ops??x.rev),backgroundColor:'rgba(69,181,181,.85)'},
+      {label:'PAT — profit after tax (qtr)',data:qs.map(x=>x.pat),backgroundColor:'rgba(127,180,217,.85)'},
+      {label:'NDCF (qtr)',data:qs.map(x=>x.ndcf),backgroundColor:C.grn}]},
+     options:{...base(),scales:{x:{grid:{display:false},ticks:{maxTicksLimit:14}},y:{title:{display:true,text:'₹ crore'}}},
+     plugins:{...base().plugins,tooltip:{callbacks:{label:it=>it.parsed.y!=null?it.dataset.label+': '+inr(it.parsed.y)+' cr':'',
+       footer:its=>{const x=qs[its[0].dataIndex];const bits=[];
+         if(x.pat==null) bits.push('PAT not extractable from this quarter’s filing (scanned)');
+         else if(x.pat<0) bits.push('note: PAT negative — one-off deferred-tax / MAT charge this quarter');
+         if(x.rev_ops==null&&x.rev!=null) bits.push('revenue = stored quarterly total');
+         if(x.est) bits.push('note: '+x.est);
+         return bits.join('\n');}}}}}});
+    charts.push(c4chart);
+    const patMissing=qs.some(x=>x.pat==null);
+    document.getElementById('c4note').textContent='Quarterly: revenue from operations · PAT (profit after tax) · NDCF per quarter, consolidated'+(patMissing?' — some PAT bars blank where the filing was a scan':'')+'.';
+    return;
+  }
+  const rr=f.rev_rental||[], rm=f.rev_maint||[];
+  const ix=y=>f.years.indexOf(y);
+  const hasRev=y=>{const i=ix(y);return rr[i]!=null||rm[i]!=null;};
+  const yrs=f.years.filter(y=>hasRev(y));                       // only FYs whose revenue is filed
+  const dropped=f.years.filter((y,i)=>f.ndcf[i]!=null&&!hasRev(y));  // NDCF exists but revenue not yet available
+  c4chart=new Chart(c('c4'),{type:'bar',data:{labels:yrs.map(y=>y.replace('20','')),datasets:[
+    {label:'Rental income',data:yrs.map(y=>rr[ix(y)]),backgroundColor:'rgba(69,181,181,.8)',stack:'rev'},
+    {label:'Maintenance income',data:yrs.map(y=>rm[ix(y)]),backgroundColor:'rgba(69,181,181,.35)',stack:'rev'},
+    {label:'NDCF',data:yrs.map(y=>f.ndcf[ix(y)]),backgroundColor:C.grn,stack:'ndcf'}]},
+   options:{...base(),scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,title:{display:true,text:'₹ crore'}}},
+   plugins:{...base().plugins,tooltip:{callbacks:{label:it=>it.dataset.label+': '+inr(it.parsed.y)+' cr',
+     footer:its=>{const y=yrs[its[0].dataIndex],i=ix(y);
+       return (rr[i]!=null&&rm[i]!=null)?('Rental+Maint total: '+inr((rr[i]||0)+(rm[i]||0))+' cr'):'';}}}}}});
+  charts.push(c4chart);
+  document.getElementById('c4note').textContent='FY: rental + maintenance income (FS revenue note) vs NDCF. Toggle for quarterly (revenue from ops + PAT).'+(dropped.length?' '+dropped.join(', ')+' omitted — annual revenue breakdown not yet available in filings.':'');
+}
+
+/* ---------- chart 5 ---------- */
+let c5mode='q', c5chart=null;
+function chart5(k){
+  const f=D.fin[k];
+  const hasQ=(f.q||[]).some(x=>x.ndcf!=null);
+  const tg=document.getElementById('c5toggle');
+  if(tg){
+    if(hasQ){
+      tg.innerHTML=`<button class="backbtn" style="display:inline-block;margin:0" id="c5btn"></button>`;
+      document.getElementById('c5btn').onclick=()=>{c5mode=c5mode==='q'?'fy':'q';drawC5(k);};
+    } else { tg.innerHTML=''; }
+  }
+  drawC5(k);
+}
+function drawC5(k){
+  const f=D.fin[k];
+  const hasQ=(f.q||[]).some(x=>x.ndcf!=null);
+  if(c5chart){c5chart.destroy();charts=charts.filter(x=>x!==c5chart);}
+  const btn=document.getElementById('c5btn'); if(btn) btn.textContent=c5mode==='q'?'switch to FY':'switch to quarterly';
+  if(c5mode==='q'&&hasQ){
+    // GAV step: FY GAV points + half-yearly assets-at-FV marks
+    const gpts=f.years.map((y,i)=>({ts:fyTs(y),v:f.gav[i]})).filter(p=>p.v!=null);
+    f.q.forEach(x=>{ if(x.assets_fv!=null) gpts.push({ts:perTs(x.per),v:x.assets_fv}); });
+    gpts.sort((a,b)=>a.ts-b.ts);
+    const gavAt=ts=>{let v=null;for(const p of gpts){if(p.ts<=ts+15*864e5)v=p.v;}return v||(gpts[0]&&gpts[0].v);};
+    const qs=f.q.filter(x=>x.ndcf!=null);
+    const yl=qs.map(x=>{const g=gavAt(perTs(x.per));return g?+(400*x.ndcf/g).toFixed(2):null;});
+    c5chart=new Chart(c('c5'),{type:'line',data:{labels:qs.map(x=>x.q),datasets:[
+      {label:'Annualised NDCF / GAV % (quarterly)',data:yl,borderColor:C.gold,backgroundColor:'rgba(168,218,220,.12)',fill:true,pointRadius:3,pointBackgroundColor:C.gold}]},
+     options:{...base(),scales:{x:{grid:{display:false},ticks:{maxTicksLimit:14}},y:{title:{display:true,text:'%'},grace:'15%'}},
+     plugins:{...base().plugins,tooltip:{callbacks:{
+       label:it=>{const x=qs[it.dataIndex];return ['Annualised yield: '+it.parsed.y+'%','NDCF '+inr(x.ndcf)+' cr ×4 / GAV '+inr(gavAt(perTs(x.per)))+' cr'];}}}}}});
+    charts.push(c5chart);
+    return;
+  }
+  const yrs=f.years.filter((y,i)=>f.ndcf[i]!=null&&f.gav[i]);
+  const yl=yrs.map(y=>{const i=f.years.indexOf(y);return +(100*f.ndcf[i]/f.gav[i]).toFixed(2);});
+  c5chart=new Chart(c('c5'),{type:'line',data:{labels:yrs.map(y=>y.replace('20','')),datasets:[
+    {label:'NDCF / GAV % (FY)',data:yl,borderColor:C.gold,backgroundColor:'rgba(168,218,220,.12)',fill:true,pointRadius:4,pointBackgroundColor:C.gold}]},
+   options:{...base(),scales:{x:{grid:{display:false}},y:{title:{display:true,text:'%'},grace:'15%'}},
+   plugins:{...base().plugins,tooltip:{callbacks:{label:it=>it.parsed.y+'%'}}}},
+   plugins:[{id:'yl',afterDatasetsDraw(ch){const ctx=ch.ctx,mt=ch.getDatasetMeta(0);
+     ctx.save();ctx.font='600 10px sans-serif';ctx.textAlign='center';ctx.fillStyle=C.gold;
+     mt.data.forEach((el,i)=>ctx.fillText(yl[i]+'%',el.x,el.y-10));ctx.restore();}}]});
+  charts.push(c5chart);
+}
+
+/* ---------- chart 6 ---------- */
+let capChart=null;
+function chart6(k){
+  const f=D.fin[k];
+  let li=-1; f.years.forEach((y,i)=>{if(f.gross_debt[i]!=null&&f.networth[i]!=null)li=i;});
+  const back=document.getElementById('capback');
+  const pie=()=>{
+    back.style.display='none';
+    if(capChart){capChart.destroy();charts=charts.filter(x=>x!==capChart);}
+    const d=f.gross_debt[li],e=f.networth[li],t=d+e;
+    capChart=new Chart(c('c6'),{type:'doughnut',
+     data:{labels:[`Debt ${(100*d/t).toFixed(1)}%`,`Equity (net worth) ${(100*e/t).toFixed(1)}%`],
+       datasets:[{data:[d,e],backgroundColor:[C.red,C.acc],borderColor:'#1a2332',borderWidth:3}]},
+     options:{maintainAspectRatio:false,
+       onClick:()=>bars(),
+       plugins:{legend:{position:'bottom'},title:{display:true,text:f.years[li]+' — total capital '+inr(t)+' cr'},
+         tooltip:{callbacks:{label:it=>' '+inr(it.parsed)+' cr'}}}}});
+    charts.push(capChart);
+  };
+  const bars=()=>{
+    back.style.display='inline-block';
+    if(capChart){capChart.destroy();charts=charts.filter(x=>x!==capChart);}
+    const yrs=f.years.filter((y,i)=>f.gross_debt[i]!=null&&f.networth[i]!=null);
+    const dd=yrs.map(y=>{const i=f.years.indexOf(y);return +(100*f.gross_debt[i]/(f.gross_debt[i]+f.networth[i])).toFixed(1);});
+    const ee=dd.map(v=>+(100-v).toFixed(1));
+    capChart=new Chart(c('c6'),{type:'bar',
+     data:{labels:yrs.map(y=>y.replace('20','')),datasets:[
+      {label:'Debt % of capital',data:dd,backgroundColor:C.red,stack:'s'},
+      {label:'Equity % of capital',data:ee,backgroundColor:C.acc,stack:'s'}]},
+     options:{...base(),scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,max:100,title:{display:true,text:'%'}}},
+      plugins:{...base().plugins,tooltip:{callbacks:{label:it=>{
+        const i=f.years.indexOf(yrs[it.dataIndex]);
+        const abs=it.dataset.label.startsWith('Debt')?f.gross_debt[i]:f.networth[i];
+        return it.dataset.label+': '+it.parsed.y+'% ('+inr(abs)+' cr)';}}}}}});
+    charts.push(capChart);
+  };
+  back.onclick=pie;
+  pie();
+}
+
+/* ---------- SPV table + annexure modal ---------- */
+function spvTable(k){
+  const rows=D.spv[k]||[];
+  const tot=rows.reduce((s,a)=>s+(a.value_cr||0),0);
+  // group assets by SPV (preserve first-seen order)
+  const groups=[];
+  rows.forEach((a,i)=>{
+    const key=(a.spv||'–').trim();
+    let g=groups.find(x=>x.spv===key);
+    if(!g){g={spv:key,assets:[]};groups.push(g);}
+    g.assets.push({...a,_i:i});
+  });
+  let h=`<table><thead><tr><th>SPV / holding entity</th><th>Asset</th><th>Type · City</th>
+    <th class="r">Leasable msf</th><th class="r">Value (NPV, ₹ cr)</th><th class="r">% of portfolio FV</th><th class="r">Annexure</th></tr></thead><tbody>`;
+  for(const g of groups){
+    const gv=g.assets.reduce((s,a)=>s+(a.value_cr||0),0);
+    g.assets.forEach((a,j)=>{
+      const secs=(ANNEX[k]&&ANNEX[k][a.asset])||[];
+      const np=annexPages(k, a.asset, secs).length;
+      h+=`<tr class="assetrow" data-i="${a._i}">`;
+      if(j===0) h+=`<td rowspan="${g.assets.length}" class="spvcell"><b title="${g.spv}">${g.spv}</b>
+        ${g.assets.length>1?`<div class="spvsub">${g.assets.length} assets · ${inr(gv)} cr · ${(100*gv/tot).toFixed(1)}%</div>`:''}</td>`;
+      h+=`<td class="assetname" title="${a.asset}"><b>${a.asset}</b></td>
+        <td>${a.type||''} · ${a.city||''}</td>
+        <td class="r">${a.leasable_msf!=null?(+a.leasable_msf).toFixed(1):'–'}</td>
+        <td class="r">${a.value_cr!=null?inr(a.value_cr):'–'}</td>
+        <td class="r">${a.value_cr!=null?(100*a.value_cr/tot).toFixed(2)+'%':'–'}</td>
+        <td class="r">${np?np+' pages ↗':'–'}</td></tr>`;
+    });
+  }
+  h+=`<tr class="total"><td colspan="4">Total</td><td class="r">${inr(tot)}</td><td class="r">100.00%</td><td></td></tr></tbody></table>
+      <div class="hint">NPV = valuer market value (DCF). Click an asset row to open the valuation-report pages for that asset. Extracted text is shown below the source pages for quick scanning.</div>`;
+  const f=D.fin[k]; let gav=null; f.years.forEach((y,i)=>{if(f.gav[i]!=null)gav=f.gav[i];});
+  if(gav&&Math.abs(tot-gav)/gav>0.05)
+    h+=`<div class="hint" style="color:var(--gold)">⚠ Asset-list total (${inr(tot)} cr) differs from headline GAV (${inr(gav)} cr) — tracker may be missing recent acquisitions or uses an earlier valuation date.</div>`;
+  const box=document.getElementById('spvtbl'); box.innerHTML=h;
+  box.querySelectorAll('tr.assetrow').forEach(tr=>{
+    tr.onclick=()=>openAnnex(k, rows[+tr.dataset.i]);
+  });
+}
+
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const JUNK=/\.{4,}|…|^—|^\s*$|^Page \d+|^\d{1,3}$|Registered Valuer|IBBI\/|^Source:/;
+function cleanTable(rows){
+  // drop TOC/junk rows, ghost columns, trailing empties
+  let R=rows.filter(r=>!JUNK.test(r.join(' ')) && r.some(c=>c&&c.length>1));
+  if(!R.length) return null;
+  const w=Math.max(...R.map(r=>r.length));
+  R=R.map(r=>{const x=[...r];while(x.length<w)x.push('');return x;});
+  const n=R.length;
+  const keep=[...Array(w).keys()].filter(j=>{
+    const filled=R.reduce((s,r)=>s+(r[j]?1:0),0);
+    return n>5 ? filled>0.15*n : filled>0;
+  });
+  if(!keep.length) return null;
+  R=R.map(r=>keep.map(j=>r[j]));
+  return R.length?R:null;
+}
+const LBL=/([A-Z][A-Za-z ()\/&'’-]{2,32}):\s+/g;
+function splitRunon(t){
+  // 'Property Name: X Property Address: Y ...' -> [[label,value],...] or null
+  const parts=[...t.matchAll(LBL)];
+  if(parts.length<2) return null;
+  const rows=[];
+  if(parts[0].index>4) rows.push(['', t.slice(0,parts[0].index).trim()]);
+  for(let i=0;i<parts.length;i++){
+    const end=i+1<parts.length?parts[i+1].index:t.length;
+    rows.push([parts[i][1], t.slice(parts[i].index+parts[i][0].length, end).trim()]);
+  }
+  return rows.filter(r=>r[1]);
+}
+function stitchTables(secs){
+  // merge consecutive tbl fragments of equal width when the follower starts with a
+  // data row (pure-number cell) — certificates fragment header/rows into 1-row tables
+  const out=[];
+  const isNum=c=>/^-?[\d,]+(?:\.\d+)?%?$/.test(c.trim());
+  for(const it of secs){
+    const prev=out[out.length-1];
+    if(it.t==='tbl'&&prev&&prev.t==='tbl'){
+      const w1=Math.max(...prev.rows.map(r=>r.length)), w2=Math.max(...it.rows.map(r=>r.length));
+      if(w1===w2&&it.rows[0].some(isNum)){ prev.rows=prev.rows.concat(it.rows); continue; }
+    }
+    out.push(it.t==='tbl'?{t:'tbl',rows:[...it.rows]}:it);
+  }
+  return out;
+}
+function renderAnnexItems(secs){
+  secs=stitchTables(secs);
+  let h='', lastH='';
+  // pre-pass: suppress tables that are exact or near-subset repeats of a larger table
+  // for the same asset (certificate/section overlap, page-spanning parse fragments)
+  const cleaned=secs.map(it=>it.t==='tbl'?cleanTable(it.rows):null);
+  const sigsets=cleaned.map(R=>R?new Set(R.map(r=>JSON.stringify(r))):null);
+  const suppress=new Set();
+  for(let i=0;i<cleaned.length;i++){
+    if(!cleaned[i])continue;
+    for(let j=0;j<cleaned.length;j++){
+      if(i===j||!cleaned[j]||suppress.has(j))continue;
+      const a=sigsets[i],b=sigsets[j];
+      if(a.size<b.size){
+        let hit=0;for(const s of a)if(b.has(s))hit++;
+        if(hit>=Math.max(2,Math.ceil(0.75*a.size))){suppress.add(i);break;}
+      }else if(a.size===b.size&&j<i){
+        let hit=0;for(const s of a)if(b.has(s))hit++;
+        if(hit===a.size){suppress.add(i);break;}
+      }
+    }
+  }
+  const renderPara=t=>{
+    if(JUNK.test(t)||t.length<12) return '';
+    // dense numeric-run paragraphs (flattened projection rows) -> monospace block
+    const numtok=(t.match(/[\d,]+(?:\.\d+)?%?/g)||[]).length;
+    if(numtok>=8 && numtok>(t.split(/\s+/).length*0.45))
+      return `<pre class="numrun">${esc(t)}</pre>`;
+    const rr=splitRunon(t);
+    if(rr) return '<div class="twrap"><table class="def"><tbody>'+rr.map(([l,v])=>
+        `<tr><td>${esc(l)}</td><td>${v.length>240?`<div class="clamp">${esc(v)}</div>`:esc(v)}</td></tr>`).join('')+'</tbody></table></div>';
+    // flattened table rows inside prose: pull runs of 5+ numeric tokens into monospace blocks
+    const parts=t.split(/((?:-?[\d,]+(?:\.\d+)?%?\s+){4,}-?[\d,]+(?:\.\d+)?%?)/);
+    if(parts.length>1)
+      return parts.map((s,i)=>{ s=s.trim(); if(!s) return '';
+        return i%2 ? `<pre class="numrun">${esc(s)}</pre>` : `<p>${esc(s)}</p>`; }).join('');
+    return `<p>${esc(t)}</p>`;
+  };
+  for(const [ix,it] of secs.entries()){
+    if(it.t==='pg') h+=`<div class="mpg">report page ${it.x}</div>`;
+    else if(it.t==='h'){
+      const t=it.x.trim();
+      if(JUNK.test(t)||t===lastH) continue;
+      lastH=t;
+      // leaked data rows misclassified as headings -> paragraph pipeline, not bold h4
+      const hnum=(t.match(/[\d,]+(?:\.\d+)?%?/g)||[]).length;
+      if(hnum>=3){ h+=renderPara(t); continue; }
+      h+=`<h4>${esc(t)}</h4>`;
+    }
+    else if(it.t==='p'){
+      const t=it.x.trim();
+      // fused table-intro prose: split after each "… table below:" / "… as follows:" so each
+      // intro renders as its own paragraph and any flattened table tail gets re-evaluated
+      const segs=t.split(/(?<=(?:table below|table above|as follows|find below[\w\s()–-]{0,80})\s{0,2}[:：])\s+/i);
+      for(const s of segs) h+=renderPara(s.trim());
+    }
+    else if(it.t==='tbl'){
+      const R=cleaned[ix];
+      if(!R||suppress.has(ix)) continue;
+      const cols=R[0].length;
+      const hdr=R[0], body=R.slice(1);
+      const isHdr=body.length>0 && hdr.filter(c=>c).length>=2 && !/\d{3}/.test(hdr.join(''));
+      const isDef=cols===2 && R.filter(r=>/[:：]\s*$/.test(r[0])).length>R.length/3;
+      const cls=(cols>=6?'wide':'')+(isDef?' def':'');
+      // rows with very long narrative cells become full-width label+paragraph blocks (not table rows)
+      const isLong=r=>r.some(c=>c.length>240);
+      const fixCell=c=>{
+        let t=c.replace(/[:：]\s*$/,'');
+        // fused mini-table cell: break line before capitalized groups that follow numbers/%
+        const nums=(t.match(/\d[\d,]*\.?\d*/g)||[]).length;
+        if(t.length>60&&nums>=2) t=t.replace(/(?<=[\d%\)\.]) (?=[A-Z(])/g,'\n');
+        return esc(t).replace(/\n/g,'<br>');
+      };
+      const rowHtml=r=>{
+        const sub=r[0]&&!r.slice(1).some(c=>c);
+        return `<tr${sub?' class="sub"':''}>`+r.map(c=>`<td>${fixCell(c)}</td>`).join('')+'</tr>';
+      };
+      const defRow=r=>{
+        const long=r.reduce((a,b)=>b.length>a.length?b:a,'');
+        const label=r[0]===long?'':r[0].replace(/[:：]\s*$/,'');
+        const rest=r.filter(c=>c!==long&&c!==r[0]&&c).join(' · ');
+        return `<div class="defrow">${label?`<span class="dl2">${esc(label)}</span>`:''}<div class="clamp">${esc(long)}${rest?' — '+esc(rest):''}</div></div>`;
+      };
+      let seg=[], parts=[];
+      const rows2=(isHdr&&!isDef)?body:R;
+      for(const r of rows2){
+        if(isLong(r)){ if(seg.length){parts.push({t:'rows',rows:seg});seg=[];} parts.push({t:'def',row:r}); }
+        else seg.push(r);
+      }
+      if(seg.length) parts.push({t:'rows',rows:seg});
+      for(const p of parts){
+        if(p.t==='def'){ h+=defRow(p.row); continue; }
+        h+=`<div class="twrap"><table class="${cls.trim()}">`;
+        if(isHdr&&!isDef) h+='<thead><tr>'+hdr.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead>';
+        h+='<tbody>'+p.rows.map(rowHtml).join('')+'</tbody></table></div>';
+      }
+    }
+  }
+  return h;
+}
+function annexPages(k, asset, secs){
+  const mapped=(ANNEXURES[k]&&ANNEXURES[k][asset])||null;
+  const pages=(mapped&&mapped.length) ? mapped : [...new Set((secs||[]).filter(s=>s.t==='pg').map(s=>s.x))];
+  if(!pages.length || !secs.length) return pages;
+  const byPage={};
+  let cur=null;
+  for(const it of secs){
+    if(it.t==='pg'){cur=it.x; if(!byPage[cur]) byPage[cur]=''; continue;}
+    if(!cur) continue;
+    if(it.t==='tbl') byPage[cur]+=' '+it.rows.flat().join(' ');
+    else byPage[cur]+=' '+(it.x||'');
+  }
+  const rawScore=p=>{
+    const t=(byPage[p]||'').toLowerCase();
+    if(/statement of assets|area statement|property name|subject property description|asset description|asset details|asset type|building area|leasable area|occupancy\s*(?:\(|:)|occupancy office|average occupancy|current effective rent|approved usage/.test(t)) return 0;
+    return 1;
+  };
+  const score={};
+  pages.forEach(p=>{score[p]=rawScore(p);});
+  // Keep page continuations with the statement page that precedes them.
+  for(let i=1;i<pages.length;i++){
+    const prev=pages[i-1], p=pages[i];
+    if(p===prev+1 && score[prev]===0) score[p]=0;
+  }
+  return [...pages].sort((a,b)=>(score[a]-score[b]) || (pages.indexOf(a)-pages.indexOf(b)));
+}
+function renderAnnexPages(k, asset, pages){
+  if(!pages.length) return '';
+  return '<div class="annexnote">Showing the original valuation-report pages for this asset, with statement and asset-description pages first. These page images are the source of truth; extracted text below is only for quick scanning.</div>'+
+    '<div class="annexpages">'+pages.map(p=>`
+      <div class="annexpage">
+        <div class="pgcap"><span>Report page ${p}</span><span>${esc(asset)}</span></div>
+        <img src="img/annex/${k}/p${p}.jpg" alt="${esc(asset)} valuation report page ${p}" loading="lazy">
+      </div>`).join('')+'</div>';
+}
+function openAnnex(k, a){
+  const secs=(ANNEX[k]&&ANNEX[k][a.asset])||[];
+  const imgs=(window.ANNEX_IMAGES&&ANNEX_IMAGES[k]&&ANNEX_IMAGES[k][a.asset])||null;
+  const pages=annexPages(k, a.asset, secs);
+  document.getElementById('mttl').textContent=a.asset+'  ·  '+(a.spv||'');
+  const val=(LINKS[k]||[]).find(l=>l.type==='Valuation report'&&l.latest);
+  // image mode: keep the header clean (source line goes to the bottom of the body instead)
+  document.getElementById('msrc').innerHTML=(imgs&&imgs.length)?'':
+    ('Parsed from: '+esc(VALREP[k])+(pages.length?' · pages '+pages.join(', '):'')+
+    (val?` · <a href="${val.url}" target="_blank" rel="noopener" style="color:var(--acc)">open source PDF ↗</a>`:''));
+  const st=document.getElementById('mstats');
+  const fld=(l,v)=>v!=null&&v!==''?`<div><div class="dl">${l}</div><div class="dv">${v}</div></div>`:'';
+  st.innerHTML =
+    fld('Market value', a.value_cr!=null?inr(a.value_cr)+' cr':null)+
+    fld('Cap rate', a.cap_rate!=null?(100*a.cap_rate).toFixed(2)+'%':null)+
+    fld('Discount rate', a.disc_rate!=null?(100*a.disc_rate).toFixed(2)+'%':null)+
+    fld('Market rent', a.mkt_rent!=null?'₹'+a.mkt_rent+'/sf/mo':null)+
+    fld('In-place rent', a.inplace_rent!=null?'₹'+a.inplace_rent+'/sf/mo':null)+
+    fld('Occupancy', a.occ!=null?(100*a.occ).toFixed(0)+'%':null)+
+    fld('WALE', a.wale!=null?a.wale+' yrs':null)+
+    fld('Leasable', a.leasable_msf!=null?a.leasable_msf+' msf':null);
+  const b=document.getElementById('mbody');
+  if(imgs&&imgs.length){
+    // Embassy: cropped data-table images only — annexure cash-flow tables first (parsed text kept in annexdata.js but not rendered)
+    const pgList=[...new Set(imgs.map(i=>i.page))].sort((x,y)=>x-y).join(', ');
+    const srcLine='<div style="font-size:12px;color:var(--mut);border-top:1px solid var(--line);margin-top:16px;padding-top:12px">Data tables from: '+esc(VALREP[k])+' · pages '+pgList+
+      (val?` · <a href="${val.url}" target="_blank" rel="noopener" style="color:var(--acc)">open source PDF ↗</a>`:'')+'</div>';
+    b.innerHTML='<div class="annexnote">Data tables snipped directly from the valuation report — annexure cash-flow tables shown first.</div>'+
+      '<div class="annexpages">'+imgs.map(im=>`
+        <div class="annexpage">
+          <div class="pgcap"><span>${esc(im.cap||'')}</span></div>
+          <img src="${im.src}" alt="${esc(a.asset)} — data table" loading="lazy">
+        </div>`).join('')+'</div>'+srcLine;
+  } else {
+    const extracted=secs.length ? renderAnnexItems(secs) : '';
+    b.innerHTML = pages.length
+      ? renderAnnexPages(k, a.asset, pages)+(extracted?'<div class="extracthead">Extracted text and tables</div>'+extracted:'')
+      : extracted
+      ? '<div class="extracthead">Extracted text and tables</div>'+extracted
+      : '<div class="missing">No annexure content parsed for this asset yet.</div>';
+  }
+  document.getElementById('modal').classList.add('open');
+  b.scrollTop=0;
+}
+document.getElementById('mclose').onclick=()=>document.getElementById('modal').classList.remove('open');
+document.getElementById('mbody').addEventListener('click',e=>{
+  const cl=e.target.closest('.clamp'); if(cl) cl.classList.toggle('open');
+});
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')e.target.classList.remove('open');});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('modal').classList.remove('open');});
+
+/* ---------- structure (native, data-driven) ---------- */
+function structure(k){
+  const s=STRUCT[k], w=document.getElementById('structwrap');
+  if(k==='embassy'){
+    w.innerHTML=`<div class="st-wrap">
+      <img src="img/structure_embassy.png" alt="Embassy Office Parks REIT structure" style="display:block;width:100%;height:auto">
+      <div class="st-note" style="margin-top:10px">
+        <b>Notes.</b> Blackstone (former sponsor) fully exited in Dec 2023; Embassy Group (sponsor) holds 8% of units and the public holds 92%.
+        SPVs are held 100% by the REIT via equity + shareholder debt unless a badge shows otherwise:
+        GLSP (GolfLinks Software Park) is a 50:50 JV, and MPPL holds 80% of Embassy Energy (EEPL) with the REIT holding the other 20% directly.
+      </div>
+    </div>`;
+    return;
+  }
+  if(!s){w.innerHTML='<div class="missing">No structure data.</div>';return;}
+  const cap=t=>`<div class="st-lvl"><span class="cap">${t}</span><span class="caprule"></span></div>`;
+  const conn=lab=>`<div class="st-conn"><div class="stem"></div><div class="arrow">▼</div>${lab?`<div class="lab">${lab}</div>`:''}</div>`;
+  w.innerHTML=`<div class="st-wrap">
+    ${cap('Level 1 · Unitholders')}
+    <div class="st-row">
+      ${s.sponsors.map(x=>`<div class="st-box${x.exited?' exited':''}"><div class="t">${x.exited?'Former sponsor':'Sponsor'}</div>${x.name}<br>
+        ${x.exited?`<span class="stk ex">exited ${x.exited}</span>${x.exit_note?`<div class="exnote">${x.exit_note}</div>`:''}`:`<span class="stk">holds ${x.stake} of units</span>`}</div>`).join('')}
+      <div class="st-box"><div class="t">Public</div>Unitholders${s.public_stake?`<br><span class="stk">hold ${s.public_stake} of units</span>`:''}</div>
+    </div>
+    ${conn('unitholding in the trust')}
+    ${cap('Level 2 · The Trust')}
+    <div class="st-mid">
+      <div class="st-box st-side"><div class="t">Trustee</div>${s.trustee}<div class="rel">acts on behalf of unitholders</div></div>
+      <div class="st-link"></div>
+      <div class="st-box trust">${D.meta[k].name}</div>
+      <div class="st-link"></div>
+      <div class="st-box st-side"><div class="t">Manager</div>${s.manager}<div class="rel">management services to trust & SPVs</div></div>
+    </div>
+    ${conn('equity + shareholder debt — 100% unless badged')}
+    ${cap('Level 3 · Asset SPVs / Holdcos')}
+    <div class="st-spvgrid">
+      ${s.spvs.map(v=>`<div class="st-spv ${v.stake<100?'part':''}">
+        <div class="nm"><span>${v.name}</span><span class="st-stake ${v.stake<100?'part':''}">${v.stake}%</span></div>
+        ${v.via?`<div class="st-via">${v.via}</div>`:''}
+        <div class="st-assets">${v.assets.join(' · ')}</div>
+      </div>`).join('')}
+    </div>
+    ${s.notes?`<div class="st-note">${s.notes}</div>`:''}
+  </div>`;
+}
+
+/* ---------- links ---------- */
+function linksSection(k){
+  const ls=LINKS[k]||[], w=document.getElementById('linkswrap');
+  if(!ls.length){w.innerHTML='<div class="missing">No links collected yet.</div>';return;}
+  const groups={};
+  ls.forEach(l=>{(groups[l.type]=groups[l.type]||[]).push(l);});
+  w.innerHTML=Object.entries(groups).map(([g,items])=>`
+    <div class="lgroup"><div class="gt">${g}s</div>
+      ${items.map(l=>`<a class="plink" href="${l.url}" target="_blank" rel="noopener">📄 ${l.label}${l.latest?' <span class="latest">LATEST</span>':''}</a>`).join('')}
+    </div>`).join('')+
+    (k==='krt'?'<div class="hint">KRT&#39;s first annual report (FY26) has no stable direct URL yet — its site renders documents via JavaScript.</div>':'')+
+    (k==='bagmane'?'<div class="hint">Bagmane listed 26 May 2026 — first earnings presentation/annual report not yet published.</div>':'');
+}
+
+/* ---------- helpers ---------- */
+function base(){return{maintainAspectRatio:false,interaction:{mode:'nearest',intersect:false},
+  plugins:{legend:{position:'bottom',labels:{boxWidth:12,boxHeight:12}}}};}
+function c(id){return document.getElementById(id).getContext('2d');}
+
+render('embassy');
+</script>
+</body>
+</html>

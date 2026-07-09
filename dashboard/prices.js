@@ -1,0 +1,33 @@
+window.LIVE_PRICES = {
+ "embassy": {
+  "price": 450.57,
+  "asof": "09 Jul 2026 10:42",
+  "src": "BSE"
+ },
+ "mindspace": {
+  "price": 488.5,
+  "asof": "09 Jul 2026 10:42",
+  "src": "BSE"
+ },
+ "brookfield": {
+  "price": 338.72,
+  "asof": "09 Jul 2026 10:42",
+  "src": "BSE"
+ },
+ "nexus": {
+  "price": 164.5,
+  "asof": "09 Jul 2026 10:42",
+  "src": "BSE"
+ },
+ "krt": {
+  "price": 115.61,
+  "asof": "09 Jul 2026 10:42",
+  "src": "BSE"
+ },
+ "bagmane": {
+  "price": 103.3,
+  "asof": "09 Jul 2026 10:42",
+  "src": "BSE"
+ },
+ "_asof": "09 Jul 2026 10:42"
+};
