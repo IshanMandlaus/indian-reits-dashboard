@@ -496,6 +496,20 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-09** — **v2 is now fully standalone; v1 `dashboard/` removed from the `v2` branch.**
+  Severed the two remaining couplings to v1: (1) `public/img` was a committed symlink →
+  `../../dashboard/img`; it is now a **real committed image folder** (918 files, ~207 MB) moved
+  in via `git mv` (pure rename — `.git` unchanged at ~179 MB, no blob bloat). (2) The static-data
+  converter no longer reads `../../dashboard/*.js`; the **11 static** `.js` sources are vendored
+  under `dashboard_v2/data-src/` and `convert-data.mjs` repoints there (`SRC_DIR`), with the **4
+  live datasets** (live-prices, bench-live, global-live, holdings) intentionally dropped from
+  `SOURCES` — they are owned by the refresh server, so `npm run data` can't clobber live data.
+  Then `git rm -r dashboard` (v1 stays frozen on `main`). Updated: `check-assets.mjs` (folder,
+  not symlink, wording), `.claude/launch.json` (dropped `v1-dashboard`), root `README.md`
+  (v2-only), root `.gitignore` (dead `dashboard/` rules → `dashboard_v2/public/img/**/_*`), and
+  this file's README/structure/pipeline sections. Note: older changelog entries below still
+  describe the symlink and `npm run data`-reads-`../dashboard` era — kept as historical record.
+  ⚠ Note the *earlier* Phase A entry's claim "`public/img` is a **symlink**" is now superseded.
 - **2026-07-09** — **Chart date labels now show the day (finance fix).** Daily time-series were
   labelling only month+year ("Jul 26"), ambiguous across ~22 trading days. `fmtM` (axis ticks)
   now includes the day ("08 Jul 26") and a new `fmtDay` ("08 Jul 2026") drives the **tooltips**,

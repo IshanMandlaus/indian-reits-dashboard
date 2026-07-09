@@ -21,13 +21,6 @@
       "runtimeArgs": ["run", "dev", "--", "--port", "5286", "--strictPort"],
       "port": 5286,
       "cwd": "dashboard_v2"
-    },
-    {
-      "name": "v1-dashboard",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["serve.py"],
-      "port": 8742,
-      "cwd": "dashboard"
     }
   ]
 }

@@ -14,7 +14,7 @@
 # Old/heavyweight copies & archives
 dashboard.zip
 
-# Raw slide/source assets (the derived PNGs under dashboard/img ARE tracked)
+# Raw slide/source assets (the derived PNGs under dashboard_v2/public/img ARE tracked)
 *.key
 *.pptx
 
@@ -29,9 +29,7 @@ __pycache__/
 .ipynb_checkpoints/
 
 # ─────────────────────────────────────────────────────────────
-# Scratch / diagnostic files created while iterating (not part of the app)
+# Scratch / diagnostic image exports in the app's image folder
+# (underscore-prefixed working files, not part of the app)
 # ─────────────────────────────────────────────────────────────
-dashboard/_regen.py
-dashboard/img/_*.png
-dashboard/img/_*.jpg
-dashboard/img/annex/**/_*.png
+dashboard_v2/public/img/**/_*

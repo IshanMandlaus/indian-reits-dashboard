@@ -1,16 +1,21 @@
 /**
- * Phase A data-layer converter.
+ * Static-data converter.
  *
- * The v1 dashboard ships its data as plain `.js` files that assign a single
- * `window.<GLOBAL> = <value>` literal. Several of them use JS object-literal
- * syntax (comments, unquoted keys, single quotes, trailing commas) rather than
- * strict JSON, so they must be *evaluated* in a sandbox — not JSON.parse'd.
+ * The static datasets ship as plain `.js` files (vendored under `data-src/`)
+ * that assign a single `window.<GLOBAL> = <value>` literal. Several use JS
+ * object-literal syntax (comments, unquoted keys, single quotes, trailing
+ * commas) rather than strict JSON, so they must be *evaluated* in a sandbox —
+ * not JSON.parse'd.
  *
- * This script reads each source file from ../dashboard, evaluates it in a
- * node:vm context with a stub `window`, then serialises the captured global to
- * public/data/<name>.json. Re-run whenever the v1 data changes:
+ * This script reads each source from `data-src/`, evaluates it in a node:vm
+ * context with a stub `window`, then serialises the captured global to
+ * public/data/<name>.json. Re-run whenever a static source changes:
  *
  *   npm run data
+ *
+ * NOTE: the four LIVE datasets (live-prices, bench-live, global-live, holdings)
+ * are owned by the npm refresh server (server/), not this script — so they are
+ * intentionally NOT listed here and are never overwritten by `npm run data`.
  */
 import vm from 'node:vm'
 import fs from 'node:fs'
@@ -18,13 +23,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const V1_DIR = path.resolve(__dirname, '../../dashboard')
+const SRC_DIR = path.resolve(__dirname, '../data-src')
 const OUT_DIR = path.resolve(__dirname, '../public/data')
 
 /** source file → [window global name, output json basename] */
 const SOURCES = [
   ['data.js', 'REIT_DATA', 'reit-data'],
-  ['prices.js', 'LIVE_PRICES', 'live-prices'],
   ['structures.js', 'REIT_STRUCTURES', 'structures'],
   ['annexures.js', 'ANNEXURES', 'annexures'],
   ['annexdata.js', 'ANNEXDATA', 'annexdata'],
@@ -33,15 +37,12 @@ const SOURCES = [
   ['val_hy.js', 'REIT_VAL_HY', 'val-hy'],
   ['blocks_live.js', 'BLOCKS_LIVE', 'blocks-live'],
   ['bench.js', 'BENCH', 'bench'],
-  ['bench_live.js', 'BENCH_LIVE', 'bench-live'],
   ['invit_data.js', 'INVIT', 'invit'],
   ['global_data.js', 'GLOBAL', 'global'],
-  ['global_live.js', 'GLOBAL_LIVE', 'global-live'],
-  ['holdings.js', 'HOLDINGS', 'holdings'],
 ]
 
 function convertOne(file, globalName) {
-  const src = fs.readFileSync(path.join(V1_DIR, file), 'utf8')
+  const src = fs.readFileSync(path.join(SRC_DIR, file), 'utf8')
   // Minimal browser-ish sandbox; these files only touch `window`.
   const sandbox = { window: {}, console }
   vm.createContext(sandbox)
