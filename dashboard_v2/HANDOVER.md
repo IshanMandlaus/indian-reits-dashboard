@@ -212,11 +212,35 @@ on a real DOM click, **not** Chart.js `options.onClick`.
 - **Reuse pattern (for future pages):** `<TimeSeriesChart>`, `<SecurityModal>`,
   `<Sparkline>`, and `src/lib/bench.ts` / `makeBenchCtx`.
 
-### Phase D — Refresh pipeline (NEXT — all 4 pages now wired)
-- Adapt `refresh_prices.py` / `refresh_market.py` / `refresh_global.py` to also emit
-  JSON into `public/data/`, or add a tiny endpoint the React refresh buttons call.
-- Re-enable a **scale-consistent** live-turnover merge in `makeBenchCtx` (currently
-  live turnover is intentionally not merged — see the Market data-accuracy note).
+### Phase D — Refresh pipeline
+**D1 — refresh → v2 JSON ✅ DONE (2026-07-09).** The three refresh buttons POST to
+`serve.py` (proxied in dev), which fetched fresh NSE/BSE + Yahoo data but only wrote
+the v1 `window.*` `.js` files — v2 reads `public/data/*.json`, so a refresh never
+reached it. Fix: `dashboard/_v2json.py` (`emit(basename, obj)`) is now called from
+each `write_*` function so `refresh_prices` → `live-prices.json`, `refresh_market` →
+`bench-live.json`, `refresh_global` → `global-live.json` are mirrored into
+`dashboard_v2/public/data/`. Guarded (try/except + dir check) so the v1 scripts still
+run standalone. The v2 `RefreshButton`s already `location.reload()` after the POST, and
+Vite dev serves the rewritten JSON fresh (verified: plain fetch returns new asof) — so
+no v2-code change was needed. Verified end-to-end in the browser (Market asof + Embassy
+₹446 update after resync). ⚠️ Refreshed `*-live.json` are committed (like v1's `.js`),
+so a refresh shows as a git data change — expected.
+
+**D2 — scale-consistent live turnover (NOT DONE — needs a real data source).** Live
+turnover is still intentionally NOT merged in `makeBenchCtx` (`src/lib/bench.ts` ~L94).
+The blocker is data-sourcing, not wiring: `refresh_market.py` computes each series'
+turnover as Yahoo `volume × close / 1e7` or NSE history `VALUE / 1e7`, but for the
+**indices** this is a different basis than the workbook (Tableau's NIFTY 50 turnover
+≈20,549 ₹cr = total traded value of all constituents; the live pull gives ≈609), and
+REIT turnover gets re-pulled back to 2019, shifting the rebase base. Merging it (as v1
+did) collapses the NIFTY 50 / REALTY moving-average lines — the bug fixed in Phase C.
+To enable it, `refresh_market.py` must emit **index turnover on the workbook basis**
+(NSE index total-traded-value, same units, not re-anchored) and REIT turnover appended
+without moving the window base, then re-verify against `REIT_Tableau_Ready_1.xlsx` +
+the docx exhibit (block-deal VOL INDEX ≈4,514). **Low value / high risk:** it only
+extends ONE chart family (volume/VOL-INDEX) past the workbook asof while prices are
+already live, and risks corrupting the workbook-verified volume charts. Recommend
+leaving disabled unless the user specifically wants live volume charts.
 
 ### Shared building blocks to extract early
 `<TimeSeriesChart>`, `<SecurityModal>`, `<DataTable>` (sortable), `<Sparkline>`,
@@ -305,6 +329,17 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-09** — **Phase D1 (refresh → v2 JSON) done.** Added `dashboard/_v2json.py`
+  and wired it into `refresh_prices` / `refresh_market` / `refresh_global` `write_*`
+  functions so every live refresh mirrors its output into
+  `dashboard_v2/public/data/{live-prices,bench-live,global-live}.json` (guarded; v1
+  scripts still run standalone). Fixes the dead refresh buttons — they wrote only the
+  v1 `.js` files, so v2 (which reads JSON) never saw fresh data. No v2-code change
+  needed: the `RefreshButton`s already reload, and Vite dev serves the rewritten JSON
+  fresh. Verified in the browser. **Remaining Phase D: D2** — re-enable scale-consistent
+  live turnover, which needs a real workbook-basis index-turnover source in
+  `refresh_market.py` (low value / high risk — see Phase D section; recommend leaving
+  disabled).
 - **2026-07-09** — **Reverted narrative chart titles + insight boxes (user request).**
   A prior experiment had (a) replaced every chart card title with a narrative
   "takeaway" headline (e.g. "Price orbits NAV — the premium/discount is the signal")
