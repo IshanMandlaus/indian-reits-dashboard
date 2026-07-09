@@ -239,8 +239,9 @@ To enable it, `refresh_market.py` must emit **index turnover on the workbook bas
 without moving the window base, then re-verify against `REIT_Tableau_Ready_1.xlsx` +
 the docx exhibit (block-deal VOL INDEX ≈4,514). **Low value / high risk:** it only
 extends ONE chart family (volume/VOL-INDEX) past the workbook asof while prices are
-already live, and risks corrupting the workbook-verified volume charts. Recommend
-leaving disabled unless the user specifically wants live volume charts.
+already live, and risks corrupting the workbook-verified volume charts. **User decided
+(2026-07-09): leave D2 disabled** — do not re-raise unless they ask for live volume
+charts. With D1 shipped and D2 intentionally deferred, **Phase D is complete.**
 
 ### Shared building blocks to extract early
 `<TimeSeriesChart>`, `<SecurityModal>`, `<DataTable>` (sortable), `<Sparkline>`,
