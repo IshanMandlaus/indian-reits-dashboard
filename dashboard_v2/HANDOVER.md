@@ -254,6 +254,89 @@ volume/VOL-INDEX turnover stays on workbook data by design. **Do NOT re-enable l
 turnover** (the user explicitly does not want the volume chart live). Phase D is
 **complete** as intended — treat D2 as won't-do, not deferred.
 
+### Phase E — npm-only live refresh (Node-in-Vite) + ONE global button — 📋 PLANNED, NOT STARTED
+**This is the next session's job. Approved plan, ready to build. Nothing implemented yet.**
+
+**Goal (from user):** make v2 stand on its own — **npm only, no Python, no v1**. Today
+refresh needs `dashboard/serve.py` (:8742) running alongside `npm run dev` (vite proxies
+`/refresh*` to it). Replace that with a **Vite plugin** exposing one `POST /api/refresh`,
+backed by **Node/TS ports** of the four Python fetchers, writing the same
+`public/data/*.json`. And collapse the **four** per-page refresh buttons into **ONE**
+global button in the top nav that refreshes everything.
+
+**The two "blockers" are solved, not traded off:**
+- **Yahoo reliability** (Python used `yfinance`/`curl_cffi`) → **`yahoo-finance2`** (npm) —
+  the maintained Node equivalent; handles Yahoo cookie+crumb+retry. `chart()` = OHLCV
+  history, `quote()` = price/currency/marketCap. Confirmed via docs it covers everything
+  the yfinance path produced.
+- **"Needs a server"** → the Vite plugin hooks **both** `configureServer` (dev) AND
+  `configurePreviewServer` (preview), so refresh works in `npm run dev` AND
+  `npm run build && npm run preview`. (Only a *pure static* deploy lacks it — same as
+  serve.py is dev-only today; not a regression.)
+
+**Full approved plan:** `~/.claude/plans/what-can-you-do-cheerful-eclipse.md` (embedded
+below in case that file is gone). Two Explore agents + one Plan agent validated it.
+
+**Build order & files (all new under `dashboard_v2/server/`):**
+1. **Config:** `npm i yahoo-finance2`; `package.json` add `"engines":{"node":">=20"}`;
+   `tsconfig.node.json` `include: ["vite.config.ts","server"]` (do NOT make a new
+   composite reference — these configs are `noEmit`, composite would conflict; just widen
+   include). Server modules import each other with **explicit `.ts` extensions**
+   (`module:"nodenext"`). `vite.config.ts`: delete the `proxy` block, add `refreshPlugin()`
+   to plugins, add `server.watch.ignored:['**/public/data/**']`.
+2. **`server/lib/io.ts`** — `resolveDataDir(config,isPreview)` (dev→`<publicDir>/data`,
+   preview→`<build.outDir>/data`), `writeJsonAtomic(dir,name,obj)` (write `*.json.tmp`
+   then `fs.rename` — avoids half-read + Vite reload race), `readJson`.
+3. **`server/lib/nse.ts`** — `createNseSession()`: GET `nseindia.com`, capture
+   `res.headers.getSetCookie()` into a jar, replay `Cookie`+`Referer`. **This is the
+   proven flow** — see the WORKING `dashboard/refresh_holdings.py` for the exact
+   warm-ups/referers each NSE endpoint needs.
+4. **`server/lib/yahoo.ts`** — wrap `yahoo-finance2`:
+   `yahooFinance.suppressNotices(['yahooSurvey','ripHistorical'])`, pass
+   `{validateResult:false}` (survive Yahoo schema drift). `chartSeries(sym,period1)`→
+   `{px:{date:close}, to:{date:volume*close/1e7}}`; `quoteOne(sym)`→`{price,ccy,mcap}`;
+   `avgVolume(sym)` (30d). Range→period1 (no `'max'` in chart): SENSEX now−6y, index
+   now−1y, reit/invit `2018-01-01`.
+5. **`server/fetchers/{prices,holdings,global,market}.ts`** — faithful ports of the four
+   `dashboard/refresh_*.py`. Each returns `{source,ok,asof,count,error?}` and writes its
+   JSON **only if it got data** (mirror the Python `has_data` guards → a failing source
+   keeps its cached file). Exact source cascades, symbol maps, and output shapes are in
+   the Python files AND in the plan. **`market.ts`: still WRITE `turnover_updates` for
+   shape parity even though `bench.ts` ignores it — do NOT change `bench.ts`.** `global.ts`
+   reads tickers from `global.json` (`rowSym`=`top5[k][i][3]` if string else `[1]`, per
+   `src/lib/global.ts`), not from v1's `global_data.js`.
+6. **`server/index.ts`** — `runAll(dataDir)`: `Promise.allSettled` two lanes — NSE lane
+   (one shared session, sequential prices→holdings) + Yahoo lane (sequential
+   market→global). Per-source try/catch; return the summary array.
+7. **`server/refreshPlugin.ts`** — tiny: registers middleware for `POST /api/refresh` on
+   both `configureServer`+`configurePreviewServer`; **lazy `await import('./index.ts')`**
+   inside the handler (keeps yahoo-finance2 out of the esbuild-bundled config). Respond
+   200 `{ok,results}`.
+8. **`src/components/layout/AppShell.tsx`** — add ONE `GlobalRefreshButton` after the
+   `flex-1 <nav>` (auto right-aligns): `useState` busy/failed, `POST /api/refresh`, on ok
+   `location.reload()`. Reuse the `bg-accent` button style from the old `RefreshButton`s.
+9. **Remove the 4 old buttons** + their `PageHeader actions` wiring + unused `useState`
+   imports: `RefreshButton` in `MarketPage.tsx`/`InvitsPage.tsx`/`GlobalPage.tsx`,
+   `RefreshHoldingsButton` in `DomesticReitsPage.tsx` (keep Domestic's `LIVE?._asof`
+   "Live prices:" span). Update stale "run serve.py" copy (UnitholdingPanel, InvitsPage
+   EmptyChart, MarketPage note, SecurityModal) to name the one top-nav ⟳ button.
+
+**Environment facts (verified this session):** Node **v23.2.0** (fetch + `getSetCookie`
+present, yahoo-finance2 needs v20+ ✓). `dashboard_v2` is `"type":"module"`, Vite 8,
+TS ~6.0. `@types/node ^24` already a devDep. `public/data/*.json` already ships to
+`dist/data/` (Vite copies public/). Data loader cache (`src/lib/data.ts`) is module-level
+→ `location.reload()` clears it (that's why the buttons reload).
+
+**Verify (dev, no serve.py running):** `npm i` → `npx tsc -b` + `npm run lint` clean →
+`npm run dev`, click ⟳ Refresh → `/api/refresh` 200 with per-source results, the 4
+live JSONs get new asof, page reloads, all 4 routes show fresh data (browser MCP, 0
+console errors). Then `npm run build && npm run preview` → button works there too.
+Confirm no `serve.py`/`:8742`/`/refresh*` refs remain in `dashboard_v2`.
+
+**Out of scope / do NOT touch:** `dashboard/` (v1 Python stays runnable standalone);
+`src/lib/bench.ts` turnover logic (still ignores `turnover_updates`); static datasets
+(still `npm run data` from the workbook — the button only refreshes the 4 live sources).
+
 ### Shared building blocks to extract early
 `<TimeSeriesChart>`, `<SecurityModal>`, `<DataTable>` (sortable), `<Sparkline>`,
 `<PieDrilldown>`, a `useReitData()` loader hook, and a central Chart.js theme
@@ -346,6 +429,48 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-09** — **Unitholding fetch confirmed LIVE + Phase E planned (npm-only refresh).**
+  (1) **The unitholding fetcher now pulls real live data** — the correct NSE endpoint was
+  discovered (the equities `corporate-share-holdings-master` is empty for REITs): use
+  **`api/corporate-unit-holdings-master?index=reits&symbol=<SYM>&issuer=<full REIT name>`**
+  (fields `asOnDate` / `sponsorGroupPer` / `publicHoldingPer`; response is
+  `{data:[...],msg}`). `dashboard/refresh_holdings.py` is updated to this and is the
+  **working reference** for the Node port (user ran it: all 6 REITs populated with full
+  quarter trends, e.g. Brookfield's sponsor drawdown 26→19%, KRT 78.56). The `(symbol,
+  issuer)` map and flexible field-parsing live in that file.
+  (2) **Phase E planned & approved** (see §6 Phase E): port all four refresh fetchers to
+  **Node/TypeScript inside a Vite plugin** (`server/` folder, `yahoo-finance2` for Yahoo),
+  exposing one `POST /api/refresh`, and replace the four per-page buttons with ONE global
+  top-nav button — so v2 runs npm-only with no Python/serve.py/v1. **Not started** —
+  next session builds it. Plan file: `~/.claude/plans/what-can-you-do-cheerful-eclipse.md`.
+  ⚠️ **Working tree at handover:** the unitholding feature (item below) is
+  **uncommitted** on `v2`; commit it first for a clean base before starting Phase E.
+- **2026-07-09** — **Unit-holding (shareholding) pattern per REIT — NEW.** Added a
+  compact "Unitholding pattern" panel at the top of the Domestic page (directly under
+  the REIT KPI header), per selected REIT: Sponsor & Sponsor Group vs Public as a
+  stacked bar + figures, plus a quarter-over-quarter sponsor-share trend (small-multiple
+  columns) when ≥2 quarters exist. Graceful empty state per REIT; a "seed" badge until
+  the first live refresh.
+  - **Fetch (runs on your machine — NSE blocks this sandbox):** `dashboard/refresh_holdings.py`
+    hits `GET /api/corporate-share-holdings-master?index=equities&symbol=<SYM>` (verified
+    schema: list of quarterly records, `pr_and_prgrp`/`public_val` as *strings*, `date`
+    = `DD-MMM-YYYY`), normalises to `{key:{symbol,quarters:[{date,label,sponsor,public,emp}]}}`
+    (newest-first, deduped, capped 8 qtrs), writes `holdings.js` + emits
+    `dashboard_v2/public/data/holdings.json` via `_v2json`. Same session/cookie pattern as
+    `refresh_prices.py`. Parsing unit-tested against a mock NSE record.
+  - **Refresh button:** "⟳ Refresh unitholding (NSE)" on the Domestic PageHeader → POST
+    `/refresh-holdings` (wired in `serve.py` + proxied in `vite.config.ts`); fails gracefully
+    to "run serve.py" like the other pages' buttons.
+  - **v2 wiring:** `holdings.js` added to `scripts/convert-data.mjs` (15/15 convert);
+    `Holdings`/`ReitHolding`/`HoldingQuarter` types in `src/types/data.ts`; `holdings`
+    added to the loader's `DatasetName`/`DatasetTypes`; component
+    `src/components/domestic/UnitholdingPanel.tsx`; integrated in `pages/DomesticReitsPage.tsx`.
+  - **Seed data:** `holdings.js` ships last-known **real, sourced, dated** filings (Embassy
+    7.69/92.31 Mar26 · Mindspace 66.60→67.29 Mar/May26 · Brookfield 26.59/73.41 Jun25 ·
+    Nexus 21/79 Dec24 · Bagmane 82.81/17.19 May26; KRT intentionally empty — no clean
+    sponsor-total sourced). Running the refresh replaces all of it with live NSE + full
+    trends. tsc + oxlint clean; all 3 panel states browser-verified (bar+figures, trend,
+    empty), 0 console errors; `holdings.json` ships in `dist/`.
 - **2026-07-09** — **Production-readiness pass (3 items, all done).**
   (1) **Production build verified.** `npm run build` → a fully working `dist/`: Vite 8
   follows the `public/img` symlink and copies all 926 image files (byte-identical,

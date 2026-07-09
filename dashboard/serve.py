@@ -16,9 +16,10 @@ sys.path.insert(0, HERE)
 import refresh_prices  # noqa: E402
 import refresh_market  # noqa: E402
 import refresh_blocks  # noqa: E402
+import refresh_holdings  # noqa: E402
 
 PORT = 8742
-REFRESH_PATHS = ("/refresh", "/refresh-market", "/refresh-global")
+REFRESH_PATHS = ("/refresh", "/refresh-market", "/refresh-global", "/refresh-holdings")
 
 LIBS = {
     "chart.umd.min.js":
@@ -75,7 +76,15 @@ class Handler(SimpleHTTPRequestHandler):
             import importlib
             importlib.reload(refresh_market)
             importlib.reload(refresh_prices)
-            if self.path == "/refresh-global":
+            if self.path == "/refresh-holdings":
+                importlib.reload(refresh_holdings)
+                out = refresh_holdings.fetch_all()
+                if not refresh_holdings.has_data(out):
+                    self._send_json(503, {"error": "No unit-holding data fetched; keeping cached data."})
+                    return
+                refresh_holdings.write_holdings(out)
+                out = {"ok": True, "asof": out.get("_asof")}
+            elif self.path == "/refresh-global":
                 import refresh_global
                 importlib.reload(refresh_global)
                 out = refresh_global.fetch_all()

@@ -17,6 +17,7 @@ import { SpvTable } from '../components/domestic/SpvTable'
 import { Structure } from '../components/domestic/Structure'
 import { LinksSection } from '../components/domestic/LinksSection'
 import { AnnexModal } from '../components/domestic/AnnexModal'
+import { UnitholdingPanel } from '../components/domestic/UnitholdingPanel'
 
 setupCharts()
 
@@ -31,6 +32,7 @@ export function DomesticReitsPage() {
   const structures = useDataset('structures')
   const links = useDataset('links')
   const annexures = useDataset('annexures')
+  const holdings = useDataset('holdings')
 
   const D = reit.data
   const LIVE = prices.data
@@ -69,9 +71,12 @@ export function DomesticReitsPage() {
         title="Domestic REITs"
         subtitle="Per-REIT deep dive — price vs NAV, distributions, AUM, capital structure, portfolio assets and trust structure."
         actions={
-          LIVE?._asof ? (
-            <span className="text-[11.5px] text-subtle">Live prices: {LIVE._asof}</span>
-          ) : undefined
+          <div className="flex items-center gap-3">
+            {LIVE?._asof && (
+              <span className="text-[11.5px] text-subtle">Live prices: {LIVE._asof}</span>
+            )}
+            <RefreshHoldingsButton />
+          </div>
         }
       />
 
@@ -105,6 +110,9 @@ export function DomesticReitsPage() {
         <Kpi label="latest reported NAV / unit" value={inr(nav, 2)} />
         {pd != null && <Badge tone={pd >= 0 ? 'pos' : 'neg'}>{pct(pd)} vs NAV</Badge>}
       </Card>
+
+      {/* Unit-holding pattern (Sponsor vs Public) for the selected REIT */}
+      <UnitholdingPanel holdings={holdings.data} k={k} />
 
       {/* Bento grid of the 9 sections */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -178,5 +186,33 @@ function Kpi({ label, value }: { label: string; value: string }) {
       <span className="text-[16px] font-semibold text-ink tnum">{value}</span>
       <span className="text-[11px] text-muted">{label}</span>
     </div>
+  )
+}
+
+/** Pulls the latest unit-holding pattern from NSE via serve.py, then reloads. */
+function RefreshHoldingsButton() {
+  const [busy, setBusy] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const refresh = async () => {
+    setBusy(true)
+    setFailed(false)
+    try {
+      const r = await fetch('/refresh-holdings', { method: 'POST' })
+      const j = await r.json()
+      if (j.error) throw new Error(j.error)
+      location.reload()
+    } catch {
+      setFailed(true)
+      setBusy(false)
+    }
+  }
+  return (
+    <button
+      onClick={refresh}
+      disabled={busy}
+      className="rounded-lg bg-accent px-3.5 py-2 text-[12px] font-semibold text-bg transition hover:bg-accent-strong disabled:opacity-50"
+    >
+      {busy ? 'Refreshing…' : failed ? '⟳ Refresh failed — run serve.py' : '⟳ Refresh unitholding (NSE)'}
+    </button>
   )
 }

@@ -37,6 +37,7 @@ const SOURCES = [
   ['invit_data.js', 'INVIT', 'invit'],
   ['global_data.js', 'GLOBAL', 'global'],
   ['global_live.js', 'GLOBAL_LIVE', 'global-live'],
+  ['holdings.js', 'HOLDINGS', 'holdings'],
 ]
 
 function convertOne(file, globalName) {

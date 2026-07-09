@@ -307,3 +307,22 @@ export interface GlobalLive {
   quotes: Record<string, GlobalQuote> // keyed by ticker, e.g. "0435.HK"
   hist: Record<string, DateMap>
 }
+
+// ─── holdings.js → HOLDINGS ─────────────────────────────────────────────────
+// Unit-holding (shareholding) pattern per REIT: Sponsor & Sponsor Group vs
+// Public, one entry per quarterly filing (most-recent-first).
+export interface HoldingQuarter {
+  date: string // ISO as-on date, e.g. "2026-03-31"
+  label: string // display quarter, e.g. "Mar 2026"
+  sponsor: number // Sponsor & Sponsor Group %
+  public: number // Public %
+  emp: number // Employee-trust % (0 for all current REITs)
+}
+export interface ReitHolding {
+  symbol: string // NSE symbol, e.g. "EMBASSY"
+  quarters: HoldingQuarter[]
+}
+export type Holdings = ByReit<ReitHolding> & {
+  _asof: string
+  _seed?: boolean // true while showing seed data, before the first live refresh
+}

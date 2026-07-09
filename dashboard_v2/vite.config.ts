@@ -12,6 +12,7 @@ export default defineConfig({
       '/refresh': 'http://localhost:8742',
       '/refresh-market': 'http://localhost:8742',
       '/refresh-global': 'http://localhost:8742',
+      '/refresh-holdings': 'http://localhost:8742',
     },
   },
 })
