@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "v2-dashboard",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5273,
+      "cwd": "dashboard_v2"
+    },
+    {
+      "name": "v1-dashboard",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["serve.py"],
+      "port": 8742,
+      "cwd": "dashboard"
+    }
+  ]
+}
