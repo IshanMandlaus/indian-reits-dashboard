@@ -95,19 +95,23 @@ browser.
 
 ## 6. Remaining work (priority order)
 
-### Phase A — Data layer (do first; unblocks everything)
-- Write a Node/TS conversion script that reads each v1 `.js` global by evaluating it
-  in a sandbox and serializing the `window.*` object to JSON. Source files in
-  `../dashboard/`: `data.js`→`REIT_DATA`, `prices.js`→`LIVE_PRICES`,
-  `structures.js`→`REIT_STRUCTURES`, `annexures.js`→`ANNEXURES`,
-  `annexdata.js`→`ANNEXDATA`, `annex_images.js`→`ANNEX_IMAGES`, `links.js`→`REIT_LINKS`,
-  `val_hy.js`→`REIT_VAL_HY`, `blocks_live.js`→`BLOCKS_LIVE`, `bench.js`→`BENCH`,
-  `bench_live.js`→`BENCH_LIVE`, `invit_data.js`→`INVIT`, `global_data.js`→`GLOBAL`,
-  `global_live.js`→`GLOBAL_LIVE`.
-- Output large files to `public/data/*.json` (fetched on demand); small ones can be
-  imported. Add **TypeScript types** for each shape (see §8).
-- Copy the image assets the annexure modal needs: `../dashboard/img/annex/**` and
-  `../dashboard/img/structure_*.png` into `public/` (or symlink during build).
+### Phase A — Data layer ✅ DONE (2026-07-09)
+- **Converter:** `scripts/convert-data.mjs` (run `npm run data`). Sandbox-evaluates
+  each v1 `.js` global via `node:vm` with a stub `window` and serializes to
+  `public/data/<name>.json`. All 14 sources convert; re-run whenever v1 data changes.
+- **Output:** `public/data/*.json` (committed, ~2.9 MB total) — `reit-data`,
+  `live-prices`, `structures`, `annexures`, `annexdata`, `annex-images`, `links`,
+  `val-hy`, `blocks-live`, `bench`, `bench-live`, `invit`, `global`, `global-live`.
+- **Types:** `src/types/data.ts` — accurate shapes derived from the real JSON (note:
+  `REIT_DATA` also has `built` + `notes`; `mcap_breakdown`/`sector_breakdown` are
+  country-keyed objects, not arrays).
+- **Loader:** `src/lib/data.ts` — `loadData(name)` (typed, cached, in-flight-deduped,
+  honours `BASE_URL`) + `invalidateData()`. React hook: `src/lib/useDataset.ts`
+  → `useDataset('reit-data')` returns `{data, loading, error}`.
+- **Images:** `public/img` is a **symlink** → `../dashboard/img` (200 MB of annexure
+  images — not duplicated/committed). Verified Vite serves both JSON and symlinked
+  images (HTTP 200) in dev. ⚠️ **Production build must resolve this** — Rollup may not
+  follow the symlink on `vite build`; do a real copy or serve `img/` from a CDN.
 
 ### Phase B — Domestic REITs page (most complex; good end-to-end reference)
 9 sections per REIT (see §8 for data): (1) Price vs NAV + DPU bars, (2) Issuances vs
@@ -221,4 +225,9 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 - **2026-07-09** — Created `v2` branch. Scaffolded Vite+React+TS+Tailwind. Built refined
   dark design system, AppShell nav, UI primitives, formatters, and routed skeletons for
   all 4 pages. Verified in browser (:5273), typecheck clean. Commit `abfb4af`.
-  **Next:** Phase A (data layer).
+- **2026-07-09** — **Phase A (data layer) done.** Added `scripts/convert-data.mjs`
+  (`npm run data`) → all 14 v1 globals as `public/data/*.json`; TS types in
+  `src/types/data.ts`; cached loader `src/lib/data.ts` + hook `src/lib/useDataset.ts`;
+  `public/img` symlink to v1 images. tsc + oxlint clean; JSON & images verified served
+  in dev. **Next:** Phase B (Domestic REITs page) — start wiring `useDataset('reit-data')`
+  into `DomesticReitsPage`, and extract the shared `<TimeSeriesChart>` / Chart.js theme.
