@@ -9,12 +9,14 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppShell />,
+    HydrateFallback: () => null,
     children: [
       { index: true, element: <Navigate to="/domestic" replace /> },
       { path: 'domestic', element: <DomesticReitsPage /> },
       { path: 'market', element: <MarketPage /> },
       { path: 'invits', element: <InvitsPage /> },
       { path: 'global', element: <GlobalPage /> },
+      { path: 'map', lazy: async () => ({ Component: (await import('./pages/MapPage')).MapPage }) },
     ],
   },
 ])

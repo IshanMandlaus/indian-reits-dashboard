@@ -6,6 +6,7 @@ const NAV = [
   { to: '/market', label: 'Market & Benchmarks', num: '02' },
   { to: '/invits', label: 'InvITs', num: '03' },
   { to: '/global', label: 'Global Markets', num: '04' },
+  { to: '/map', label: 'Portfolio Map', num: '05' },
 ]
 
 export function AppShell() {
