@@ -50,7 +50,11 @@ function timeLineConfig(datasets: DS[], yTitle: string): RangeConfig {
         },
         y: { title: { display: true, text: yTitle } },
       },
-      plugins: { ...baseOptions().plugins, zoom: zoomOptions() },
+      plugins: {
+        ...baseOptions().plugins,
+        zoom: zoomOptions(),
+        tooltip: { callbacks: { title: (it) => (it[0] ? fmtM(it[0].parsed.x as number) : '') } },
+      },
     },
   }
   cfg._xmin = xmin
