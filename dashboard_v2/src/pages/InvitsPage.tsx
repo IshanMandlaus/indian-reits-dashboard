@@ -77,7 +77,7 @@ export function InvitsPage() {
       {/* Snapshot cards */}
       <Card
         className="mb-4"
-        title="The three listed InvITs at a glance"
+        title="Snapshot of listed InvITs tracked"
         note="Government-sponsored infrastructure trusts — NHAI's two road InvITs and PowerGrid's transmission InvIT · click a card for the full price chart + metrics"
         exportable="panel"
         exportName="invits-snapshot"
@@ -97,7 +97,7 @@ export function InvitsPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card
           className="lg:col-span-2"
-          title="Range-bound prices — InvITs trade on yield, not growth"
+          title="Unit price — NHIT vs RIIT vs PGInvIT"
           note="Daily closes from NSE (populated by Refresh) · wheel to zoom, double-click resets"
           exportable="chart"
           exportName="invits-unit-price"
@@ -109,12 +109,12 @@ export function InvitsPage() {
           )}
         </Card>
 
-        <Card title="InvITs behave like bonds — steady against the market" exportable="chart" exportName="invits-rebased">
+        <Card title="InvITs vs NIFTY 50 vs FD — rebased to 100" exportable="chart" exportName="invits-rebased">
           {hasData ? <InvitRebasedChart ctx={ctx} trusts={trusts} /> : <EmptyChart height={320} />}
         </Card>
 
         <Card
-          title="InvITs out-yield REITs, FDs and G-secs"
+          title="Trailing cash yield comparison"
           note="InvIT DPU ÷ price vs Indian REITs combined distribution yield (FY26) vs SBI 1-yr FD & a flat 7% p.a. FD — InvITs are return-OF-capital heavy: yields are not directly comparable to a coupon"
           exportable="chart"
           exportName="invits-cash-yield"
@@ -124,7 +124,7 @@ export function InvitsPage() {
 
         <Card
           className="lg:col-span-2"
-          title="NHIT dwarfs the newer trusts by enterprise value"
+          title="Enterprise value (₹ cr)"
           note="Latest disclosed valuations — NHIT's FY26 valuation ₹56,988 cr dwarfs the newer vehicles"
           exportable="chart"
           exportName="invits-enterprise-value"

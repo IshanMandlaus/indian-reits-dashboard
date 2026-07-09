@@ -56,7 +56,7 @@ export function GlobalPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card
-          title="The US is ~80% of the listed-REIT world"
+          title="Listed REIT market capitalisation by country"
           note="US$ bn listed-REIT market cap — click a country slice to drill into its top listed REITs by market cap."
           exportable="chart"
           exportName="global-mcap-by-country"
@@ -65,7 +65,7 @@ export function GlobalPage() {
         </Card>
 
         <Card
-          title="By gross assets, the US dwarfs every other market"
+          title="Real-estate AUM (gross assets) by country"
           note="US$ bn gross real-estate AUM (US included — click its legend swatch to hide/show) — click a country slice to drill into its AUM by sector."
           exportable="chart"
           exportName="global-aum-by-country"
@@ -80,7 +80,7 @@ export function GlobalPage() {
 
         <Card
           className="lg:col-span-2"
-          title="The market leaders in each country"
+          title="Country panels — top 5 listed REITs each (live quotes)"
           exportable="panel"
           exportName="global-market-leaders"
           note={
@@ -94,7 +94,7 @@ export function GlobalPage() {
 
         <Card
           className="lg:col-span-2"
-          title="Three models: government-tenant, private-NAV, state-directed"
+          title="Case studies — government REITs & private REITs"
           note="Renting to the state, private NAV-priced vehicles, and state-directed listings"
         >
           <div className="space-y-2.5">

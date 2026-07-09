@@ -117,7 +117,8 @@ browser.
 All 9 sections wired to real data + verified in browser. Files:
 - **Foundation:** `src/lib/chartSetup.ts` (Chart.js registration, `CHART` palette,
   `baseOptions`/`zoomOptions`/`rescaleY`, `RangeConfig`/`ChartWithRange`);
-  `src/lib/reit.ts` (`navSteps`/`navAt`/`lastPrice`, date helpers, `buildInsights`).
+  `src/lib/reit.ts` (`navSteps`/`navAt`/`lastPrice`, date helpers). *(Originally also
+  had a `buildInsights` narrative-insight generator — removed 2026-07-09, see Changelog.)*
 - **Charts** in `src/components/domestic/`: `useChartCanvas` (raw Chart.js hook —
   chosen over react-chartjs-2 for v1's custom plugins/zoom/rescale), `RangeBar`
   (6M/1Y/3Y/5Y/All), `Chart1PriceNav`, `Chart2Issuances` (markers + Embassy
@@ -131,7 +132,7 @@ All 9 sections wired to real data + verified in browser. Files:
   doughnut drilldown — replaced with a container-level React click (`role=button`,
   keyboard-accessible). If you add click-to-drill elsewhere, do the same, not
   `options.onClick`.
-- **Verified in browser:** tab switch, KPIs, insights (bold), all 6 charts draw,
+- **Verified in browser:** tab switch, KPIs, all 6 charts draw,
   §4 toggle, §6 drilldown + back, SPV table (17 grouped rows), both modal modes
   (Embassy image mode / others page-image + extracted text with real tables),
   structure PNG, links. tsc + oxlint clean; zero console errors.
@@ -304,6 +305,22 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-09** — **Reverted narrative chart titles + insight boxes (user request).**
+  A prior experiment had (a) replaced every chart card title with a narrative
+  "takeaway" headline (e.g. "Price orbits NAV — the premium/discount is the signal")
+  and (b) added per-chart data-driven **insight callout boxes** on the Domestic page
+  (`buildInsights` in `src/lib/reit.ts` + an `Insight` component). The user rejected
+  both. Restored the **plain descriptive titles** (v1 style: "1 · Price vs NAV &
+  Distributions", etc.) across all 4 pages; removed the `Insight` component, the
+  `insights` `useMemo`, and every `<Insight>` usage from `DomesticReitsPage.tsx`; and
+  deleted `buildInsights` + its helpers (`lastNN`/`firstNN`/`ap`/`cagr`), the
+  `Insights` interface, and the now-unused `inr` import from `reit.ts`. Also reverted
+  the matching uncommitted v1 edits (`git checkout HEAD -- dashboard/{dashboard,global,
+  invits,market}.html`); v1's `prices.js`/`bench_live.js` still carry a live-price
+  refresh (data only, left as-is). **Design rule going forward: chart/card titles are
+  plain and describe what the chart shows — no editorializing headlines, no insight
+  boxes.** tsc + oxlint clean; verified in browser (all 4 pages show plain titles, no
+  insight boxes, 0 console errors).
 - **2026-07-09** — Created `v2` branch. Scaffolded Vite+React+TS+Tailwind. Built refined
   dark design system, AppShell nav, UI primitives, formatters, and routed skeletons for
   all 4 pages. Verified in browser (:5273), typecheck clean. Commit `abfb4af`.
@@ -313,7 +330,7 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
   `public/img` symlink to v1 images. tsc + oxlint clean; JSON & images verified served
   in dev.
 - **2026-07-09** — **Phase B (Domestic REITs page) done.** Full page wired to real
-  data: Chart.js foundation (`chartSetup`), domain helpers + insights (`reit.ts`),
+  data: Chart.js foundation (`chartSetup`), domain helpers (`reit.ts`),
   all 6 charts, SPV table, structure diagram, links, and the 3-mode annexure modal
   (`AnnexModal` + `annexRender.ts`). Verified end-to-end in the browser. tsc + oxlint
   clean. **Next:** Phase C — Market page. Extract the reusable `<TimeSeriesChart>` and
