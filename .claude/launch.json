@@ -9,6 +9,13 @@
       "cwd": "dashboard_v2"
     },
     {
+      "name": "v2-dashboard-alt",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5280", "--strictPort"],
+      "port": 5280,
+      "cwd": "dashboard_v2"
+    },
+    {
       "name": "v1-dashboard",
       "runtimeExecutable": "python3",
       "runtimeArgs": ["serve.py"],

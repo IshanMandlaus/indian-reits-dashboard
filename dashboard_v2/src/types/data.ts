@@ -136,7 +136,7 @@ export interface StructureSponsor {
 
 export interface StructureSpv {
   name: string
-  stake?: string
+  stake: number // percent the REIT holds in this SPV
   via?: string
   assets: string[]
 }
@@ -165,11 +165,12 @@ export interface AnnexImage {
 export type AnnexImages = ByReit<Record<string, AnnexImage[]>>
 
 // ─── annexdata.js → ANNEXDATA (parsed valuation text/tables) ─────────────────
-/** t: "pg" page marker · "h" heading · "p" paragraph · "tbl" table. */
-export interface AnnexBlock {
-  t: 'pg' | 'h' | 'p' | 'tbl'
-  x: unknown // number for "pg"; string for "h"/"p"; table payload for "tbl"
-}
+/** Parsed block: "pg" page marker · "h" heading · "p" paragraph · "tbl" table. */
+export type AnnexBlock =
+  | { t: 'pg'; x: number }
+  | { t: 'h'; x: string }
+  | { t: 'p'; x: string }
+  | { t: 'tbl'; rows: string[][] }
 export type AnnexData = ByReit<Record<string, AnnexBlock[]>>
 
 // ─── links.js → REIT_LINKS ──────────────────────────────────────────────────

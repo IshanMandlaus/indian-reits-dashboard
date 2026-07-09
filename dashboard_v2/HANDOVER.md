@@ -113,14 +113,28 @@ browser.
   images (HTTP 200) in dev. ⚠️ **Production build must resolve this** — Rollup may not
   follow the symlink on `vite build`; do a real copy or serve `img/` from a CDN.
 
-### Phase B — Domestic REITs page (most complex; good end-to-end reference)
-9 sections per REIT (see §8 for data): (1) Price vs NAV + DPU bars, (2) Issuances vs
-NAV with fair/book-value lines + markers, (3) AUM FV vs BV grouped bars, (4) NDCF vs
-Revenue with FY/quarterly toggle, (5) Distribution yield line with toggle, (6) Capital
-structure doughnut → click-to-drill year bars, (7) SPV/asset table (row-click → annexure
-modal), (8) native REIT structure diagram (Embassy = static PNG), (9) PDF links.
-Plus the **annexure modal** (image mode for Embassy via `ANNEX_IMAGES`; page-image +
-extracted-text mode for others via `ANNEXURES`/`ANNEXDATA`).
+### Phase B — Domestic REITs page ✅ DONE (2026-07-09)
+All 9 sections wired to real data + verified in browser. Files:
+- **Foundation:** `src/lib/chartSetup.ts` (Chart.js registration, `CHART` palette,
+  `baseOptions`/`zoomOptions`/`rescaleY`, `RangeConfig`/`ChartWithRange`);
+  `src/lib/reit.ts` (`navSteps`/`navAt`/`lastPrice`, date helpers, `buildInsights`).
+- **Charts** in `src/components/domestic/`: `useChartCanvas` (raw Chart.js hook —
+  chosen over react-chartjs-2 for v1's custom plugins/zoom/rescale), `RangeBar`
+  (6M/1Y/3Y/5Y/All), `Chart1PriceNav`, `Chart2Issuances` (markers + Embassy
+  TechVillage + custom label plugin), `Chart3FvBv`, `Chart4Ndcf` (FY↔qtr toggle),
+  `Chart5Yield` (qtr↔FY toggle), `Chart6Capital` (pie→bars drilldown).
+- **Sections:** `SpvTable` (grouped, row-click → modal), `Structure` (Embassy PNG
+  special-case + native diagram), `LinksSection`, `AnnexModal` + `annexRender.ts`
+  (faithful port of v1's `renderAnnexItems`/`annexPages`; annexdata + annex-images
+  lazy-load on first open). Modal CSS lives under `.annex-content` in `index.css`.
+- **Gotcha fixed:** Chart.js canvas `onClick` did NOT fire reliably for the §6
+  doughnut drilldown — replaced with a container-level React click (`role=button`,
+  keyboard-accessible). If you add click-to-drill elsewhere, do the same, not
+  `options.onClick`.
+- **Verified in browser:** tab switch, KPIs, insights (bold), all 6 charts draw,
+  §4 toggle, §6 drilldown + back, SPV table (17 grouped rows), both modal modes
+  (Embassy image mode / others page-image + extracted text with real tables),
+  structure PNG, links. tsc + oxlint clean; zero console errors.
 
 ### Phase C — Market, InvITs, Global
 - Reusable **`<TimeSeriesChart>`** (range bar 6M/1Y/3Y/5Y/All + zoom/pan + y-rescale).
@@ -229,5 +243,12 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
   (`npm run data`) → all 14 v1 globals as `public/data/*.json`; TS types in
   `src/types/data.ts`; cached loader `src/lib/data.ts` + hook `src/lib/useDataset.ts`;
   `public/img` symlink to v1 images. tsc + oxlint clean; JSON & images verified served
-  in dev. **Next:** Phase B (Domestic REITs page) — start wiring `useDataset('reit-data')`
-  into `DomesticReitsPage`, and extract the shared `<TimeSeriesChart>` / Chart.js theme.
+  in dev.
+- **2026-07-09** — **Phase B (Domestic REITs page) done.** Full page wired to real
+  data: Chart.js foundation (`chartSetup`), domain helpers + insights (`reit.ts`),
+  all 6 charts, SPV table, structure diagram, links, and the 3-mode annexure modal
+  (`AnnexModal` + `annexRender.ts`). Verified end-to-end in the browser. tsc + oxlint
+  clean. **Next:** Phase C — Market page. Extract the reusable `<TimeSeriesChart>` and
+  `<SecurityModal>` here (the domestic charts already establish the patterns to lift).
+  Note: `.claude/launch.json` gained a `v2-dashboard-alt` config (port 5280) for
+  running a second dev server when 5273 is busy.
