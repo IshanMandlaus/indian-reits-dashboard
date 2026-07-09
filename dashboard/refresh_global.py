@@ -112,6 +112,12 @@ def fetch_all():
 def write_live(out):
     with open(os.path.join(HERE, "global_live.js"), "w") as f:
         f.write("window.GLOBAL_LIVE = " + json.dumps(out, separators=(",", ":")) + ";\n")
+    # Also feed the v2 React app (public/data/global-live.json); no-op if absent.
+    try:
+        from _v2json import emit as _emit_v2
+        _emit_v2("global-live", out)
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

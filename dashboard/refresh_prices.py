@@ -90,6 +90,12 @@ def fetch_all():
 def write_prices(out):
     with open(os.path.join(HERE, "prices.js"), "w") as f:
         f.write("window.LIVE_PRICES = " + json.dumps(out, indent=1) + ";")
+    # Also feed the v2 React app (public/data/live-prices.json); no-op if absent.
+    try:
+        from _v2json import emit as _emit_v2
+        _emit_v2("live-prices", out)
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

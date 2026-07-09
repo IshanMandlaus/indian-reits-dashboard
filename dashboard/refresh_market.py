@@ -387,6 +387,12 @@ def fetch_all():
 def write_live(live):
     with open(os.path.join(HERE, "bench_live.js"), "w") as f:
         f.write("window.BENCH_LIVE = " + json.dumps(live, separators=(",", ":")) + ";\n")
+    # Also feed the v2 React app (public/data/bench-live.json); no-op if absent.
+    try:
+        from _v2json import emit as _emit_v2
+        _emit_v2("bench-live", live)
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":
