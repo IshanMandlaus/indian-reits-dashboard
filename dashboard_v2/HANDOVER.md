@@ -346,3 +346,15 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
   Added `v2-dashboard-alt2` launch config (port 5286). **Next:** Phase C — InvITs + Global
   (reuse `TimeSeriesChart`/`SecurityModal`/`Sparkline`); then Phase D refresh pipeline
   (and re-enabling a scale-consistent live-turnover merge).
+- **2026-07-09** — **SVG export feature.** "↓ SVG" button on every chart card + snapshot
+  panel (all 4 pages) via a new `Card` `exportable` ('chart' | 'panel') + `exportName`
+  prop → downloads a portable, white-background, light-themed `.svg` for Word/slides.
+  `src/lib/svgExport.ts`: **charts** light-themed by overriding `Chart.defaults` (NOT a
+  chart's `options` — proxied, mutating recurses → `RangeError`), canvas composited on
+  white, wrapped in `<svg><image>`; **panels** cloned, re-themed via `.svg-export-light`
+  (overrides Tailwind `--color-*` tokens, index.css), rasterised through a
+  `<foreignObject>` carrying the page's own stylesheet (embedding real CSS preserves
+  layout; a per-node style inliner mangled it and `html-to-image` hung on font
+  embedding). Both emit raster-in-SVG (a `<foreignObject>` SVG won't render in Word).
+  ⚠️ Headless preview exports charts blank (Chart.js doesn't repaint after resize there);
+  verify chart exports in a real browser — the user confirmed both look correct.
