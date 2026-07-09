@@ -1,10 +1,10 @@
 # Indian REITs Dashboard v2 — Session Handover
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
-> Last updated: 2026-07-09 (**Phase E DONE + shipped** — npm-only live refresh via a Vite
-> plugin + one global refresh button; v2 no longer needs Python/serve.py/v1. Also: chart
-> date labels now show the day. Committed on `v2` as `18a6348`). Update the **Status** and
-> **Changelog** sections as you go.
+> Last updated: 2026-07-09 (**v2 is now fully STANDALONE** — the v1 `dashboard/` folder was
+> removed from the `v2` branch; images de-symlinked into a real `public/img/`, static data
+> sources vendored to `data-src/`. Committed on `v2` as `8b0d9c5`. Prior milestone: Phase E
+> npm-only refresh, `18a6348`.) Update the **Status** and **Changelog** sections as you go.
 
 ---
 
@@ -21,8 +21,9 @@ chart stays on workbook data by design). Read §10 Changelog top-to-bottom for t
 build history; §6 Phase E for the refresh server.
 
 - **Repo:** https://github.com/IshanMandlaus/indian-reits-dashboard (private)
-- **Branch:** `v2` (v1 stays on `main`, untouched, as the source of truth)
-- **v2 app:** `dashboard_v2/` · **v1 app:** `dashboard/`
+- **Branch:** `v2` — now fully standalone; **`dashboard/` (v1) was removed from this branch.**
+  v1 stays frozen and intact on `main`.
+- **v2 app:** `dashboard_v2/` (the whole product; `npm install && npm run dev` off a clean clone)
 
 ---
 
@@ -47,12 +48,12 @@ build history; §6 Phase E for the refresh server.
 | Styling | Tailwind CSS v4 (CSS-first `@theme` in `src/index.css`) | User request; tokens → utilities |
 | Routing | React Router 7 (`src/router.tsx`) | Replaces 4 hard-linked HTML pages with SPA + shared shell |
 | Charts | Chart.js 4 + react-chartjs-2 + chartjs-plugin-zoom | Preserve v1's zoom/pan/drilldown/custom-label behavior |
-| Data | Convert v1 `window.*` `.js` globals → static JSON, lazy-loaded per route | Big files (annexdata 1.1 MB, global_live 763 KB) must be code-split |
-| Refresh | Keep Python `refresh_*.py`; adapt to emit JSON; dev proxy to `serve.py` | Preserve live-price/market/global refresh |
+| Data | Static `window.*` `.js` sources (vendored in `data-src/`) → static JSON via `npm run data`, lazy-loaded per route | Big files (annexdata 1.1 MB) must be code-split; JSON is the committed source of truth |
+| Refresh | **Node/TS fetchers in a Vite plugin** (`server/`), one `POST /api/refresh` | npm-only; no Python. See §6 Phase E |
 
-**Dev-server proxy:** `vite.config.ts` proxies `/refresh`, `/refresh-market`,
-`/refresh-global` → `http://localhost:8742` (the v1 `serve.py`). Run `serve.py`
-alongside `npm run dev` to exercise the refresh buttons.
+**Refresh (as of Phase E, npm-only):** `vite.config.ts` registers `refreshPlugin()` which
+serves `POST /api/refresh` on dev **and** preview. No proxy, no `serve.py`. The old dev-proxy
+to `:8742` is gone.
 
 ---
 
@@ -61,15 +62,14 @@ alongside `npm run dev` to exercise the refresh buttons.
 ```bash
 cd dashboard_v2
 npm install
-npm run dev          # http://localhost:5273
-# optional, for live refresh in dev:
-python3 ../dashboard/serve.py     # :8742
+npm run dev          # http://localhost:5273  (live refresh works here via /api/refresh)
 ```
 
-Typecheck: `npx tsc -b`  ·  Build: `npm run build`  ·  Lint: `npm run lint` (oxlint).
+Typecheck: `npx tsc -b`  ·  Build: `npm run build`  ·  Lint: `npm run lint` (oxlint)  ·
+Regenerate static data: `npm run data` (from vendored `data-src/`).
 
-There is a `.claude/launch.json` at repo root with two configs: **`v2-dashboard`**
-(npm dev, :5273) and **`v1-dashboard`** (serve.py, :8742).
+There is a `.claude/launch.json` at repo root with the **`v2-dashboard`** config (npm dev,
+:5273) plus alt-port variants. (The old `v1-dashboard`/serve.py config was removed.)
 
 ---
 
@@ -93,6 +93,8 @@ dashboard_v2/
     pages/{Domestic,Market,Invits,Global}Page.tsx   # all fully wired to real data
     types/data.ts
   public/data/*.json            # 15 datasets; the 4 *-live + holdings refresh live
+  public/img/                   # committed annexure + structure images (~207 MB, real folder)
+  data-src/*.js                 # vendored .js sources for the 11 STATIC datasets (npm run data)
   scripts/{convert-data,check-assets}.mjs
 ```
 
@@ -106,8 +108,9 @@ still exist but is unused.
 
 ### Phase A — Data layer ✅ DONE (2026-07-09)
 - **Converter:** `scripts/convert-data.mjs` (run `npm run data`). Sandbox-evaluates
-  each v1 `.js` global via `node:vm` with a stub `window` and serializes to
-  `public/data/<name>.json`. All 14 sources convert; re-run whenever v1 data changes.
+  each `.js` global via `node:vm` with a stub `window` and serializes to
+  `public/data/<name>.json`. **(Standalone update: sources are now vendored in `data-src/`,
+  and only the 11 STATIC datasets are converted — see the top Changelog entry.)**
 - **Output:** `public/data/*.json` (committed, ~2.9 MB total) — `reit-data`,
   `live-prices`, `structures`, `annexures`, `annexdata`, `annex-images`, `links`,
   `val-hy`, `blocks-live`, `bench`, `bench-live`, `invit`, `global`, `global-live`.
@@ -117,8 +120,9 @@ still exist but is unused.
 - **Loader:** `src/lib/data.ts` — `loadData(name)` (typed, cached, in-flight-deduped,
   honours `BASE_URL`) + `invalidateData()`. React hook: `src/lib/useDataset.ts`
   → `useDataset('reit-data')` returns `{data, loading, error}`.
-- **Images:** `public/img` is a **symlink** → `../dashboard/img` (200 MB of annexure
-  images — not duplicated/committed). Verified Vite serves both JSON and symlinked
+- **Images:** ~~`public/img` is a **symlink** → `../dashboard/img`~~ **SUPERSEDED — as of the
+  standalone move `public/img` is a real committed folder of 918 files (~207 MB); the note below
+  about symlink behaviour is historical.** Verified Vite serves both JSON and
   images (HTTP 200) in dev. ✅ **Production build RESOLVED (2026-07-09):** Vite 8 /
   Rollup *does* follow the symlink on `vite build` — `dist/img` is a real copy of all
   926 files (byte-identical, md5-verified), and `vite preview` serves them + data JSON
@@ -483,13 +487,17 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 9. Gotchas
 
-- v1 data files are `.js` that assign `window.*` — they must be sandboxed/evaluated to
-  convert, not JSON-parsed.
-- Two near-identical security modals in v1 (`secmodal.js`, page-2 `#smodal`) — unify.
-- Embassy is a special case in several places (structure = static PNG; annexure = image
-  mode; chart 2 has extra TechVillage fair-value lines).
+- Static data sources (`data-src/*.js`) assign `window.*` — `convert-data.mjs` sandbox-
+  evaluates them (`node:vm`), not `JSON.parse`. `npm run data` regenerates only the 11 STATIC
+  datasets; the 4 live ones (live-prices, bench-live, global-live, holdings) are owned by the
+  refresh server and must NOT be added back to `SOURCES`.
+- Embassy is a special case in several places (structure = static PNG `public/img/structure_embassy.png`;
+  annexure = image mode; chart 2 has extra TechVillage fair-value lines).
 - Large JSON must be code-split / fetched, not bundled, to keep the initial load fast.
-- The refresh buttons only work when `serve.py` is running (proxied in dev).
+- Refresh (`⟳ Refresh data` → `POST /api/refresh`) needs the Node process, so it works under
+  `npm run dev`/`npm run preview` but not a pure-static deploy — committed JSON seeds ship there.
+- `public/img` is a **real committed folder** now (was a symlink to v1 before the standalone
+  move). `check-assets.mjs` guards it at build time.
 - Node modules and build output are gitignored inside `dashboard_v2/`.
 
 ---
