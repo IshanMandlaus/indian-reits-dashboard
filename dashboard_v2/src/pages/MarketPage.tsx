@@ -64,11 +64,7 @@ export function MarketPage() {
 
   return (
     <>
-      <PageHeader
-        title="Market & Benchmarks"
-        subtitle={asof}
-        actions={<RefreshButton />}
-      />
+      <PageHeader title="Market & Benchmarks" subtitle={asof} />
 
       {/* Exhibit 1 — snapshot cards */}
       <Card
@@ -162,32 +158,5 @@ export function MarketPage() {
 
       <SecurityModal data={modal} onClose={() => setModal(null)} />
     </>
-  )
-}
-
-function RefreshButton() {
-  const [busy, setBusy] = useState(false)
-  const [failed, setFailed] = useState(false)
-  const refresh = async () => {
-    setBusy(true)
-    setFailed(false)
-    try {
-      const r = await fetch('/refresh-market', { method: 'POST' })
-      const j = await r.json()
-      if (j.error) throw new Error(j.error)
-      location.reload()
-    } catch {
-      setFailed(true)
-      setBusy(false)
-    }
-  }
-  return (
-    <button
-      onClick={refresh}
-      disabled={busy}
-      className="rounded-lg bg-accent px-4 py-2 text-[12.5px] font-semibold text-bg transition hover:bg-accent-strong disabled:opacity-50"
-    >
-      {busy ? 'Refreshing…' : failed ? '⟳ Refresh failed — run serve.py' : '⟳ Refresh live (NSE/BSE + benchmarks)'}
-    </button>
   )
 }

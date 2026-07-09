@@ -71,12 +71,9 @@ export function DomesticReitsPage() {
         title="Domestic REITs"
         subtitle="Per-REIT deep dive — price vs NAV, distributions, AUM, capital structure, portfolio assets and trust structure."
         actions={
-          <div className="flex items-center gap-3">
-            {LIVE?._asof && (
-              <span className="text-[11.5px] text-subtle">Live prices: {LIVE._asof}</span>
-            )}
-            <RefreshHoldingsButton />
-          </div>
+          LIVE?._asof ? (
+            <span className="text-[11.5px] text-subtle">Live prices: {LIVE._asof}</span>
+          ) : undefined
         }
       />
 
@@ -189,30 +186,3 @@ function Kpi({ label, value }: { label: string; value: string }) {
   )
 }
 
-/** Pulls the latest unit-holding pattern from NSE via serve.py, then reloads. */
-function RefreshHoldingsButton() {
-  const [busy, setBusy] = useState(false)
-  const [failed, setFailed] = useState(false)
-  const refresh = async () => {
-    setBusy(true)
-    setFailed(false)
-    try {
-      const r = await fetch('/refresh-holdings', { method: 'POST' })
-      const j = await r.json()
-      if (j.error) throw new Error(j.error)
-      location.reload()
-    } catch {
-      setFailed(true)
-      setBusy(false)
-    }
-  }
-  return (
-    <button
-      onClick={refresh}
-      disabled={busy}
-      className="rounded-lg bg-accent px-3.5 py-2 text-[12px] font-semibold text-bg transition hover:bg-accent-strong disabled:opacity-50"
-    >
-      {busy ? 'Refreshing…' : failed ? '⟳ Refresh failed — run serve.py' : '⟳ Refresh unitholding (NSE)'}
-    </button>
-  )
-}

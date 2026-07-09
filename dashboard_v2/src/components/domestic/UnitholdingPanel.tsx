@@ -33,7 +33,7 @@ export function UnitholdingPanel({
       actions={
         seed ? (
           <span
-            title="Last-known filings. Run the unitholding refresh to pull live NSE data + the full trend."
+            title="Last-known filings. Hit ⟳ Refresh data in the top nav to pull live NSE data + the full trend."
             className="rounded-md border border-border px-2 py-1 text-[10.5px] font-medium text-subtle"
           >
             seed
@@ -43,7 +43,7 @@ export function UnitholdingPanel({
     >
       {!latest ? (
         <p className="py-3 text-[12.5px] text-muted">
-          No unitholding filing loaded yet for this REIT — run the refresh (NSE) to pull it.
+          No unitholding filing loaded yet for this REIT — hit ⟳ Refresh data in the top nav to pull it.
         </p>
       ) : (
         <div className="flex flex-col gap-4">

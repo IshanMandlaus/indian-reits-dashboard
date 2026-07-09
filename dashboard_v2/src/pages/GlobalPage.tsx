@@ -52,7 +52,7 @@ export function GlobalPage() {
 
   return (
     <>
-      <PageHeader title="Global REIT Markets" subtitle={asof} actions={<RefreshButton />} />
+      <PageHeader title="Global REIT Markets" subtitle={asof} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card
@@ -86,7 +86,7 @@ export function GlobalPage() {
           note={
             LIVE?.asof
               ? 'Live quotes as of ' + LIVE.asof + ' (Yahoo Finance) · local currency · click a row for the full chart + metrics'
-              : 'Hit ⟳ Refresh (with serve.py running) to pull live prices from Yahoo Finance · local currency per unit/share'
+              : 'Hit ⟳ Refresh data in the top nav to pull live prices from Yahoo Finance · local currency per unit/share'
           }
         >
           <CountryPanels G={G} LIVE={LIVE} onOpen={(ckey, ri) => setModal(buildGlobalSecModal(G, LIVE, ckey, ri))} />
@@ -139,29 +139,3 @@ function TemasekPanel({ t }: { t: import('../types/data').GlobalTemasek }) {
   )
 }
 
-function RefreshButton() {
-  const [busy, setBusy] = useState(false)
-  const [failed, setFailed] = useState(false)
-  const refresh = async () => {
-    setBusy(true)
-    setFailed(false)
-    try {
-      const r = await fetch('/refresh-global', { method: 'POST' })
-      const j = await r.json()
-      if (j.error) throw new Error(j.error)
-      location.reload()
-    } catch {
-      setFailed(true)
-      setBusy(false)
-    }
-  }
-  return (
-    <button
-      onClick={refresh}
-      disabled={busy}
-      className="rounded-lg bg-accent px-4 py-2 text-[12.5px] font-semibold text-bg transition hover:bg-accent-strong disabled:opacity-50"
-    >
-      {busy ? 'Refreshing…' : failed ? '⟳ Refresh failed — run serve.py' : '⟳ Refresh live quotes (Yahoo)'}
-    </button>
-  )
-}

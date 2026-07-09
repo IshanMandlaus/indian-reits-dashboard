@@ -7,7 +7,7 @@
  */
 import type { ChartConfiguration } from 'chart.js'
 import { baseOptions, zoomOptions, CHART, type RangeConfig } from '../../lib/chartSetup'
-import { fmtM } from '../../lib/reit'
+import { fmtM, fmtDay } from '../../lib/reit'
 import { type BenchCtx, type Pt, volumeSeries, turnoverCal, startFrom } from '../../lib/bench'
 import { TimeSeriesChart, ZOOM_HINT } from '../charts/TimeSeriesChart'
 
@@ -68,7 +68,7 @@ export function VolumeCharts({ ctx, years }: { ctx: BenchCtx; years: number }) {
                   ...timeAxis('VOL INDEX').plugins,
                   tooltip: {
                     callbacks: {
-                      title: (it) => (it[0] ? fmtM(it[0].parsed.x as number) : ''),
+                      title: (it) => (it[0] ? fmtDay(it[0].parsed.x as number) : ''),
                       afterBody: (items) =>
                         items.some((i) => i.dataset.label === 'Embassy block deal')
                           ? 'PPFAS bought ~5.63 cr units (~6%) at ₹420\nfrom exiting Capital Group funds'

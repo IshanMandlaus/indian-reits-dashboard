@@ -123,7 +123,7 @@ export function SecurityModal({ data, onClose }: { data: SecModalData | null; on
             <SecChart series={data.series} livePrice={data.livePrice} ccy={data.ccy} daysBack={daysBack} />
           ) : (
             <div className="py-12 text-center text-[13px] text-subtle">
-              No price history yet — run ⟳ Refresh (with serve.py) to pull it.
+              No price history yet — hit ⟳ Refresh data in the top nav to pull it.
             </div>
           )}
         </div>

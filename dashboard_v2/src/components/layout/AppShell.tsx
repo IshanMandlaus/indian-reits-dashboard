@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 
 const NAV = [
@@ -58,6 +59,9 @@ export function AppShell() {
               </NavLink>
             ))}
           </nav>
+
+          {/* One global refresh — pulls prices, unitholding, benchmarks & global quotes */}
+          <GlobalRefreshButton />
         </div>
       </header>
 
@@ -65,5 +69,66 @@ export function AppShell() {
         <Outlet />
       </main>
     </div>
+  )
+}
+
+interface SourceResult {
+  source: string
+  ok: boolean
+  asof: string | null
+  count: number
+  error?: string
+}
+
+/**
+ * The single live-data refresh: POST /api/refresh (served by the Vite plugin in
+ * dev + preview), which re-pulls prices, unitholding, benchmarks and global
+ * quotes from NSE/BSE/Yahoo and rewrites public/data/*.json. Reloads on success.
+ */
+function GlobalRefreshButton() {
+  const [busy, setBusy] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const [tip, setTip] = useState('Pull the latest prices, unitholding, benchmarks & global quotes')
+
+  const refresh = async () => {
+    setBusy(true)
+    setFailed(false)
+    try {
+      const r = await fetch('/api/refresh', { method: 'POST' })
+      const j = (await r.json()) as { ok?: boolean; results?: SourceResult[]; error?: string }
+      if (!r.ok || j.error) throw new Error(j.error || `HTTP ${r.status}`)
+      const results = j.results ?? []
+      const summary = results
+        .map((s) => `${s.source}: ${s.ok ? `✓ ${s.count}` : `✗ ${s.error ?? 'failed'}`}`)
+        .join(' · ')
+      if (!j.ok) {
+        setTip(summary || 'All sources failed')
+        setFailed(true)
+        setBusy(false)
+        return
+      }
+      // Some sources may have partially failed but at least one updated → reload to show it.
+      location.reload()
+    } catch (e) {
+      setTip(e instanceof Error ? e.message : 'Refresh failed')
+      setFailed(true)
+      setBusy(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={refresh}
+      disabled={busy}
+      title={tip}
+      className={[
+        'shrink-0 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold transition disabled:opacity-50',
+        failed
+          ? 'bg-neg/15 text-neg hover:bg-neg/25'
+          : 'bg-accent text-bg hover:bg-accent-strong',
+      ].join(' ')}
+    >
+      {busy ? 'Refreshing…' : failed ? '⟳ Refresh failed — retry' : '⟳ Refresh data'}
+    </button>
   )
 }

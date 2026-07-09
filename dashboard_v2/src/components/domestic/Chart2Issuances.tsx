@@ -6,7 +6,7 @@
  */
 import type { ReitData, ReitKey, ReitValHy, BlocksLive } from '../../types/data'
 import { CHART, baseOptions, zoomOptions, rescaleY, type ChartWithRange, type RangeConfig } from '../../lib/chartSetup'
-import { navSteps, navAt, fyTs, fmtM } from '../../lib/reit'
+import { navSteps, navAt, fyTs, fmtM, fmtDay } from '../../lib/reit'
 import { inr, pct } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
 import { RangeBar } from '../charts/RangeBar'
@@ -178,7 +178,7 @@ function build(
         zoom: zoomOptions(),
         tooltip: {
           callbacks: {
-            title: (it) => fmtM(it[0].parsed.x as number),
+            title: (it) => fmtDay(it[0].parsed.x as number),
             label: (it) => {
               const raw = it.raw as { b?: (typeof blk)[number]['b']; e?: (typeof iss)[number]['e']; pd?: number | null; nav?: number | null }
               if (raw.b) {

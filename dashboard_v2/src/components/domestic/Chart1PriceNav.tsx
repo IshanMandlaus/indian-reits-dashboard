@@ -1,7 +1,7 @@
 /** Chart 1 — traded price vs stepped NAV/unit, with DPU bars on a 2nd axis. */
 import type { ReitData, ReitKey, LivePrices } from '../../types/data'
 import { CHART, baseOptions, zoomOptions, rescaleY, type ChartWithRange, type RangeConfig } from '../../lib/chartSetup'
-import { navSteps, navAt, dTs, perTs, fyTs, fmtM } from '../../lib/reit'
+import { navSteps, navAt, dTs, perTs, fyTs, fmtM, fmtDay } from '../../lib/reit'
 import { inr, pct } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
 import { RangeBar } from '../charts/RangeBar'
@@ -78,7 +78,7 @@ function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null): ChartConfigura
         zoom: zoomOptions(),
         tooltip: {
           callbacks: {
-            title: (it) => fmtM(it[0].parsed.x as number),
+            title: (it) => fmtDay(it[0].parsed.x as number),
             label: (it) => {
               const px = it.parsed.x as number
               const py = it.parsed.y as number

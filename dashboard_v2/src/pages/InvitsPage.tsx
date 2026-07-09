@@ -60,16 +60,11 @@ export function InvitsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Indian InvITs — Highways & Power Transmission"
-        subtitle={asof}
-        actions={<RefreshButton />}
-      />
+      <PageHeader title="Indian InvITs — Highways & Power Transmission" subtitle={asof} />
 
       {!hasData && (
         <div className="mb-4 rounded-lg border border-warn/40 bg-warn/10 px-4 py-2.5 text-[12px] text-warn">
-          No InvIT price history loaded yet — hit <b>⟳ Refresh live</b> (with{' '}
-          <code className="rounded bg-surface-2 px-1">python3 serve.py</code> running) to pull up to ~400 trading days of
+          No InvIT price history loaded yet — hit <b>⟳ Refresh data</b> in the top nav to pull up to ~400 trading days of
           NHIT / RIIT / PGINVIT prices from NSE. Snapshot fundamentals below are pre-loaded.
         </div>
       )}
@@ -144,34 +139,8 @@ function EmptyChart({ height }: { height: number }) {
       className="flex items-center justify-center rounded-lg border border-dashed border-border text-[12px] text-subtle"
       style={{ height }}
     >
-      No price history yet — run ⟳ Refresh (with serve.py) to populate this chart.
+      No price history yet — hit ⟳ Refresh data in the top nav to populate this chart.
     </div>
   )
 }
 
-function RefreshButton() {
-  const [busy, setBusy] = useState(false)
-  const [failed, setFailed] = useState(false)
-  const refresh = async () => {
-    setBusy(true)
-    setFailed(false)
-    try {
-      const r = await fetch('/refresh-market', { method: 'POST' })
-      const j = await r.json()
-      if (j.error) throw new Error(j.error)
-      location.reload()
-    } catch {
-      setFailed(true)
-      setBusy(false)
-    }
-  }
-  return (
-    <button
-      onClick={refresh}
-      disabled={busy}
-      className="rounded-lg bg-accent px-4 py-2 text-[12.5px] font-semibold text-bg transition hover:bg-accent-strong disabled:opacity-50"
-    >
-      {busy ? 'Refreshing…' : failed ? '⟳ Refresh failed — run serve.py' : '⟳ Refresh live (NSE)'}
-    </button>
-  )
-}

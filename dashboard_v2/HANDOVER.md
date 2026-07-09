@@ -1,8 +1,9 @@
 # Indian REITs Dashboard v2 — Session Handover
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
-> Last updated: 2026-07-09 (production-ready: build verified, Inter self-hosted, all 4
-> routes re-verified). Update the **Status** and **Changelog** sections as you go.
+> Last updated: 2026-07-09 (**Phase E DONE** — npm-only live refresh via a Vite plugin +
+> one global refresh button; v2 no longer needs Python/serve.py/v1). Update the **Status**
+> and **Changelog** sections as you go.
 
 ---
 
@@ -254,7 +255,64 @@ volume/VOL-INDEX turnover stays on workbook data by design. **Do NOT re-enable l
 turnover** (the user explicitly does not want the volume chart live). Phase D is
 **complete** as intended — treat D2 as won't-do, not deferred.
 
-### Phase E — npm-only live refresh (Node-in-Vite) + ONE global button — 📋 PLANNED, NOT STARTED
+### Phase E — npm-only live refresh (Node-in-Vite) + ONE global button — ✅ DONE (2026-07-09)
+**Built & verified end-to-end. v2 now runs npm-only: no Python, no serve.py, no v1.**
+Click the one **⟳ Refresh data** button in the top nav → `POST /api/refresh` (served by a
+Vite plugin in BOTH dev and preview) re-pulls prices + unitholding (NSE/BSE) and benchmarks
++ global quotes (Yahoo via `yahoo-finance2`) and rewrites `public/data/*.json`, then reloads.
+
+**Shipped files** (all new under `dashboard_v2/server/`):
+- `lib/io.ts` — `resolveDataDir` (dev→`<publicDir>/data`, preview→`dist/data`),
+  `writeJsonAtomic` (tmp+rename), `readJson`.
+- `lib/nse.ts` — `createNseSession(warmups[])`: cookie-primed `fetch` (`getSetCookie` jar,
+  replays Cookie + Referer). `NSE_UA` export.
+- `lib/yahoo.ts` — wraps `yahoo-finance2` **v3**: `chartSeries(sym,period1)`→`{px,to}`,
+  `quoteOne`→`{price,ccy,mcap}`, `avgVolume` (30d), `yearsAgo`/`daysAgo`.
+- `lib/types.ts` — `FetchResult`, `nowStamp()`.
+- `fetchers/{prices,holdings,global,market}.ts` — faithful ports of the four `refresh_*.py`;
+  each returns `{source,ok,asof,count,error?}` and writes JSON **only if it got data**.
+- `index.ts` — `runAll(dataDir)`: two-lane `Promise.allSettled` (NSE lane prices→holdings on
+  one shared primed session; Yahoo lane market→global). Per-source try/catch.
+- `refreshPlugin.ts` — registers `POST /api/refresh` on `configureServer`+`configurePreviewServer`;
+  lazy `await import('./index.ts')` in the handler; responds `{ok,results}`.
+
+**Edits:** `vite.config.ts` (dropped the `proxy` block; added `refreshPlugin()` +
+`server.watch.ignored:['**/public/data/**']`); `tsconfig.node.json` include `["vite.config.ts","server"]`;
+`package.json` (+`yahoo-finance2`, `engines.node>=20`); `AppShell.tsx` (one `GlobalRefreshButton`);
+removed the four per-page buttons; refreshed all stale "serve.py" copy to name the top-nav ⟳ button.
+
+**Two things that differed from / improved on the plan:**
+1. **`yahoo-finance2` v3 API.** The default export is now the **class** `YahooFinance`, not a
+   singleton — you must `new YahooFinance({ suppressNotices:['yahooSurvey','ripHistorical'],
+   validation:{logErrors:false}, versionCheck:false })`. `suppressNotices` is a constructor
+   option (no top-level `suppressNotices()`); pass `{validateResult:false}` as the 3rd arg to
+   `chart()`/`quote()` to survive schema drift. `chart()` returns `{quotes:[{date:Date,close,volume}]}`
+   (typed `unknown` when `validateResult:false` → cast). See `lib/yahoo.ts`.
+2. **"Never reduce coverage" merge (NEW — real bug caught in verification).** A wholesale rewrite
+   of `bench-live.json` clobbered thin names: **NHIT InvIT** is ~1 day on Yahoo on a given run, and
+   a straight overwrite dropped it from **302 → 1** close (killed the InvIT NHIT chart). Fix:
+   `market.ts` (and `global.ts` hist) now **union each series with the cached file** (fresh wins on
+   shared dates) before writing, so live history only ever grows. Verified: after refresh NHIT = 303
+   (302 cached + 1 new), not 1. If you add another live series, apply the same union.
+
+**ADTV is NSE+BSE summed (unchanged intent, verified):** `market.ts` `ADTV_SYMBOLS` sums both legs
+(`.NS`+`.BO`) per name — e.g. Embassy 602,141 units = NSE 498,932 + BSE 103,209; split kept in
+`adtv_detail`. `market.ts` still WRITES `turnover_updates` for shape parity; **`src/lib/bench.ts`
+is unchanged and still ignores it** (Phase D2 stays won't-do).
+
+**Verified (2026-07-09):** `tsc -b` + oxlint + `npm run build` clean. `npm run dev` (NO serve.py)
+→ ⟳ Refresh → `/api/refresh` **200 in ~59s, all 4 sources ✓** (prices 6 · holdings 6 · market 12 ·
+global 35); all four routes render with fresh asof and **0 console errors**; one button in the nav,
+none in the pages. `npm run build && vite preview` → same button works, writes `dist/data`. No
+`serve.py`/`8742`/`/refresh-*` refs remain in `dashboard_v2` source. NSE was **not** blocked from
+this machine (prices+holdings came back live).
+
+**Known limitation (unchanged, not a regression):** `/api/refresh` needs the Node process, so it
+exists under `vite dev`/`vite preview` but not a pure static deploy — refresh is a local authoring
+action; committed JSON seeds are what ship.
+
+<details><summary>Original plan (kept for reference)</summary>
+
 **This is the next session's job. Approved plan, ready to build. Nothing implemented yet.**
 
 **Goal (from user):** make v2 stand on its own — **npm only, no Python, no v1**. Today
@@ -336,6 +394,8 @@ Confirm no `serve.py`/`:8742`/`/refresh*` refs remain in `dashboard_v2`.
 **Out of scope / do NOT touch:** `dashboard/` (v1 Python stays runnable standalone);
 `src/lib/bench.ts` turnover logic (still ignores `turnover_updates`); static datasets
 (still `npm run data` from the workbook — the button only refreshes the 4 live sources).
+
+</details>
 
 ### Shared building blocks to extract early
 `<TimeSeriesChart>`, `<SecurityModal>`, `<DataTable>` (sortable), `<Sparkline>`,
@@ -429,6 +489,20 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-09** — **Phase E DONE — npm-only live refresh (Node-in-Vite) + ONE global button.**
+  Ported all four `dashboard/refresh_*.py` fetchers to Node/TS under `dashboard_v2/server/`,
+  wired as a Vite plugin exposing `POST /api/refresh` on dev **and** preview; Yahoo via
+  `yahoo-finance2`, NSE via cookie-primed `fetch`. Replaced the four per-page refresh buttons
+  with one **⟳ Refresh data** button in the top nav; removed all `serve.py` proxy/copy. v2 now
+  runs npm-only (no Python/serve.py/v1). Two notable points: (1) `yahoo-finance2` **v3**'s default
+  export is a class you must `new` with `suppressNotices`/`validation`/`versionCheck` options
+  (not a singleton); (2) added a **"never reduce coverage" union merge** in `market.ts`/`global.ts`
+  after catching a real regression — a wholesale bench-live rewrite dropped thin-name **NHIT InvIT
+  302→1** close; the merge unions each series with the cached file (fresh wins on shared dates), so
+  live history only grows (verified NHIT 303 post-refresh). ADTV stays the NSE+BSE unit sum
+  (Embassy 602,141 = NSE 498,932 + BSE 103,209). Full detail in §6 Phase E. tsc + oxlint + build
+  clean; `/api/refresh` 200 with all 4 sources ✓ in dev and preview; all 4 routes fresh, 0 console
+  errors. ⚠️ Refreshed `*-live.json` + `holdings.json` show as git data changes (expected, like v1).
 - **2026-07-09** — **Unitholding fetch confirmed LIVE + Phase E planned (npm-only refresh).**
   (1) **The unitholding fetcher now pulls real live data** — the correct NSE endpoint was
   discovered (the equities `corporate-share-holdings-master` is empty for REITs): use

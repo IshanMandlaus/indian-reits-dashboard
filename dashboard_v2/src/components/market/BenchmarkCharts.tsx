@@ -7,7 +7,7 @@
  */
 import type { ChartConfiguration } from 'chart.js'
 import { baseOptions, zoomOptions, CHART, type RangeConfig } from '../../lib/chartSetup'
-import { fmtM } from '../../lib/reit'
+import { fmtM, fmtDay } from '../../lib/reit'
 import {
   type BenchCtx,
   type Pt,
@@ -53,7 +53,7 @@ function timeLineConfig(datasets: DS[], yTitle: string): RangeConfig {
       plugins: {
         ...baseOptions().plugins,
         zoom: zoomOptions(),
-        tooltip: { callbacks: { title: (it) => (it[0] ? fmtM(it[0].parsed.x as number) : '') } },
+        tooltip: { callbacks: { title: (it) => (it[0] ? fmtDay(it[0].parsed.x as number) : '') } },
       },
     },
   }

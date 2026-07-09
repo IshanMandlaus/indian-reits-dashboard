@@ -34,8 +34,12 @@ export const dTs = (d: string): number => new Date(d).getTime()
 /** Quarterly period "2022-09" → ~quarter end (28th of the month). */
 export const perTs = (per: string): number =>
   new Date(+per.slice(0, 4), +per.slice(5, 7) - 1, 28).getTime()
+/** Compact axis-tick date incl. the day (daily data → the day matters): "08 Jul 26". */
 export const fmtM = (ts: number): string =>
-  new Date(ts).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' })
+  new Date(ts).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })
+/** Full unambiguous date for tooltips — identifies the exact trading day: "08 Jul 2026". */
+export const fmtDay = (ts: number): string =>
+  new Date(ts).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
 
 // ─── NAV / price ────────────────────────────────────────────────────────────
 export interface NavPoint {
