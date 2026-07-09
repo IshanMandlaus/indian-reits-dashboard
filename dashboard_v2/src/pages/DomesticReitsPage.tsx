@@ -124,6 +124,8 @@ export function DomesticReitsPage() {
           className="lg:col-span-2"
           title="1 · Price orbits NAV — the premium/discount is the signal"
           note="Traded price (NSE/BSE) against reported NAV per unit; bars = distribution per unit."
+          exportable="chart"
+          exportName={`${k}-1-price-vs-nav`}
         >
           <Insight html={insights.c1} />
           <Chart1PriceNav D={D} k={k} LIVE={LIVE} />
@@ -133,27 +135,29 @@ export function DomesticReitsPage() {
           className="lg:col-span-2"
           title="2 · Assets enter at cost and mark up above book"
           note="NAV/unit (gold) with issuance (diamonds) & block-deal (triangles) markers, plus fair value/unit vs dashed book value/unit — the shaded gap is the accretion signal."
+          exportable="chart"
+          exportName={`${k}-2-issuances`}
         >
           <Insight html={insights.c2} />
           <Chart2Issuances D={D} k={k} valHy={valHy.data} blocksLive={blocksLive.data} />
         </Card>
 
-        <Card title="3 · Fair value keeps pulling ahead of book" note="FV = valuer GAV; BV = investment property + IPUD + PP&E + CWIP.">
+        <Card title="3 · Fair value keeps pulling ahead of book" note="FV = valuer GAV; BV = investment property + IPUD + PP&E + CWIP." exportable="chart" exportName={`${k}-3-fair-vs-book`}>
           <Insight html={insights.c3} />
           <Chart3FvBv D={D} k={k} />
         </Card>
 
-        <Card title="4 · Distributable cash grows with the top line">
+        <Card title="4 · Distributable cash grows with the top line" exportable="chart" exportName={`${k}-4-ndcf`}>
           <Insight html={insights.c4} />
           <Chart4Ndcf D={D} k={k} />
         </Card>
 
-        <Card title="5 · The cash return the assets throw off (NDCF ÷ GAV)">
+        <Card title="5 · The cash return the assets throw off (NDCF ÷ GAV)" exportable="chart" exportName={`${k}-5-cash-yield`}>
           <Insight html={insights.c5} />
           <Chart5Yield D={D} k={k} />
         </Card>
 
-        <Card title="6 · Low leverage by design — equity carries the stack" note="Latest FY debt vs unitholders’ equity — click the chart for the year-by-year split.">
+        <Card title="6 · Low leverage by design — equity carries the stack" note="Latest FY debt vs unitholders’ equity — click the chart for the year-by-year split." exportable="chart" exportName={`${k}-6-capital-structure`}>
           <Insight html={insights.c6} />
           <Chart6Capital D={D} k={k} />
         </Card>

@@ -79,6 +79,8 @@ export function InvitsPage() {
         className="mb-4"
         title="The three listed InvITs at a glance"
         note="Government-sponsored infrastructure trusts — NHAI's two road InvITs and PowerGrid's transmission InvIT · click a card for the full price chart + metrics"
+        exportable="panel"
+        exportName="invits-snapshot"
       >
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           {trusts.map((t) => (
@@ -97,6 +99,8 @@ export function InvitsPage() {
           className="lg:col-span-2"
           title="Range-bound prices — InvITs trade on yield, not growth"
           note="Daily closes from NSE (populated by Refresh) · wheel to zoom, double-click resets"
+          exportable="chart"
+          exportName="invits-unit-price"
         >
           {hasData ? (
             <InvitPriceChart ctx={ctx} trusts={trusts} />
@@ -105,13 +109,15 @@ export function InvitsPage() {
           )}
         </Card>
 
-        <Card title="InvITs behave like bonds — steady against the market">
+        <Card title="InvITs behave like bonds — steady against the market" exportable="chart" exportName="invits-rebased">
           {hasData ? <InvitRebasedChart ctx={ctx} trusts={trusts} /> : <EmptyChart height={320} />}
         </Card>
 
         <Card
           title="InvITs out-yield REITs, FDs and G-secs"
           note="InvIT DPU ÷ price vs Indian REITs combined distribution yield (FY26) vs SBI 1-yr FD & a flat 7% p.a. FD — InvITs are return-OF-capital heavy: yields are not directly comparable to a coupon"
+          exportable="chart"
+          exportName="invits-cash-yield"
         >
           <InvitYieldChart ctx={ctx} trusts={trusts} reitYield={reitYield} />
         </Card>
@@ -120,6 +126,8 @@ export function InvitsPage() {
           className="lg:col-span-2"
           title="NHIT dwarfs the newer trusts by enterprise value"
           note="Latest disclosed valuations — NHIT's FY26 valuation ₹56,988 cr dwarfs the newer vehicles"
+          exportable="chart"
+          exportName="invits-enterprise-value"
         >
           <InvitEvChart trusts={trusts} />
         </Card>

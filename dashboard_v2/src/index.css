@@ -108,6 +108,26 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
+   SVG export — light, white-background re-theme applied to a
+   subtree while it is serialised (see src/lib/svgExport.ts).
+   Overriding the theme's --color-* tokens re-colours every
+   Tailwind utility in the subtree for a print-ready snapshot.
+   ───────────────────────────────────────────────────────────── */
+.svg-export-light {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8fafc;
+  --color-surface-3: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-soft: #eef2f6;
+  --color-ink: #0f172a;
+  --color-muted: #475569;
+  --color-subtle: #64748b;
+  --color-gold: #a16207;
+  background: #ffffff;
+}
+
+/* ─────────────────────────────────────────────────────────────
    Annexure modal — styles for the HTML string produced by the
    ported renderAnnexItems pipeline (annexRender.ts).
    ───────────────────────────────────────────────────────────── */

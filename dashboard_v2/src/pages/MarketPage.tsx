@@ -75,6 +75,8 @@ export function MarketPage() {
         className="mb-4"
         title="India's six REITs at a glance"
         note="Ordered by market cap · click a card for the full price chart + NSE/BSE metrics"
+        exportable="panel"
+        exportName="market-snapshot"
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {snapRows.map((row) => (
@@ -109,6 +111,8 @@ export function MarketPage() {
           className="lg:col-span-2"
           title="REIT prices have decoupled from the realty index"
           note="Combined = sum of unit prices of all listed REITs (basket grows at each IPO: KRT Aug-25, Bagmane May-26)"
+          exportable="chart"
+          exportName="market-levels"
         >
           <BenchLevels ctx={ctx} years={years} />
         </Card>
@@ -117,6 +121,8 @@ export function MarketPage() {
           className="lg:col-span-2"
           title="How REITs stack up against equities, G-secs and FDs"
           note="Listed REITs (combined, growing basket) vs NIFTY 50 · SENSEX · NIFTY REALTY · SBI 1-yr FD (stepped) · a flat 7% p.a. FD · GoI 10Y G-Sec. SENSEX appears after the first live refresh."
+          exportable="chart"
+          exportName="market-rebased"
         >
           <BenchRebased ctx={ctx} years={years} />
         </Card>
@@ -124,11 +130,13 @@ export function MarketPage() {
         <Card
           title="The seasoned four have beaten the broad market"
           note="Embassy + Mindspace + Brookfield + Nexus (KRT & Bagmane excluded owing to IPO recency)"
+          exportable="chart"
+          exportName="market-veterans"
         >
           <BenchVets ctx={ctx} years={years} />
         </Card>
 
-        <Card title="A development pipeline sits atop the completed base" note="Completed vs under-construction / future development">
+        <Card title="A development pipeline sits atop the completed base" note="Completed vs under-construction / future development" exportable="chart" exportName="market-development-pipeline">
           <AreaChart ctx={ctx} />
         </Card>
 
@@ -136,6 +144,8 @@ export function MarketPage() {
           className="lg:col-span-2"
           title="Liquidity is building — REIT turnover keeps climbing"
           note="REITs basket = Embassy + Mindspace + Brookfield + Nexus daily traded turnover · ▲ 24-Feb-26: Embassy block deal — PPFAS bought ~5.63 cr units (~6%) at ₹420 from exiting Capital Group funds"
+          exportable="chart"
+          exportName="market-turnover"
         >
           <VolumeCharts ctx={ctx} years={years} />
         </Card>
@@ -143,6 +153,8 @@ export function MarketPage() {
         <Card
           title="REIT payouts clear the fixed-deposit hurdle"
           note="Total distributions paid per FY (₹ cr, stacked) · combined trailing distribution yield vs SBI 1-yr FD rate and a flat 7% p.a. FD"
+          exportable="chart"
+          exportName="market-distributions"
         >
           <DistributionChart ctx={ctx} D={D} />
         </Card>

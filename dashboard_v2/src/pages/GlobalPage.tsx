@@ -58,6 +58,8 @@ export function GlobalPage() {
         <Card
           title="The US is ~80% of the listed-REIT world"
           note="US$ bn listed-REIT market cap — click a country slice to drill into its top listed REITs by market cap."
+          exportable="chart"
+          exportName="global-mcap-by-country"
         >
           <PieDrilldown slices={mcapSlices} worldTotal={mcapWorld} drill={(k) => mcapDrill(G, k)} />
         </Card>
@@ -65,6 +67,8 @@ export function GlobalPage() {
         <Card
           title="By gross assets, the US dwarfs every other market"
           note="US$ bn gross real-estate AUM (US included — click its legend swatch to hide/show) — click a country slice to drill into its AUM by sector."
+          exportable="chart"
+          exportName="global-aum-by-country"
         >
           <PieDrilldown
             slices={aumSlices}
@@ -77,6 +81,8 @@ export function GlobalPage() {
         <Card
           className="lg:col-span-2"
           title="The market leaders in each country"
+          exportable="panel"
+          exportName="global-market-leaders"
           note={
             LIVE?.asof
               ? 'Live quotes as of ' + LIVE.asof + ' (Yahoo Finance) · local currency · click a row for the full chart + metrics'
