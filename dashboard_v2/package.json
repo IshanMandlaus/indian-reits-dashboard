@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "data": "node scripts/convert-data.mjs",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/check-assets.mjs && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },

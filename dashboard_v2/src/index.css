@@ -1,5 +1,18 @@
 @import 'tailwindcss';
 
+/* Self-hosted Inter (variable, full glyph set incl. ₹ U+20B9 and → U+2192).
+   File lives in public/fonts/ and is copied verbatim into dist/. Variable axis
+   covers 100–900, so the single file serves every weight the app uses (400/500/
+   600/700). font-display:swap → text paints immediately in the fallback, then
+   swaps to Inter with no invisible-text flash. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/InterVariable.woff2') format('woff2');
+}
+
 /* ─────────────────────────────────────────────────────────────
    Indian REITs Dashboard v2 — Refined dark design system.
    Tailwind v4 CSS-first theme: tokens below become utilities,

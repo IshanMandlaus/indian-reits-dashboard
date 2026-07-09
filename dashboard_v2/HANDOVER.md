@@ -1,7 +1,8 @@
 # Indian REITs Dashboard v2 — Session Handover
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
-> Last updated: 2026-07-09. Update the **Status** and **Changelog** sections as you go.
+> Last updated: 2026-07-09 (production-ready: build verified, Inter self-hosted, all 4
+> routes re-verified). Update the **Status** and **Changelog** sections as you go.
 
 ---
 
@@ -110,8 +111,15 @@ browser.
   → `useDataset('reit-data')` returns `{data, loading, error}`.
 - **Images:** `public/img` is a **symlink** → `../dashboard/img` (200 MB of annexure
   images — not duplicated/committed). Verified Vite serves both JSON and symlinked
-  images (HTTP 200) in dev. ⚠️ **Production build must resolve this** — Rollup may not
-  follow the symlink on `vite build`; do a real copy or serve `img/` from a CDN.
+  images (HTTP 200) in dev. ✅ **Production build RESOLVED (2026-07-09):** Vite 8 /
+  Rollup *does* follow the symlink on `vite build` — `dist/img` is a real copy of all
+  926 files (byte-identical, md5-verified), and `vite preview` serves them + data JSON
+  + SPA deep-route fallback all at HTTP 200. The feared "Rollup won't follow the
+  symlink" does not occur with this toolchain. A prebuild guard
+  (`scripts/check-assets.mjs`, wired into `npm run build`) now fails the build **loudly**
+  if `public/img` ever dangles (repo restructure / sparse checkout), instead of silently
+  shipping a `dist/` with broken images. No copy/CDN change needed for the current
+  single-repo deploy model.
 
 ### Phase B — Domestic REITs page ✅ DONE (2026-07-09)
 All 9 sections wired to real data + verified in browser. Files:
@@ -271,9 +279,14 @@ Tokens live in `src/index.css` under `@theme` (Tailwind v4). Use as utilities:
 | `--color-warn` / `--color-info` / `--color-violet` / `--color-gold` | `#fbbf24` / `#60a5fa` / `#a78bfa` / `#d9c48a` | supporting series |
 
 Conventions: `--radius-card: 14px`; `--shadow-card` for elevation; `.tnum` utility for
-tabular-numeric financial figures; font stack is Inter → system-ui (Inter not yet
-self-hosted — add woff2 to `public/` if desired). Keep charts on the same palette
-(thin lines, soft grid `--color-border` at low alpha, rounded bars).
+tabular-numeric financial figures; font stack is Inter → system-ui. **Inter is now
+self-hosted (2026-07-09):** `public/fonts/InterVariable.woff2` (full glyph set, variable
+100–900) + an `@font-face` at the top of `src/index.css` + a `<link rel=preload>` in
+`index.html`. **Use the FULL InterVariable, not fontsource's `latin` subset** — the
+latin subset is missing both ₹ (U+20B9) and → (U+2192), which the dashboard uses
+everywhere; the full file (352 KB) includes them (glyph coverage verified with
+fontTools). Keep charts on the same palette (thin lines, soft grid `--color-border` at
+low alpha, rounded bars).
 
 ---
 
@@ -333,6 +346,26 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-09** — **Production-readiness pass (3 items, all done).**
+  (1) **Production build verified.** `npm run build` → a fully working `dist/`: Vite 8
+  follows the `public/img` symlink and copies all 926 image files (byte-identical,
+  md5-checked); `vite preview` serves app, SPA deep routes (`/market`, `/global` → 200
+  fallback), `data/*.json`, and annexure/structure images all at HTTP 200. Added
+  `scripts/check-assets.mjs` (a prebuild guard in `npm run build`) so a dangling
+  `public/img` fails the build loudly instead of silently shipping broken images. No
+  copy/CDN change needed for the single-repo deploy model.
+  (2) **Inter self-hosted.** `public/fonts/InterVariable.woff2` (full variable font) +
+  `@font-face` in `src/index.css` + preload in `index.html`. Chose the FULL font over
+  fontsource's `latin` subset because the subset lacks ₹ (U+20B9) and → (U+2192) — both
+  used throughout the app (verified glyph coverage with fontTools). Browser-confirmed:
+  `document.fonts.check('16px Inter')` true, body computes to Inter, ₹ renders from
+  Inter itself.
+  (3) **Fresh E2E browser verification** of all 4 routes on a clean dev server: Domestic
+  (6 charts painted), Market (snapshot cards + sparklines), InvITs (3 cards + sparklines),
+  Global (both pies paint — PieController fix holds); security modal opens with live
+  price + range buttons + painted area chart + metrics grid. **0 console errors on every
+  route.** tsc + oxlint clean. **The v2 rebuild is now feature-complete and
+  production-ready.**
 - **2026-07-09** — **Phase D1 (refresh → v2 JSON) done.** Added `dashboard/_v2json.py`
   and wired it into `refresh_prices` / `refresh_market` / `refresh_global` `write_*`
   functions so every live refresh mirrors its output into
