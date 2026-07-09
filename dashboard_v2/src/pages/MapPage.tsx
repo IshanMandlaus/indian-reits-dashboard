@@ -80,6 +80,13 @@ export function MapPage() {
 
   const annexPages = picked ? annexures.data?.[picked.reit]?.[picked.asset]?.length || 0 : 0
 
+  const SIZE_LBL = { leasable: 'leasable area', completed: 'completed area', value: 'portfolio value' }
+  const COLOR_LBL = { reit: 'REIT', occ: 'committed occupancy', rent: 'in-place rent' }
+  const SHADE_LBL = { leasable: 'leasable area', value: 'portfolio value', count: 'asset count' }
+  const mapNote =
+    `Bubble size = ${SIZE_LBL[size]} · colour = ${COLOR_LBL[color]} · state shade = ${SHADE_LBL[stateMetric]} · ` +
+    `scroll to zoom, drag to pan, click a pin for detail`
+
   return (
     <>
       <PageHeader
@@ -111,7 +118,7 @@ export function MapPage() {
       </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2" title="REIT assets across India" note={mapNote} bodyClassName="pt-2">
           <IndiaMap
             assets={filtered}
             view={view}

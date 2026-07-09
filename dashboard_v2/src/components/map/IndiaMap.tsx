@@ -47,11 +47,22 @@ const STATE_LABEL: Record<StateMetric, string> = {
   value: 'portfolio value (₹ cr)',
   count: 'asset count',
 }
-const SIZE_LABEL: Record<SizeMetric, string> = {
-  leasable: 'Leasable msf',
-  completed: 'Completed msf',
-  value: 'Value ₹cr',
+
+/** Asset type → ECharts symbol + its legend glyph. */
+const SYMBOL_BY_TYPE: Record<string, string> = {
+  Office: 'circle',
+  Retail: 'diamond',
+  Hotel: 'triangle',
+  Solar: 'rect',
+  Other: 'roundRect',
 }
+const TYPE_GLYPH: [string, string][] = [
+  ['Office', '●'],
+  ['Retail', '◆'],
+  ['Hotel', '▲'],
+  ['Solar', '■'],
+  ['Other', '▢'],
+]
 
 const sizeVal = (a: MapAsset, m: SizeMetric): number =>
   (m === 'value' ? a.valueCr : m === 'completed' ? a.completed : a.leasable) || 0
@@ -166,10 +177,11 @@ export function IndiaMap({ assets, view, sizeMetric, colorMode, stateMetric, hov
         const item: Record<string, unknown> = {
           id: a.id,
           name: a.asset,
+          symbol: SYMBOL_BY_TYPE[a.type] || 'circle',
           value: [a.lng, a.lat, sizeVal(a, sizeMetric), colorRaw ?? '-'],
           _a: a,
         }
-        if (colorMode === 'reit') item.itemStyle = { color: a.color }
+        if (colorMode === 'reit') item.itemStyle = { color: a.color, shadowColor: a.color, shadowBlur: 12 }
         return item
       })
     } else {
@@ -181,7 +193,7 @@ export function IndiaMap({ assets, view, sizeMetric, colorMode, stateMetric, hov
           value: [c.lng, c.lat, citySizeVal(c, sizeMetric), colorRaw ?? '-'],
           _c: c,
         }
-        if (colorMode !== 'occ') item.itemStyle = { color: P.accent }
+        if (colorMode !== 'occ') item.itemStyle = { color: P.accent, shadowColor: P.accent, shadowBlur: 14 }
         return item
       })
     }
@@ -212,19 +224,11 @@ export function IndiaMap({ assets, view, sizeMetric, colorMode, stateMetric, hov
       })
     }
 
-    const sizeScale = (raw: number) => (raw <= 0 ? 4 : 7 + 30 * Math.sqrt(raw / maxSize))
+    const sizeScale = (raw: number) => (raw <= 0 ? 4 : 6 + 25 * Math.sqrt(raw / maxSize))
 
     chart.setOption(
       {
         backgroundColor: 'transparent',
-        title: {
-          text: view === 'assets' ? assets.length + ' assets' : cities.length + ' cities',
-          subtext: 'Bubble size = ' + SIZE_LABEL[sizeMetric] + ' · shade = ' + STATE_LABEL[stateMetric],
-          left: 14,
-          top: 8,
-          textStyle: { color: P.ink, fontSize: 14, fontWeight: 600 },
-          subtextStyle: { color: P.subtle, fontSize: 11 },
-        },
         toolbox: {
           right: 12,
           top: 10,
@@ -252,17 +256,18 @@ export function IndiaMap({ assets, view, sizeMetric, colorMode, stateMetric, hov
             max: maxState,
             calculable: false,
             show: false,
-            inRange: { color: ['#1b2634', '#1e3a42', '#136f68', '#1aa596', '#5df0dd'] },
+            inRange: { color: ['#182230', '#1c4842', '#149183', '#2dd4bf', '#7ff5e6'] },
           },
           ...pinVisualMap,
         ],
         geo: {
           map: 'india',
           roam: true,
-          center: roamRef.current.center ?? [82, 22.5],
-          zoom: roamRef.current.zoom ?? 1.7,
+          ...(roamRef.current.center
+            ? { center: roamRef.current.center, zoom: roamRef.current.zoom }
+            : { layoutCenter: ['50%', '53%'], layoutSize: '132%' }),
           scaleLimit: { min: 1, max: 12 },
-          itemStyle: { areaColor: '#1b2634', borderColor: 'rgba(130,150,175,.20)', borderWidth: 0.5 },
+          itemStyle: { areaColor: '#161f2b', borderColor: 'rgba(140,160,185,.16)', borderWidth: 0.5 },
           emphasis: { disabled: true },
           silent: true, // choropleth is drawn by the map series below; geo is just the canvas
         },
@@ -272,7 +277,7 @@ export function IndiaMap({ assets, view, sizeMetric, colorMode, stateMetric, hov
             geoIndex: 0,
             name: 'footprint',
             data: mapData,
-            itemStyle: { borderColor: 'rgba(130,150,175,.22)', borderWidth: 0.5 },
+            itemStyle: { borderColor: 'rgba(140,160,185,.18)', borderWidth: 0.5 },
             emphasis: { disabled: true },
             select: { disabled: true },
           },
@@ -284,8 +289,8 @@ export function IndiaMap({ assets, view, sizeMetric, colorMode, stateMetric, hov
             data: scatter,
             symbolSize: (val: number[]) => sizeScale(val[2]),
             showEffectOn: 'render',
-            rippleEffect: { scale: 2.4, brushType: 'stroke', period: 4.5 },
-            itemStyle: { opacity: 0.92, shadowBlur: 6, shadowColor: 'rgba(0,0,0,.5)' },
+            rippleEffect: { scale: 2.6, brushType: 'stroke', period: 5 },
+            itemStyle: { opacity: 0.95, borderColor: 'rgba(255,255,255,.6)', borderWidth: 0.8, shadowBlur: 8, shadowColor: 'rgba(0,0,0,.5)' },
             emphasis: {
               scale: 1.5,
               focus: 'self',
@@ -307,7 +312,24 @@ export function IndiaMap({ assets, view, sizeMetric, colorMode, stateMetric, hov
     )
   }
 
-  return <div ref={elRef} className="h-[600px] w-full" />
+  return (
+    <div
+      className="relative h-[600px] w-full overflow-hidden rounded-lg"
+      style={{ background: 'radial-gradient(115% 85% at 50% 56%, rgba(45,212,191,0.08), rgba(45,212,191,0) 60%)' }}
+    >
+      <div ref={elRef} className="h-full w-full" />
+      {view === 'assets' && (
+        <div className="pointer-events-none absolute bottom-3 left-4 flex flex-wrap gap-x-3 gap-y-1 text-[10.5px] text-muted">
+          {TYPE_GLYPH.map(([t, g]) => (
+            <span key={t} className="inline-flex items-center gap-1">
+              <span className="text-subtle">{g}</span>
+              {t}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function tooltipFormatter(stateMetric: StateMetric) {
