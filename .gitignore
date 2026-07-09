@@ -13,7 +13,6 @@
 
 # Old/heavyweight copies & archives
 dashboard.zip
-/dashboard_v2/
 
 # Raw slide/source assets (the derived PNGs under dashboard/img ARE tracked)
 *.key
