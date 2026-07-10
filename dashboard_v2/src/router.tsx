@@ -11,11 +11,11 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     HydrateFallback: () => null,
     children: [
-      { index: true, element: <Navigate to="/domestic" replace /> },
+      { index: true, element: <GlobalPage /> },
       { path: 'domestic', element: <DomesticReitsPage /> },
       { path: 'market', element: <MarketPage /> },
       { path: 'invits', element: <InvitsPage /> },
-      { path: 'global', element: <GlobalPage /> },
+      { path: 'global', element: <Navigate to="/" replace /> }, // old URL, pre-landing-redesign
       { path: 'map', lazy: async () => ({ Component: (await import('./pages/MapPage')).MapPage }) },
     ],
   },

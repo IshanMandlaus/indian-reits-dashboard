@@ -83,7 +83,7 @@ function buildPie(slices: DrillSlice[], total: number, title: string | null, suf
         {
           data: slices.map((s) => s.value),
           backgroundColor: slices.map((s) => s.color),
-          borderColor: '#0a0e14',
+          borderColor: '#000000',
           borderWidth: 2,
         },
       ],

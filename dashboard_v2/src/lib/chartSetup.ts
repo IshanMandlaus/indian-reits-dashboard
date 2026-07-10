@@ -69,7 +69,7 @@ export const CHART = {
   info: '#60a5fa', // DPU / blocks / PAT
   violet: '#a78bfa',
   mut: '#93a1b3', // muted text / ticks
-  grid: 'rgba(35, 45, 59, 0.6)', // --color-border at low alpha
+  grid: 'rgba(28, 36, 49, 0.6)', // --color-border at low alpha
   bookGrid: '#8fa0b8', // book-value dashed line
 } as const
 

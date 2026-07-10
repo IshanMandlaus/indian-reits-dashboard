@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 
-const NAV = [
-  { to: '/domestic', label: 'Domestic REITs', num: '01' },
-  { to: '/market', label: 'Market & Benchmarks', num: '02' },
-  { to: '/invits', label: 'InvITs', num: '03' },
-  { to: '/global', label: 'Global Markets', num: '04' },
+const NAV: { to: string; label: string; num: string; end?: boolean }[] = [
+  // `end` keeps "/" from matching as active on every route.
+  { to: '/', label: 'Global', num: '01', end: true },
+  { to: '/domestic', label: 'Domestic REITs', num: '02' },
+  { to: '/market', label: 'Market & Benchmarks', num: '03' },
+  { to: '/invits', label: 'InvITs', num: '04' },
   { to: '/map', label: 'Portfolio Map', num: '05' },
 ]
 
@@ -35,6 +36,7 @@ export function AppShell() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                end={item.end}
                 className={({ isActive }) =>
                   [
                     'group relative flex items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-[13px] font-medium transition-colors',

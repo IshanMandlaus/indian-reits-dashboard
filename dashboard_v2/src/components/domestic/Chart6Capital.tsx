@@ -68,7 +68,7 @@ function build(D: ReitData, k: ReitKey, view: 'pie' | 'bars', drill: () => void)
       type: 'doughnut',
       data: {
         labels: [`Debt ${((100 * d) / t).toFixed(1)}%`, `Equity (net worth) ${((100 * e) / t).toFixed(1)}%`],
-        datasets: [{ data: [d, e], backgroundColor: [CHART.red, CHART.acc], borderColor: '#111721', borderWidth: 3 }],
+        datasets: [{ data: [d, e], backgroundColor: [CHART.red, CHART.acc], borderColor: '#0c1117', borderWidth: 3 }],
       },
       options: {
         maintainAspectRatio: false,

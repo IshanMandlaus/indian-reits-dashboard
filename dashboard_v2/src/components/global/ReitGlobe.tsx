@@ -5,12 +5,14 @@
  * not `react-globe.gl` (avoids React-19 peer-dep friction).
  *
  * On-brand look: a dark globe whose landmasses are a teal HEX-GRID (globe.gl
- * `hexPolygons`, no photographic texture), a teal atmosphere glow, and a transparent
- * background so the card's radial teal backdrop shows through. Each player is a
- * market-cap-sized point with a pulsing ring; hovering shows a live-quote label and
- * clicking opens the same <SecurityModal> the country-panel rows use.
+ * `hexPolygons`, no photographic texture), a teal atmosphere glow, and a fully
+ * TRANSPARENT canvas so the page and its glow show through — the globe sits bare
+ * and boundless in the landing hero, no card chrome, no bounding rectangle.
+ * Each player is a market-cap-sized point with a pulsing ring; hovering shows a
+ * live-quote label and clicking opens the same <SecurityModal> the country-panel
+ * rows use.
  *
- * globe.gl is lazy-loaded by GlobalPage (React.lazy), so three.js lands in its own
+ * globe.gl is lazy-loaded by GlobeHero (React.lazy), so three.js lands in its own
  * async chunk and never touches the other routes' bundles.
  */
 import { useEffect, useRef } from 'react'
@@ -22,6 +24,8 @@ import { pointPriceLabel } from '../../lib/globe'
 interface Props {
   points: GlobePoint[]
   onPick: (ckey: string, ri: number) => void
+  /** Height/sizing classes for the wrapper; defaults to the card-sized h-[560px]. */
+  className?: string
 }
 
 const ACCENT = '#2dd4bf'
@@ -58,7 +62,7 @@ function hexColor(feat: object): string {
   return pal[h % pal.length]
 }
 
-export function ReitGlobe({ points, onPick }: Props) {
+export function ReitGlobe({ points, onPick, className }: Props) {
   const elRef = useRef<HTMLDivElement>(null)
   const globeRef = useRef<GlobeInstance | null>(null)
   // Live refs so imperative globe callbacks never read stale props.
@@ -82,11 +86,11 @@ export function ReitGlobe({ points, onPick }: Props) {
       }
       const g = new Globe(node, {
         animateIn: true,
-        rendererConfig: { preserveDrawingBuffer: true, antialias: true },
+        rendererConfig: { preserveDrawingBuffer: true, antialias: true, alpha: true },
       })
       globeRef.current = g
 
-      g.backgroundColor('#0a0e14') // --color-bg: deep space, darker than the card — globe reads as inset
+      g.backgroundColor('rgba(0,0,0,0)') // transparent — the page (and its glow) shows through, no bounding rectangle
         .showAtmosphere(true)
         .atmosphereColor(ACCENT)
         .atmosphereAltitude(0.26)
@@ -196,10 +200,7 @@ export function ReitGlobe({ points, onPick }: Props) {
   }
 
   return (
-    <div
-      className="relative h-[560px] w-full overflow-hidden rounded-lg"
-      style={{ background: 'radial-gradient(120% 90% at 50% 45%, rgba(45,212,191,0.12), rgba(45,212,191,0) 62%)' }}
-    >
+    <div className={['relative w-full', className ?? 'h-[560px]'].join(' ')}>
       <div ref={elRef} className="h-full w-full" />
     </div>
   )
@@ -216,7 +217,7 @@ function labelHtml(p: GlobePoint): string {
   const price = pointPriceLabel(p)
   const mcap = p.mcapBn != null ? '$' + p.mcapBn.toFixed(1) + ' bn mkt cap' : ''
   return `
-    <div style="background:#111721;border:1px solid #232d3b;border-radius:10px;padding:8px 11px;
+    <div style="background:#0c1117;border:1px solid #1c2431;border-radius:10px;padding:8px 11px;
       box-shadow:0 8px 30px rgba(0,0,0,.55);font-family:Inter,system-ui,sans-serif;min-width:160px">
       <div style="font-weight:700;color:#e8eef4;font-size:13px">${escapeHtml(p.name)}</div>
       <div style="color:${p.color};font-size:11px;margin-bottom:5px">

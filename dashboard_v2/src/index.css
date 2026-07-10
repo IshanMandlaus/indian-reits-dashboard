@@ -19,13 +19,14 @@
    e.g. --color-surface → bg-surface / text-surface / border-surface.
    ───────────────────────────────────────────────────────────── */
 @theme {
-  /* Surfaces — deep, calm neutral slate (cooler + darker than v1) */
-  --color-bg: #0a0e14;
-  --color-surface: #111721;
-  --color-surface-2: #161d29;
-  --color-surface-3: #1c2532;
-  --color-border: #232d3b;
-  --color-border-soft: #1a2230;
+  /* Surfaces — pure-black page so the hero globe and chart colors pop;
+     cards sit on a dark slate ramp one step lighter (same hierarchy). */
+  --color-bg: #000000;
+  --color-surface: #0c1117;
+  --color-surface-2: #11161e;
+  --color-surface-3: #161c26;
+  --color-border: #1c2431;
+  --color-border-soft: #141b25;
 
   /* Text */
   --color-ink: #e8eef4;
@@ -76,7 +77,7 @@
     /* subtle depth: faint radial glow toward the top */
     background-image: radial-gradient(
       1200px 600px at 50% -10%,
-      rgba(45, 212, 191, 0.05),
+      rgba(45, 212, 191, 0.07),
       transparent 60%
     );
     background-attachment: fixed;

@@ -36,10 +36,10 @@ const P = {
   ink: '#e8eef4',
   muted: '#93a1b3',
   subtle: '#61707f',
-  surface: '#111721',
-  border: '#232d3b',
+  surface: '#0c1117',
+  border: '#1c2431',
   accent: '#2dd4bf',
-  bg: '#0a0e14',
+  bg: '#000000',
 }
 
 const STATE_LABEL: Record<StateMetric, string> = {

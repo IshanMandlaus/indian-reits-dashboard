@@ -1,18 +1,13 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
-import { PageHeader } from '../components/ui/PageHeader'
+import { useMemo, useState } from 'react'
 import { Card } from '../components/ui/Card'
 import { useDataset } from '../lib/useDataset'
 import { setupCharts } from '../lib/chartSetup'
 import { countrySlices, mcapDrill, sectorDrill, sectorReitDrill, buildGlobalSecModal } from '../lib/global'
 import { buildGlobePoints } from '../lib/globe'
+import { GlobeHero } from '../components/global/GlobeHero'
 import { PieDrilldown } from '../components/global/PieDrilldown'
 import { CountryPanels } from '../components/global/CountryPanels'
 import { SecurityModal, type SecModalData } from '../components/charts/SecurityModal'
-
-// Lazy so globe.gl / three.js land in their own async chunk (only fetched on /global).
-const ReitGlobe = lazy(() =>
-  import('../components/global/ReitGlobe').then((m) => ({ default: m.ReitGlobe })),
-)
 
 setupCharts()
 
@@ -29,117 +24,89 @@ export function GlobalPage() {
   const aumSlices = useMemo(() => (G ? countrySlices(G, 'aum') : []), [G])
   const globePoints = useMemo(() => (G ? buildGlobePoints(G, LIVE) : []), [G, LIVE])
 
-  if (global.error) {
-    return (
-      <>
-        <PageHeader title="Global REIT Markets" subtitle="Global context for the Indian REIT market." />
+  const mcapWorld = G ? G.countries.reduce((a, c) => a + c.mcap, 0) : 0
+  const aumWorld = G ? G.countries.reduce((a, c) => a + c.aum, 0) : 0
+  // Stamped under the title in exported SVGs (live-quote charts lose the date otherwise).
+  const exportAsof = LIVE?.asof
+    ? 'Live quotes as of ' + LIVE.asof + ' (Yahoo Finance) · estimates as of ' + (G?.asof ?? '—')
+    : 'Estimates as of ' + (G?.asof ?? '—')
+
+  // Hero mounts unconditionally (points=[] while loading) so the globe never
+  // re-initialises when data arrives; only the cards section below swaps state.
+  return (
+    <>
+      <GlobeHero
+        points={globePoints}
+        liveAsof={LIVE?.asof ?? null}
+        estAsof={G?.asof ?? null}
+        onPick={(ckey, ri) => {
+          if (G) setModal(buildGlobalSecModal(G, LIVE, ckey, ri))
+        }}
+      />
+
+      {global.error ? (
         <Card title="Failed to load data">
           <p className="text-[13px] text-neg">{global.error.message}</p>
         </Card>
-      </>
-    )
-  }
-
-  if (!G) {
-    return (
-      <>
-        <PageHeader title="Global REIT Markets" subtitle="Global context for the Indian REIT market." />
+      ) : !G ? (
         <Card title="Loading…">
           <div className="h-40 animate-pulse rounded-lg bg-surface-2" />
         </Card>
-      </>
-    )
-  }
-
-  const mcapWorld = G.countries.reduce((a, c) => a + c.mcap, 0)
-  const aumWorld = G.countries.reduce((a, c) => a + c.aum, 0)
-  const asof =
-    'US · Japan · Australia · Singapore · Hong Kong · China · India' +
-    (LIVE?.asof ? ' · live quotes ' + LIVE.asof + ' (Yahoo Finance)' : ' · estimates in global_data')
-  // Stamped under the title in exported SVGs (live-quote charts lose the date otherwise).
-  const exportAsof = LIVE?.asof
-    ? 'Live quotes as of ' + LIVE.asof + ' (Yahoo Finance) · estimates as of ' + G.asof
-    : 'Estimates as of ' + G.asof
-
-  return (
-    <>
-      <PageHeader title="Global REIT Markets" subtitle={asof} />
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card
-          title="Listed REIT market capitalisation by country"
-          note="US$ bn listed-REIT market cap — click a country slice to drill into its top listed REITs by market cap."
-          exportable="chart"
-          exportName="global-mcap-by-country"
-          exportAsof={exportAsof}
-        >
-          <PieDrilldown
-            slices={mcapSlices}
-            worldTotal={mcapWorld}
-            drill={(path) => (path.length === 1 ? mcapDrill(G, path[0]) : null)}
-          />
-        </Card>
-
-        <Card
-          title="Real-estate AUM (gross assets) by country"
-          note="US$ bn gross real-estate AUM (US included — click its legend swatch to hide/show) — click a country → its AUM by sector → a sector to see the listed REITs in it (estimated AUM share, live market cap)."
-          exportable="chart"
-          exportName="global-aum-by-country"
-          exportAsof={exportAsof}
-        >
-          <PieDrilldown
-            slices={aumSlices}
-            worldTotal={aumWorld}
-            tooltipSuffix=" gross assets"
-            drill={(path) =>
-              path.length === 1
-                ? sectorDrill(G, path[0])
-                : path.length === 2
-                  ? sectorReitDrill(G, LIVE, path[0], path[1])
-                  : null
-            }
-          />
-        </Card>
-
-        <Card
-          className="lg:col-span-2"
-          title="Country panels — top 5 listed REITs each (live quotes)"
-          exportable="panel"
-          exportName="global-market-leaders"
-          exportAsof={exportAsof}
-          note={
-            LIVE?.asof
-              ? 'Live quotes as of ' + LIVE.asof + ' (Yahoo Finance) · local currency · click a row for the full chart + metrics'
-              : 'Hit ⟳ Refresh data in the top nav to pull live prices from Yahoo Finance · local currency per unit/share'
-          }
-        >
-          <CountryPanels G={G} LIVE={LIVE} onOpen={(ckey, ri) => setModal(buildGlobalSecModal(G, LIVE, ckey, ri))} />
-        </Card>
-
-        <Card
-          className="lg:col-span-2"
-          title="Global REIT players — live 3D map"
-          note={
-            LIVE?.asof
-              ? 'Every top-5 listed REIT by country, at its HQ · sized by market cap · live quotes as of ' +
-                LIVE.asof +
-                ' (Yahoo Finance) · drag to spin, scroll to zoom, click a marker for the full chart + metrics'
-              : 'Every top-5 listed REIT by country, at its HQ · sized by market cap · drag to spin, scroll to zoom, click a marker for detail · hit ⟳ Refresh data for live prices'
-          }
-        >
-          <Suspense
-            fallback={<div className="h-[560px] w-full animate-pulse rounded-lg bg-surface-2" />}
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Card
+            title="Listed REIT market capitalisation by country"
+            note="US$ bn listed-REIT market cap — click a country slice to drill into its top listed REITs by market cap."
+            exportable="chart"
+            exportName="global-mcap-by-country"
+            exportAsof={exportAsof}
           >
-            <ReitGlobe
-              points={globePoints}
-              onPick={(ckey, ri) => setModal(buildGlobalSecModal(G, LIVE, ckey, ri))}
+            <PieDrilldown
+              slices={mcapSlices}
+              worldTotal={mcapWorld}
+              drill={(path) => (path.length === 1 ? mcapDrill(G, path[0]) : null)}
             />
-          </Suspense>
-        </Card>
-      </div>
+          </Card>
+
+          <Card
+            title="Real-estate AUM (gross assets) by country"
+            note="US$ bn gross real-estate AUM (US included — click its legend swatch to hide/show) — click a country → its AUM by sector → a sector to see the listed REITs in it (estimated AUM share, live market cap)."
+            exportable="chart"
+            exportName="global-aum-by-country"
+            exportAsof={exportAsof}
+          >
+            <PieDrilldown
+              slices={aumSlices}
+              worldTotal={aumWorld}
+              tooltipSuffix=" gross assets"
+              drill={(path) =>
+                path.length === 1
+                  ? sectorDrill(G, path[0])
+                  : path.length === 2
+                    ? sectorReitDrill(G, LIVE, path[0], path[1])
+                    : null
+              }
+            />
+          </Card>
+
+          <Card
+            className="lg:col-span-2"
+            title="Country panels — top 5 listed REITs each (live quotes)"
+            exportable="panel"
+            exportName="global-market-leaders"
+            exportAsof={exportAsof}
+            note={
+              LIVE?.asof
+                ? 'Live quotes as of ' + LIVE.asof + ' (Yahoo Finance) · local currency · click a row for the full chart + metrics'
+                : 'Hit ⟳ Refresh data in the top nav to pull live prices from Yahoo Finance · local currency per unit/share'
+            }
+          >
+            <CountryPanels G={G} LIVE={LIVE} onOpen={(ckey, ri) => setModal(buildGlobalSecModal(G, LIVE, ckey, ri))} />
+          </Card>
+        </div>
+      )}
 
       <SecurityModal data={modal} onClose={() => setModal(null)} />
     </>
   )
 }
-
