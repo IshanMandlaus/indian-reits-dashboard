@@ -2,8 +2,9 @@
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
 > Last updated: 2026-07-10 (**Global page — case studies replaced by an interactive 3D REIT
-> globe**: globe.gl/three.js, earth-night texture, 35 big-player markers with live Yahoo quotes,
-> click→SecurityModal. See §13 and the top Changelog entry.) Prior: NEW 5th page — interactive
+> globe**: globe.gl/three.js, **on-brand dark teal HEX-GRID globe** (no photo texture), 35 big-player
+> markers with live Yahoo quotes, click→SecurityModal. See §13 and the top Changelog entry.) Prior:
+> NEW 5th page — interactive
 > Portfolio Map (§11, `ca14bc2`/`5be9c70`); v2 fully STANDALONE (`8b0d9c5`); Phase E npm-only
 > refresh (`18a6348`). Update the **Status** and **Changelog** sections as you go.
 
@@ -503,32 +504,40 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 - `public/img` is a **real committed folder** now (was a symlink to v1 before the standalone
   move). `check-assets.mjs` guards it at build time.
 - Node modules and build output are gitignored inside `dashboard_v2/`.
-- **Globe/WebGL** (`/global`) is blank in the **headless preview** because a hidden tab pauses
-  `requestAnimationFrame` — not a bug; verify the globe in a real browser. See §13 gotcha 3.
-- **Vendored offline assets** now include `public/textures/` (globe) alongside `public/geo/`
-  (map), `public/fonts/`, `public/img/`. Never hotlink CDNs for these — offline-asset ethos.
+- **Globe/WebGL** (`/global`) is **un-verifiable visually in the headless preview** (hidden tab pauses
+  rAF + globe.gl renders via a post-processing composer) — not a bug; verify the globe in a real
+  browser. See §13 gotcha 4.
+- **Vendored offline assets:** `public/geo/` now holds both `india-districts.json` (map) and
+  `world-countries.geojson` (globe), alongside `public/fonts/` + `public/img/`. Never hotlink CDNs for
+  these — offline-asset ethos. (globe.gl’s `three` textures aren’t used — the globe is a hex grid.)
 
 ---
 
 ## 10. Changelog
 
-- **2026-07-10** — **Global page: case studies → interactive 3D REIT globe.** Removed both
-  narrative case-study blocks (the "Case studies" card — Easterly/BREIT/C-REITs — and the Temasek
-  Singapore deep-dive panel) from `GlobalPage.tsx` and replaced them with a **fully-interactive
-  earth-night globe** (`globe.gl` / three.js) plotting the world's **35 big listed-REIT players**
+- **2026-07-10** — **Global page: case studies → interactive 3D REIT globe (on-brand hex look).**
+  Removed both narrative case-study blocks (the "Case studies" card — Easterly/BREIT/C-REITs — and the
+  Temasek Singapore deep-dive panel) from `GlobalPage.tsx` and replaced them with a **fully-interactive
+  dark teal HEX-GRID globe** (`globe.gl` / three.js) plotting the world's **35 big listed-REIT players**
   (the `top5` per country) at their HQ cities, **sized by market cap**, coloured by country, with
-  pulsing rings. Live Yahoo quotes come from the data we already own (`global-live.json`, refreshed
-  by the existing server) — hover shows the live price + mkt cap; **clicking a marker opens the same
+  pulsing rings. Live Yahoo quotes come from the data we already own (`global-live.json`, refreshed by
+  the existing server) — hover shows the live price + mkt cap; **clicking a marker opens the same
   `<SecurityModal>`** the country-panel rows use (reuses `buildGlobalSecModal`). New files:
   `src/lib/globe.ts` (HQ coords + `buildGlobePoints`), `src/components/global/ReitGlobe.tsx`,
-  `public/textures/{earth-night.jpg,earth-topology.png,night-sky.png}` (vendored from `three-globe`,
-  offline). Dep: `+globe.gl` (pulls `three`+`three-globe`). The globe is **`React.lazy`-loaded** in
+  `public/geo/world-countries.geojson` (Natural Earth 110m, vendored offline). Deps: `+globe.gl`
+  (pulls `three`+`three-globe`) `+@types/three` (dev). The globe is **`React.lazy`-loaded** in
   `GlobalPage`, so three.js lands in its **own ~1.89 MB / 534 KB-gzip async chunk** (`ReitGlobe-*.js`),
   out of the main bundle — the other four routes are untouched. `global.json`'s `cases`/`temasek`
-  data + their types are left in place (UI-only removal). tsc + oxlint + build clean; verified in
-  browser (35 markers + 35 rings, earth texture renders, live quotes, click→modal Prologis $141.36);
-  4 other routes regression-clean, 0 console errors. **Full detail: §13.** See §9 gotchas for the
-  headless-preview caveat. Committed on `v2` (the "interactive 3D REIT globe" commit).
+  data + their types are left in place (UI-only removal). **Aesthetic iteration:** the first pass used a
+  photographic earth-night texture, which the user found "cartoony" → switched to the on-brand look —
+  landmasses as a teal honeycomb (`hexPolygonsData` over the world GeoJSON), a solid lit dark-teal ocean
+  (`globeMaterial(new MeshPhongMaterial(...))` — the default no-texture sphere is an invisible
+  ShaderMaterial, so it MUST be replaced), teal atmosphere, deep `#0a0e14` background. The 3 photographic
+  textures were removed. tsc + oxlint + build clean; scene structurally verified (177 hex countries + 35
+  markers + 35 rings, 0 console errors), click→modal proven (Prologis $141.36); 4 other routes
+  regression-clean. **Full detail: §13.** ⚠️ Globe is **blank in the headless preview** (hidden tab
+  pauses rAF + globe.gl renders through a post-processing composer) — verify the LOOK in a real browser.
+  Committed on `v2` (the "on-brand hex globe" commit).
 - **2026-07-10** — **NEW 5th page: interactive Portfolio Map (`/map`).** An India map of every
   REIT asset (108 rows in `reit-data.spv`), built with **Apache ECharts** (tree-shaken, lazy
   route → echarts isolated in its own ~585 KB chunk, out of the main bundle). District-level
@@ -813,9 +822,12 @@ the existing server; **no new fetch wiring**). Positions are the only added data
 **Stack:** **`globe.gl`** (framework-agnostic; three.js / ThreeGlobe under the hood), driven
 **imperatively on a raw `<div>` ref** — the same idiom as the Portfolio Map's `IndiaMap.tsx`. Chosen
 over `react-globe.gl` to avoid React-19 peer-dep friction (matches the codebase's "raw canvas/div, no
-React wrapper" convention). Realistic **earth-night** texture + bump + night-sky background + teal
-atmosphere glow; auto-rotate (pauses on hover), drag-to-rotate, scroll-zoom; one **market-cap-sized
-point per player** with a **pulsing ring** (same ripple language as the map's `effectScatter`).
+React wrapper" convention). **On-brand dark look (NOT a photo texture):** landmasses are a teal
+**HEX GRID** (`hexPolygonsData` over the world GeoJSON), the ocean is a solid lit dark-teal sphere
+(`globeMaterial(new MeshPhongMaterial(...))`), a teal atmosphere glow, deep `#0a0e14` background;
+auto-rotate (pauses on hover), drag-to-rotate, scroll-zoom; one **market-cap-sized point per player**
+with a **pulsing ring** (same ripple language as the map's `effectScatter`). *(v1 of this globe used a
+photographic earth-night texture — the user found it "cartoony", hence the hex switch.)*
 
 **Files:**
 - `src/lib/globe.ts` — `HQ` (35 tickers → `[lat,lng]` HQ city), golden-angle `jitter` (fans co-located
@@ -823,13 +835,17 @@ point per player** with a **pulsing ring** (same ripple language as the map's `e
   LIVE)` → `GlobePoint[]` (ckey+ri for the modal, country colour from `global.ts` `COLS`, live
   price/ccy/mcap from `LIVE.quotes`, `size` = normalised √market-cap for radius/altitude/rings).
 - `src/components/global/ReitGlobe.tsx` — the globe. Init-once `useEffect` mirroring `IndiaMap`:
-  `requestAnimationFrame` size-guard (lazy mount → 0-width) + `ResizeObserver`; `pointsData`/`ringsData`
-  accessors; rich HTML `pointLabel`; `onPointHover` pauses auto-rotate; `onPointClick` → `onPick(ckey,ri)`.
-  `_destructor()` on unmount. `preserveDrawingBuffer:true` so the globe is screenshot-/export-able.
-- `public/textures/{earth-night.jpg,earth-topology.png,night-sky.png}` — **vendored** (copied from
-  `node_modules/three-globe/example/img/`), fetched via `import.meta.env.BASE_URL + 'textures/…'`.
-  **Do NOT hotlink unpkg** — honours the offline-asset ethos (same reason Leaflet/MapLibre were
-  rejected for the map). ~2 MB total, committed, not gitignored.
+  `requestAnimationFrame` size-guard (lazy mount → 0-width) + `ResizeObserver`. Loads the world GeoJSON
+  once (`ensureWorld()`), sets `hexPolygonsData` (`hexPolygonResolution:3`, `hexPolygonMargin:0.28`,
+  `hexPolygonColor` = per-country teal shade by name-hash), replaces the globe material with a
+  `MeshPhongMaterial`, then `pointsData`/`ringsData` accessors, rich HTML `pointLabel`, `onPointHover`
+  pauses auto-rotate, `onPointClick` → `onPick(ckey,ri)`. `_destructor()` on unmount.
+  `preserveDrawingBuffer:true` so the globe is screenshot-/export-able.
+- `public/geo/world-countries.geojson` — Natural Earth **110m admin-0 countries** (177 features, 480 KB),
+  copied from `node_modules/globe.gl/example/datasets/`, fetched via `import.meta.env.BASE_URL +
+  'geo/world-countries.geojson'`. **Do NOT hotlink unpkg** — honours the offline-asset ethos (same
+  reason Leaflet/MapLibre were rejected for the map). Committed, not gitignored.
+  *(The earlier photographic textures under `public/textures/` were removed with the hex switch.)*
 - `src/pages/GlobalPage.tsx` — the two case-study `<Card>`s + the `TemasekPanel` function are gone;
   a `<Card title="Global REIT players — live 3D map">` now wraps `<Suspense><ReitGlobe …/></Suspense>`.
   `ReitGlobe` is **`React.lazy`-imported** → three.js in its own async chunk. `onPick` builds the modal
@@ -839,18 +855,25 @@ point per player** with a **pulsing ring** (same ripple language as the map's `e
 `cases`/`temasek` data + `types/data.ts` types (the removal is UI-only — re-add a card any time).
 
 **Gotchas:**
-1. **`ringColor` needs an explicit param type.** Its accessor return type is itself a function
-   (`(t)=>string`), so TS can't tell an accessor-fn from a value-fn — annotate `(d: object) => …`
-   (the other point/ring accessors infer `object` fine).
-2. **globe.gl’s `package.json` isn’t in `exports`** — `require('globe.gl/package.json')` throws; read
+1. **The default no-texture globe sphere is an INVISIBLE `ShaderMaterial`.** With no `globeImageUrl`,
+   `globeMaterial()` is a transparent shader → the sphere renders nothing (and mutating its
+   `.color/.emissive` silently no-ops). You MUST replace it: `g.globeMaterial(new MeshPhongMaterial({
+   color, emissive, emissiveIntensity, shininess }))` (imported from `three` — needs `@types/three`,
+   pinned to the same `three` version, single deduped copy so the instance is compatible).
+2. **`ringColor`/`hexPolygonColor` need an explicit param type.** Their accessor return type is itself a
+   function/union, so TS can't tell an accessor-fn from a value — annotate `(d: object) => …` (the
+   plain `pointLat`/`ringLat` accessors infer `object` fine).
+3. **globe.gl’s `package.json` isn’t in `exports`** — `require('globe.gl/package.json')` throws; read
    the file directly if you need the version. Import is `import Globe, { type GlobeInstance } from 'globe.gl'`
    and construct with `new Globe(el, cfg)`.
-3. **Headless-preview blank (expected, NOT a bug).** In the automation browser the preview tab is
-   `document.hidden` → `requestAnimationFrame` is paused → globe.gl’s render loop never ticks, so the
-   WebGL canvas is blank in screenshots (readPixels all-zero). Everything is fine: forcing a frame
-   (`g.renderer().render(g.scene(), g.camera())`) draws the earth (center px maxChannel 255) and the
-   scene has 35 `pointsData` + 35 `ringsData`. Same class as the documented Chart.js “canvas exports
-   blank in headless” caveat — **verify the globe visually in a real (visible) browser.**
-4. **Coords are HQ cities, not asset-level.** US spread across each REIT’s real HQ; JP/AU/SG/HK
+4. **Headless-preview is UN-verifiable visually (expected, NOT a bug).** In the automation browser the
+   preview tab is `document.hidden` → `requestAnimationFrame` is paused AND globe.gl renders through a
+   post-processing composer (`postProcessingComposer()`), so neither the internal loop nor a manual
+   `renderer.render()`/`composer.render()` reliably paints the visible canvas — readPixels reads the
+   flat background. You can still verify the **scene is built** (`hexPolygonsData().length`===177,
+   `pointsData().length`===35, `ringsData().length`===35) and that there are **0 console errors**, and
+   the click→modal path (shared with the country panels). **The actual LOOK can only be confirmed in a
+   real (visible) browser** — same class as the documented Chart.js “canvas blank in headless” caveat.
+5. **Coords are HQ cities, not asset-level.** US spread across each REIT’s real HQ; JP/AU/SG/HK
    collapse to one hub city + jitter; CN to sponsor cities; IN to Mumbai/Bengaluru. Refining is pure
    polish in `globe.ts` `HQ`.

@@ -2,16 +2,20 @@
  * Interactive 3D globe of the world's big listed-REIT players, drawn with globe.gl
  * (three.js) on a raw <div> ref — the same imperative idiom the Portfolio Map uses for
  * ECharts (`IndiaMap.tsx`), which is why we use the framework-agnostic `globe.gl` and
- * not `react-globe.gl` (avoids React-19 peer-dep friction). Realistic earth-night
- * texture + teal atmosphere glow, auto-rotating, drag-to-rotate, scroll-zoom. Each
- * player is a market-cap-sized point with a pulsing ring; hovering shows a live-quote
- * label and clicking opens the same <SecurityModal> the country-panel rows use.
+ * not `react-globe.gl` (avoids React-19 peer-dep friction).
+ *
+ * On-brand look: a dark globe whose landmasses are a teal HEX-GRID (globe.gl
+ * `hexPolygons`, no photographic texture), a teal atmosphere glow, and a transparent
+ * background so the card's radial teal backdrop shows through. Each player is a
+ * market-cap-sized point with a pulsing ring; hovering shows a live-quote label and
+ * clicking opens the same <SecurityModal> the country-panel rows use.
  *
  * globe.gl is lazy-loaded by GlobalPage (React.lazy), so three.js lands in its own
  * async chunk and never touches the other routes' bundles.
  */
 import { useEffect, useRef } from 'react'
 import Globe, { type GlobeInstance } from 'globe.gl'
+import { Color, MeshPhongMaterial } from 'three'
 import type { GlobePoint } from '../../lib/globe'
 import { pointPriceLabel } from '../../lib/globe'
 
@@ -20,9 +24,27 @@ interface Props {
   onPick: (ckey: string, ri: number) => void
 }
 
-const TEX = import.meta.env.BASE_URL + 'textures/'
 const ACCENT = '#2dd4bf'
-const BG = '#0a0e14'
+// A few teal shades for the honeycomb landmasses — varied per country so the grid reads
+// with depth instead of a flat wash.
+const HEX_SHADES = ['#134e48', '#177f74', '#1ba396', '#22c9b6', '#2dd4bf', '#4fe0cf']
+
+/** Load the world-countries GeoJSON once (fetched, not bundled) for the hex landmasses. */
+let worldPromise: Promise<{ features: object[] }> | null = null
+function ensureWorld(): Promise<{ features: object[] }> {
+  if (!worldPromise) {
+    worldPromise = fetch(import.meta.env.BASE_URL + 'geo/world-countries.geojson').then((r) => r.json())
+  }
+  return worldPromise
+}
+
+/** Deterministic teal shade per country (by name hash) so the honeycomb isn't monotone. */
+function hexShade(feat: object): string {
+  const name = String((feat as { properties?: { ADMIN?: string; NAME?: string } }).properties?.ADMIN ?? '')
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return HEX_SHADES[h % HEX_SHADES.length]
+}
 
 export function ReitGlobe({ points, onPick }: Props) {
   const elRef = useRef<HTMLDivElement>(null)
@@ -46,29 +68,51 @@ export function ReitGlobe({ points, onPick }: Props) {
         requestAnimationFrame(initWhenSized) // wait for layout (lazy mount → 0-width)
         return
       }
-      // preserveDrawingBuffer keeps the globe screenshot-/export-able (negligible cost here).
-      const g = new Globe(node, { animateIn: true, rendererConfig: { preserveDrawingBuffer: true } })
+      const g = new Globe(node, {
+        animateIn: true,
+        rendererConfig: { preserveDrawingBuffer: true, antialias: true },
+      })
       globeRef.current = g
 
-      g.globeImageUrl(TEX + 'earth-night.jpg')
-        .bumpImageUrl(TEX + 'earth-topology.png')
-        .backgroundImageUrl(TEX + 'night-sky.png')
-        .backgroundColor(BG)
+      g.backgroundColor('#0a0e14') // --color-bg: deep space, darker than the card — globe reads as inset
         .showAtmosphere(true)
         .atmosphereColor(ACCENT)
-        .atmosphereAltitude(0.22)
+        .atmosphereAltitude(0.26)
         .width(node.clientWidth)
         .height(node.clientHeight)
+
+      // Replace globe.gl's default (transparent, no-texture) shader sphere with a solid,
+      // lit dark-teal ocean so the brighter teal hex landmasses read as glowing on top.
+      g.globeMaterial(
+        new MeshPhongMaterial({
+          color: new Color('#0b1a28'),
+          emissive: new Color('#0a2c2a'),
+          emissiveIntensity: 0.45,
+          shininess: 8,
+        }),
+      )
+
+      // Landmasses as a teal hex grid (no photographic texture → on-brand dark look).
+      ensureWorld().then((geo) => {
+        if (disposed || !globeRef.current) return
+        globeRef.current
+          .hexPolygonsData(geo.features)
+          .hexPolygonResolution(3)
+          .hexPolygonMargin(0.28)
+          .hexPolygonAltitude(0.008)
+          .hexPolygonUseDots(false)
+          .hexPolygonColor((d: object) => hexShade(d))
+      })
 
       // Points: market-cap-sized glowing dots that lift off the surface.
       g.pointsData([])
         .pointLat((d) => (d as GlobePoint).lat)
         .pointLng((d) => (d as GlobePoint).lng)
         .pointColor((d) => (d as GlobePoint).color)
-        .pointAltitude((d) => 0.04 + 0.22 * (d as GlobePoint).size)
-        .pointRadius((d) => 0.22 + 0.55 * (d as GlobePoint).size)
+        .pointAltitude((d) => 0.04 + 0.24 * (d as GlobePoint).size)
+        .pointRadius((d) => 0.24 + 0.6 * (d as GlobePoint).size)
         .pointsMerge(false)
-        .pointResolution(6)
+        .pointResolution(8)
         .pointLabel((d) => labelHtml(d as GlobePoint))
         .onPointHover((pt) => {
           const c = g.controls()
@@ -142,7 +186,7 @@ export function ReitGlobe({ points, onPick }: Props) {
   return (
     <div
       className="relative h-[560px] w-full overflow-hidden rounded-lg"
-      style={{ background: 'radial-gradient(120% 90% at 50% 45%, rgba(45,212,191,0.10), rgba(45,212,191,0) 62%)' }}
+      style={{ background: 'radial-gradient(120% 90% at 50% 45%, rgba(45,212,191,0.12), rgba(45,212,191,0) 62%)' }}
     >
       <div ref={elRef} className="h-full w-full" />
     </div>
