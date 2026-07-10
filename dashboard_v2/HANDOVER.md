@@ -1,11 +1,11 @@
 # Indian REITs Dashboard v2 — Session Handover
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
-> Last updated: 2026-07-10 (**NEW 5th page — interactive Portfolio Map** of every REIT asset,
-> ECharts + India GeoJSON, built from `reit-data.spv`. Committed on `v2` as `ca14bc2`, look
-> refined in `5be9c70`. See §11 Portfolio Map and the top Changelog entry.) Prior milestone:
-> v2 fully STANDALONE (`8b0d9c5`); Phase E npm-only refresh (`18a6348`). Update the **Status**
-> and **Changelog** sections as you go.
+> Last updated: 2026-07-10 (**Global page — case studies replaced by an interactive 3D REIT
+> globe**: globe.gl/three.js, earth-night texture, 35 big-player markers with live Yahoo quotes,
+> click→SecurityModal. See §13 and the top Changelog entry.) Prior: NEW 5th page — interactive
+> Portfolio Map (§11, `ca14bc2`/`5be9c70`); v2 fully STANDALONE (`8b0d9c5`); Phase E npm-only
+> refresh (`18a6348`). Update the **Status** and **Changelog** sections as you go.
 
 ---
 
@@ -215,7 +215,8 @@ toggle, modal (EV/NAV/premium/yield/ADTV all correct), 0 console errors.
 `src/lib/global.ts`; components in `src/components/global/` (`PieDrilldown`,
 `CountryPanels`). Two country pies with per-country **slice drilldown** (market cap →
 top listed REITs + "Others" remainder; AUM → sectors), country panels with live
-Yahoo quotes (`global-live.json`, keyed by ticker), case studies + Temasek deep-dive.
+Yahoo quotes (`global-live.json`, keyed by ticker). *(The case studies + Temasek deep-dive
+that shipped here were replaced 2026-07-10 by the interactive 3D REIT globe — see §13.)*
 `top5` rows are `[name, ticker, sector, quoteOverride|null, manager]` (element [3] is
 a quote-symbol override, always null in current data → falls back to the ticker).
 Verified: both pies paint, slice-click drills + back returns, all 35 country rows
@@ -502,11 +503,32 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 - `public/img` is a **real committed folder** now (was a symlink to v1 before the standalone
   move). `check-assets.mjs` guards it at build time.
 - Node modules and build output are gitignored inside `dashboard_v2/`.
+- **Globe/WebGL** (`/global`) is blank in the **headless preview** because a hidden tab pauses
+  `requestAnimationFrame` — not a bug; verify the globe in a real browser. See §13 gotcha 3.
+- **Vendored offline assets** now include `public/textures/` (globe) alongside `public/geo/`
+  (map), `public/fonts/`, `public/img/`. Never hotlink CDNs for these — offline-asset ethos.
 
 ---
 
 ## 10. Changelog
 
+- **2026-07-10** — **Global page: case studies → interactive 3D REIT globe.** Removed both
+  narrative case-study blocks (the "Case studies" card — Easterly/BREIT/C-REITs — and the Temasek
+  Singapore deep-dive panel) from `GlobalPage.tsx` and replaced them with a **fully-interactive
+  earth-night globe** (`globe.gl` / three.js) plotting the world's **35 big listed-REIT players**
+  (the `top5` per country) at their HQ cities, **sized by market cap**, coloured by country, with
+  pulsing rings. Live Yahoo quotes come from the data we already own (`global-live.json`, refreshed
+  by the existing server) — hover shows the live price + mkt cap; **clicking a marker opens the same
+  `<SecurityModal>`** the country-panel rows use (reuses `buildGlobalSecModal`). New files:
+  `src/lib/globe.ts` (HQ coords + `buildGlobePoints`), `src/components/global/ReitGlobe.tsx`,
+  `public/textures/{earth-night.jpg,earth-topology.png,night-sky.png}` (vendored from `three-globe`,
+  offline). Dep: `+globe.gl` (pulls `three`+`three-globe`). The globe is **`React.lazy`-loaded** in
+  `GlobalPage`, so three.js lands in its **own ~1.89 MB / 534 KB-gzip async chunk** (`ReitGlobe-*.js`),
+  out of the main bundle — the other four routes are untouched. `global.json`'s `cases`/`temasek`
+  data + their types are left in place (UI-only removal). tsc + oxlint + build clean; verified in
+  browser (35 markers + 35 rings, earth texture renders, live quotes, click→modal Prologis $141.36);
+  4 other routes regression-clean, 0 console errors. **Full detail: §13.** See §9 gotchas for the
+  headless-preview caveat. Committed on `v2` (the "interactive 3D REIT globe" commit).
 - **2026-07-10** — **NEW 5th page: interactive Portfolio Map (`/map`).** An India map of every
   REIT asset (108 rows in `reit-data.spv`), built with **Apache ECharts** (tree-shaken, lazy
   route → echarts isolated in its own ~585 KB chunk, out of the main bundle). District-level
@@ -780,3 +802,55 @@ total-return charts, all buildable from data we already own, to fold into the ex
 - Plus valuation-quality ideas: **mark-to-market rent upside** (`mkt_rent` vs `inplace_rent`, already
   in SPV), **GAV growth & CAGR** (`val_hy`), **premium/discount-to-NAV over time**, a **relative-value
   scoreboard**. Not started. Respect the plain-title / no-insight-box design rule.
+
+## 13. Global REIT globe (`/global`) — NEW, 2026-07-10
+
+Replaced the Global page's two narrative case-study blocks with a **sexy, fully-interactive 3D globe**
+of the world's big listed-REIT players. Built **only from data we already own** — `global.json`
+(`top5` per country) for the roster + `global-live.json` for live Yahoo quotes/history (refreshed by
+the existing server; **no new fetch wiring**). Positions are the only added data: a static HQ coord map.
+
+**Stack:** **`globe.gl`** (framework-agnostic; three.js / ThreeGlobe under the hood), driven
+**imperatively on a raw `<div>` ref** — the same idiom as the Portfolio Map's `IndiaMap.tsx`. Chosen
+over `react-globe.gl` to avoid React-19 peer-dep friction (matches the codebase's "raw canvas/div, no
+React wrapper" convention). Realistic **earth-night** texture + bump + night-sky background + teal
+atmosphere glow; auto-rotate (pauses on hover), drag-to-rotate, scroll-zoom; one **market-cap-sized
+point per player** with a **pulsing ring** (same ripple language as the map's `effectScatter`).
+
+**Files:**
+- `src/lib/globe.ts` — `HQ` (35 tickers → `[lat,lng]` HQ city), golden-angle `jitter` (fans co-located
+  HQs so pins don't stack — ported from `geo.ts`, wider radius for globe scale), `buildGlobePoints(G,
+  LIVE)` → `GlobePoint[]` (ckey+ri for the modal, country colour from `global.ts` `COLS`, live
+  price/ccy/mcap from `LIVE.quotes`, `size` = normalised √market-cap for radius/altitude/rings).
+- `src/components/global/ReitGlobe.tsx` — the globe. Init-once `useEffect` mirroring `IndiaMap`:
+  `requestAnimationFrame` size-guard (lazy mount → 0-width) + `ResizeObserver`; `pointsData`/`ringsData`
+  accessors; rich HTML `pointLabel`; `onPointHover` pauses auto-rotate; `onPointClick` → `onPick(ckey,ri)`.
+  `_destructor()` on unmount. `preserveDrawingBuffer:true` so the globe is screenshot-/export-able.
+- `public/textures/{earth-night.jpg,earth-topology.png,night-sky.png}` — **vendored** (copied from
+  `node_modules/three-globe/example/img/`), fetched via `import.meta.env.BASE_URL + 'textures/…'`.
+  **Do NOT hotlink unpkg** — honours the offline-asset ethos (same reason Leaflet/MapLibre were
+  rejected for the map). ~2 MB total, committed, not gitignored.
+- `src/pages/GlobalPage.tsx` — the two case-study `<Card>`s + the `TemasekPanel` function are gone;
+  a `<Card title="Global REIT players — live 3D map">` now wraps `<Suspense><ReitGlobe …/></Suspense>`.
+  `ReitGlobe` is **`React.lazy`-imported** → three.js in its own async chunk. `onPick` builds the modal
+  via the existing `buildGlobalSecModal(G, LIVE, ckey, ri)` — identical to the country-panel rows.
+
+**Left intact:** the two country pies + `CountryPanels` (still live-quote tables), and `global.json`'s
+`cases`/`temasek` data + `types/data.ts` types (the removal is UI-only — re-add a card any time).
+
+**Gotchas:**
+1. **`ringColor` needs an explicit param type.** Its accessor return type is itself a function
+   (`(t)=>string`), so TS can't tell an accessor-fn from a value-fn — annotate `(d: object) => …`
+   (the other point/ring accessors infer `object` fine).
+2. **globe.gl’s `package.json` isn’t in `exports`** — `require('globe.gl/package.json')` throws; read
+   the file directly if you need the version. Import is `import Globe, { type GlobeInstance } from 'globe.gl'`
+   and construct with `new Globe(el, cfg)`.
+3. **Headless-preview blank (expected, NOT a bug).** In the automation browser the preview tab is
+   `document.hidden` → `requestAnimationFrame` is paused → globe.gl’s render loop never ticks, so the
+   WebGL canvas is blank in screenshots (readPixels all-zero). Everything is fine: forcing a frame
+   (`g.renderer().render(g.scene(), g.camera())`) draws the earth (center px maxChannel 255) and the
+   scene has 35 `pointsData` + 35 `ringsData`. Same class as the documented Chart.js “canvas exports
+   blank in headless” caveat — **verify the globe visually in a real (visible) browser.**
+4. **Coords are HQ cities, not asset-level.** US spread across each REIT’s real HQ; JP/AU/SG/HK
+   collapse to one hub city + jitter; CN to sponsor cities; IN to Mumbai/Bengaluru. Refining is pure
+   polish in `globe.ts` `HQ`.

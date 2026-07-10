@@ -1,12 +1,18 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Card } from '../components/ui/Card'
 import { useDataset } from '../lib/useDataset'
 import { setupCharts } from '../lib/chartSetup'
 import { countrySlices, mcapDrill, sectorDrill, buildGlobalSecModal } from '../lib/global'
+import { buildGlobePoints } from '../lib/globe'
 import { PieDrilldown } from '../components/global/PieDrilldown'
 import { CountryPanels } from '../components/global/CountryPanels'
 import { SecurityModal, type SecModalData } from '../components/charts/SecurityModal'
+
+// Lazy so globe.gl / three.js land in their own async chunk (only fetched on /global).
+const ReitGlobe = lazy(() =>
+  import('../components/global/ReitGlobe').then((m) => ({ default: m.ReitGlobe })),
+)
 
 setupCharts()
 
@@ -21,6 +27,7 @@ export function GlobalPage() {
 
   const mcapSlices = useMemo(() => (G ? countrySlices(G, 'mcap') : []), [G])
   const aumSlices = useMemo(() => (G ? countrySlices(G, 'aum') : []), [G])
+  const globePoints = useMemo(() => (G ? buildGlobePoints(G, LIVE) : []), [G, LIVE])
 
   if (global.error) {
     return (
@@ -94,48 +101,28 @@ export function GlobalPage() {
 
         <Card
           className="lg:col-span-2"
-          title="Case studies — government REITs & private REITs"
-          note="Renting to the state, private NAV-priced vehicles, and state-directed listings"
+          title="Global REIT players — live 3D map"
+          note={
+            LIVE?.asof
+              ? 'Every top-5 listed REIT by country, at its HQ · sized by market cap · live quotes as of ' +
+                LIVE.asof +
+                ' (Yahoo Finance) · drag to spin, scroll to zoom, click a marker for the full chart + metrics'
+              : 'Every top-5 listed REIT by country, at its HQ · sized by market cap · drag to spin, scroll to zoom, click a marker for detail · hit ⟳ Refresh data for live prices'
+          }
         >
-          <div className="space-y-2.5">
-            {G.cases.map((c) => (
-              <div key={c.title} className="rounded-lg border-l-[3px] border-accent bg-surface-2 px-4 py-3">
-                <div className="text-[10.5px] font-bold tracking-[0.05em] text-accent">{c.tag}</div>
-                <div className="mb-1 mt-0.5 text-[14.5px] font-bold text-ink">{c.title}</div>
-                <p className="text-[12.5px] leading-relaxed text-muted">{c.body}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="lg:col-span-2">
-          <TemasekPanel t={G.temasek} />
+          <Suspense
+            fallback={<div className="h-[560px] w-full animate-pulse rounded-lg bg-surface-2" />}
+          >
+            <ReitGlobe
+              points={globePoints}
+              onPick={(ckey, ri) => setModal(buildGlobalSecModal(G, LIVE, ckey, ri))}
+            />
+          </Suspense>
         </Card>
       </div>
 
       <SecurityModal data={modal} onClose={() => setModal(null)} />
     </>
-  )
-}
-
-function TemasekPanel({ t }: { t: import('../types/data').GlobalTemasek }) {
-  return (
-    <div className="rounded-[var(--radius-card)] border border-accent/60 bg-gradient-to-br from-accent/10 to-info/[0.06] px-5 py-4">
-      <div className="text-[10.5px] font-bold tracking-[0.05em] text-accent">CASE STUDY · SINGAPORE</div>
-      <div className="mt-0.5 text-[17px] font-bold text-ink">{t.title}</div>
-      <div className="my-3 grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-2">
-        {t.facts.map(([l, v]) => (
-          <div key={l} className="rounded-lg border border-border bg-surface-2 px-3 py-2">
-            <div className="text-[10.5px] uppercase tracking-[0.04em] text-subtle">{l}</div>
-            <div className="mt-0.5 text-[13px] font-semibold text-ink">{v}</div>
-          </div>
-        ))}
-      </div>
-      <h4 className="mb-1 mt-3 text-[13px] font-semibold text-gold">Around the world</h4>
-      <p className="text-[12.5px] leading-relaxed text-muted">{t.world}</p>
-      <h4 className="mb-1 mt-3 text-[13px] font-semibold text-gold">In India</h4>
-      <p className="text-[12.5px] leading-relaxed text-muted">{t.india}</p>
-    </div>
   )
 }
 
