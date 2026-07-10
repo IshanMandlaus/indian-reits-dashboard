@@ -822,8 +822,11 @@ the existing server; **no new fetch wiring**). Positions are the only added data
 **Stack:** **`globe.gl`** (framework-agnostic; three.js / ThreeGlobe under the hood), driven
 **imperatively on a raw `<div>` ref** — the same idiom as the Portfolio Map's `IndiaMap.tsx`. Chosen
 over `react-globe.gl` to avoid React-19 peer-dep friction (matches the codebase's "raw canvas/div, no
-React wrapper" convention). **On-brand dark look (NOT a photo texture):** landmasses are a teal
-**HEX GRID** (`hexPolygonsData` over the world GeoJSON), the ocean is a solid lit dark-teal sphere
+React wrapper" convention). **On-brand dark look (NOT a photo texture):** landmasses are a
+**HEX GRID** (`hexPolygonsData` over the world GeoJSON) coloured **by continent** — each continent has
+its own palette family (`CONTINENT_PALETTES` keyed by the GeoJSON `CONTINENT` prop; teal=Asia the hero,
+blue=N.America, violet=Europe, green=S.America, amber=Africa, coral=Oceania), a country picks a shade
+within its family by name-hash; the ocean is a solid lit dark-teal sphere
 (`globeMaterial(new MeshPhongMaterial(...))`), a teal atmosphere glow, deep `#0a0e14` background;
 auto-rotate (pauses on hover), drag-to-rotate, scroll-zoom; one **market-cap-sized point per player**
 with a **pulsing ring** (same ripple language as the map's `effectScatter`). *(v1 of this globe used a

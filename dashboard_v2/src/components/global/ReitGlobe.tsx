@@ -25,9 +25,19 @@ interface Props {
 }
 
 const ACCENT = '#2dd4bf'
-// A few teal shades for the honeycomb landmasses — varied per country so the grid reads
-// with depth instead of a flat wash.
-const HEX_SHADES = ['#134e48', '#177f74', '#1ba396', '#22c9b6', '#2dd4bf', '#4fe0cf']
+
+// Each continent gets its own on-brand palette family (dark → bright); a country picks a
+// shade within its continent's family by name-hash, so the honeycomb reads with per-country
+// texture AND groups the world by region. Teal stays the hero (Asia — the dashboard's home).
+const CONTINENT_PALETTES: Record<string, string[]> = {
+  Asia: ['#0f4a44', '#177f74', '#1ba396', '#2dd4bf', '#5fe6d3'], // teal (hero)
+  'North America': ['#173a5e', '#1e5aa0', '#3b82f6', '#60a5fa', '#93c5fd'], // blue
+  Europe: ['#3b2f66', '#6d4fb0', '#8b5cf6', '#a78bfa', '#c4b5fd'], // violet
+  'South America': ['#14532d', '#15803d', '#22c55e', '#34d399', '#6ee7b7'], // green
+  Africa: ['#5c4611', '#a87d1e', '#e0a92e', '#fbbf24', '#fcd34d'], // amber/gold
+  Oceania: ['#5b1f2a', '#a8324a', '#e5566f', '#f87171', '#fca5a5'], // rose/coral
+}
+const DEFAULT_PALETTE = ['#2a3543', '#3a4a5c', '#4d6070', '#61707f'] // Antarctica / open ocean / unknown
 
 /** Load the world-countries GeoJSON once (fetched, not bundled) for the hex landmasses. */
 let worldPromise: Promise<{ features: object[] }> | null = null
@@ -38,12 +48,14 @@ function ensureWorld(): Promise<{ features: object[] }> {
   return worldPromise
 }
 
-/** Deterministic teal shade per country (by name hash) so the honeycomb isn't monotone. */
-function hexShade(feat: object): string {
-  const name = String((feat as { properties?: { ADMIN?: string; NAME?: string } }).properties?.ADMIN ?? '')
+/** Per-country hex colour: pick the country's continent palette, then a shade by name-hash. */
+function hexColor(feat: object): string {
+  const props = (feat as { properties?: { CONTINENT?: string; ADMIN?: string; NAME?: string } }).properties
+  const pal = CONTINENT_PALETTES[props?.CONTINENT ?? ''] ?? DEFAULT_PALETTE
+  const name = String(props?.ADMIN ?? props?.NAME ?? '')
   let h = 0
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
-  return HEX_SHADES[h % HEX_SHADES.length]
+  return pal[h % pal.length]
 }
 
 export function ReitGlobe({ points, onPick }: Props) {
@@ -101,7 +113,7 @@ export function ReitGlobe({ points, onPick }: Props) {
           .hexPolygonMargin(0.28)
           .hexPolygonAltitude(0.008)
           .hexPolygonUseDots(false)
-          .hexPolygonColor((d: object) => hexShade(d))
+          .hexPolygonColor((d: object) => hexColor(d))
       })
 
       // Points: market-cap-sized glowing dots that lift off the surface.
