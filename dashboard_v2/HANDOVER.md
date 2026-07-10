@@ -1,15 +1,14 @@
 # Indian REITs Dashboard v2 — Session Handover
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
-> Last updated: 2026-07-10, second session — **five changes, read the top five Changelog entries**:
-> (1) **Global AUM pie: 3rd drilldown level** country → sector → REITs (new `sector_reits` roster in
-> `global_data.js`; refresh pulls live quotes for every roster ticker); (2) **SVG exports: title +
-> as-of header** (vector text) and **no gridlines** in the export; (3) **SVG exports: high-res**
-> (charts 4×, panels 3× — plus the `resize()`+`draw()` Chart.js trap); (4) **complete-pairs rule**
-> on Domestic paired charts (a year missing one leg is omitted + noted — user-set design rule);
-> (5) **unitholding pattern: FULL NSE filing history** (8-quarter cap removed; trend wraps).
-> Prior: **Global 3D REIT globe** (§13); Portfolio Map (§11, `ca14bc2`/`5be9c70`); v2 fully
-> STANDALONE (`8b0d9c5`); Phase E npm-only refresh (`18a6348`).
+> Last updated: 2026-07-10, third session — **LANDING REDESIGN on branch `v2-redesign`, read §14**:
+> Global is now the landing page at `/` with a full-viewport, scroll-pinned, boundless 3D globe
+> hero (scroll-scrubbed recede, geometric zoom caps, wheel-scroll etiquette) and the whole app
+> moved to a **pure-black theme**. Stable pre-redesign v2 is tagged **`v2.0-stable`** (= `dba89fe`
+> on `v2`); the `v2` branch itself is untouched. Redesign commits: `071bb27`, `e79cceb`.
+> Prior session: Global AUM pie 3rd drilldown; SVG exports title+asof header / no gridlines /
+> high-res 4×; complete-pairs rule; unitholding FULL NSE history. Before that: Global 3D globe
+> (§13); Portfolio Map (§11); v2 fully STANDALONE (`8b0d9c5`); Phase E npm-only refresh (`18a6348`).
 > Update the **Status** and **Changelog** sections as you go.
 
 ---
@@ -28,8 +27,8 @@ chart stays on workbook data by design). Read §10 Changelog top-to-bottom for t
 build history; §6 Phase E for the refresh server; §11 for the map.
 
 - **Repo:** https://github.com/IshanMandlaus/indian-reits-dashboard (private)
-- **Branch:** `v2` — now fully standalone; **`dashboard/` (v1) was removed from this branch.**
-  v1 stays frozen and intact on `main`.
+- **Branches:** `main` = frozen v1 · `v2` = stable v2 (tag **`v2.0-stable`**, do not touch) ·
+  **`v2-redesign`** = active branch: landing redesign (§14). `dashboard/` (v1) exists only on `main`.
 - **v2 app:** `dashboard_v2/` (the whole product; `npm install && npm run dev` off a clean clone)
 
 ---
@@ -520,6 +519,16 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-10 (branch `v2-redesign`)** — **Landing redesign: Global at `/` with a full-viewport
+  pinned globe hero + pure-black theme.** Stable v2 first protected with tag `v2.0-stable`
+  (`dba89fe`); `Global reits/` PDFs + issuances docx gitignored (local-only, user choice). Then on
+  `v2-redesign`: Global page renders at `/` (old `/global` → redirect; nav reordered 01 Global,
+  `NavLink end` on `/`); old "Global REIT players — live 3D map" card removed; new `GlobeHero`
+  (globe-only hero, no headline copy — user cut it); whole app re-themed to pure-black
+  (`--color-bg #000`, surface ramp `#0c1117/#11161e/#161c26`, borders `#1c2431/#141b25`, + 5
+  hardcoded-hex sites updated); globe made "boundless" (transparent canvas) then cinematic:
+  sticky full-viewport hero, scroll-scrubbed recede, geometric zoom caps, wheel-scroll etiquette,
+  pointer-events gating. **Full detail + gotchas: §14.** Commits `071bb27`, `e79cceb`.
 - **2026-07-10** — **Unitholding pattern: FULL filing history (cap removed).** `server/fetchers/
   holdings.ts` capped the NSE unit-holding history at 8 quarters (`MAX_QUARTERS`); the user asked
   for all of it. Cap removed; dedup changed from by-date to **by label (month+year), newest-first**
@@ -980,3 +989,95 @@ photographic earth-night texture — the user found it "cartoony", hence the hex
 5. **Coords are HQ cities, not asset-level.** US spread across each REIT’s real HQ; JP/AU/SG/HK
    collapse to one hub city + jitter; CN to sponsor cities; IN to Mumbai/Bengaluru. Refining is pure
    polish in `globe.ts` `HQ`.
+
+---
+
+## 14. Landing redesign (branch `v2-redesign`) — 2026-07-10
+
+**What:** Global became the app's landing page with a cinematic full-viewport globe hero; the whole
+app went pure-black. All on branch **`v2-redesign`** (from `v2` tip). Pre-redesign stable state is
+tag **`v2.0-stable`** — recover via `git checkout v2.0-stable` / `git reset --hard v2.0-stable`.
+Design inspiration: graphite.com hero (the headline/CTA copy was built, then **cut by the user** —
+the hero is globe-only now; don't re-add copy without asking).
+
+### 14.1 Routing & nav
+- `router.tsx`: `{ index: true, element: <GlobalPage/> }`; `global` path → `<Navigate to="/" replace/>`.
+- `AppShell.tsx` `NAV`: 01 Global (`to:'/'`, **`end:true`** — without `end`, `/` matches every route),
+  02 Domestic, 03 Market, 04 InvITs, 05 Portfolio Map.
+
+### 14.2 Pure-black theme (all pages)
+- `index.css` @theme: `--color-bg #000000`; surfaces `#0c1117 / #11161e / #161c26`; borders
+  `#1c2431 / #141b25`. Ink/muted/accents unchanged. Body radial teal glow alpha 0.05 → **0.07**.
+- Hardcoded-hex sites that MUST track the tokens (grep old values before re-theming again):
+  `chartSetup.ts` `CHART.grid` rgba(28,36,49,.6) · `IndiaMap.tsx` `P.surface/border/bg` ·
+  `ReitGlobe.tsx` tooltip inline style · `PieDrilldown.tsx` slice `borderColor #000` ·
+  `Chart6Capital.tsx` doughnut `borderColor #0c1117`. `.svg-export-light` untouched (light export).
+
+### 14.3 GlobeHero (`src/components/global/GlobeHero.tsx`)
+- Owns the `React.lazy` ReitGlobe import (three.js stays in its own chunk, now loaded on `/`).
+- **Sticky full-viewport hero**: `sticky top-[61px] z-0 -mt-6 mb-3 h-[calc(100svh-177px)]
+  min-h-[420px]`. 61px = AppShell sticky-nav height (py-3 + content + border — single constant to
+  move if the nav ever changes); 177 = 61 + ~116px of pie-card row peeking at the viewport bottom
+  on a fresh load. `-mt-6` cancels `<main>`'s top padding so the globe sits flush under the nav.
+- **Scroll-scrubbed recede**: rAF-throttled passive scroll listener; `p = clamp(scrollY/heroH, 0, 1)`
+  drives `scale(1 − 0.12p)` + `opacity(1 − 0.55p)` on the fx wrapper (`SCRUB_SCALE`/`SCRUB_FADE`
+  constants). Scrubbed ⇒ fully reversible. Cards (`relative z-10`, translucent `bg-surface/90`)
+  ride over the pinned globe; past full overlap the dimmed globe just stays pinned to page end
+  (sticky containing block = `<main>`).
+- **Pointer gate**: same handler sets `section.style.pointerEvents = p > 0.02 ? 'none' : ''` — the
+  globe is interactive ONLY at the rest state. Without this, the canvas bleed behind the cards
+  hijacks wheel/drag through the gaps between cards.
+- The live-asof note (`Live quotes as of … · drag to spin …`) is INSIDE the fx wrapper — it fades
+  with the globe. When `LIVE` is absent it falls back to the estimates + ⟳ Refresh hint.
+
+### 14.4 ReitGlobe changes (`src/components/global/ReitGlobe.tsx`)
+- **Transparent canvas**: `rendererConfig.alpha:true` + `g.backgroundColor('rgba(0,0,0,0)')`; wrapper
+  lost `overflow-hidden rounded-lg` + its box radial gradient. The globe is chrome-less — page glow
+  runs through it ("boundless"). An opaque bg equal to --color-bg is NOT enough: the body's radial
+  glow makes the canvas rectangle read darker than the page.
+- **Props**: `className` (wrapper band sizing; hero passes `min-h-0 flex-1`) and `canvasClassName`
+  (hero passes `h-[175%]`) — when set, the canvas div is `absolute inset-x-0 top-1/2 -translate-y-1/2`,
+  i.e. CENTERED zoom headroom: invisible at rest, lets a zoomed globe overflow under nav/note/cards
+  instead of clipping at the canvas edge.
+- **Camera framed to the BAND, not the canvas**: `ratio = canvasH/bandH` (measured at init);
+  `restAlt = 3.4·ratio − 1` (altitude 2.4 was the tuned fit when canvas == band);
+  `controls.maxDistance = 100·(1+restAlt)` ⇒ **rest = fully zoomed out**, fresh load fits the band.
+- **Zoom-in cap — exact sphere projection**: a sphere of radius r at distance d projects with
+  half-angle `asin(r/d)`, on-screen tangent `r/√(d²−r²)` — NOT the small-angle r/d (the first
+  attempt used r/d and clipped badly at close range). Horizontal no-clip bound:
+  `minDistance = AURA·R·√(1 + 1/T²)·SAFETY`, `T = tan(25°)·w/h` (globe.gl camera vfov 50°, R=100),
+  `AURA 1.35` (atmosphere shell 1.26R + fade), `SAFETY 1.04`. Recomputed in the resize handler
+  (aspect-dependent) and clamped ≤ maxDistance (narrow screens ⇒ effectively no zoom, correct).
+- **Wheel etiquette** (capture-phase `wheel` listener on the container, `passive:true`):
+  if the wheel direction can't zoom further (at min/max distance) AND the user has paused
+  ≥ `ZOOM_SCROLL_GRACE_MS` (600) since their last consumed tick → `stopPropagation()` so
+  OrbitControls never sees it and the browser scrolls the page. During the grace window the event
+  still reaches OrbitControls (clamped no-op that preventDefaults) — zoom-out momentum can't ram
+  the page into the cards. Fresh-load first scroll passes through instantly (grace arms on zoom).
+
+### 14.5 GlobalPage
+- `GlobeHero` mounts unconditionally (`points=[]` while loading ⇒ globe never re-inits when data
+  arrives); only the section below swaps error/loading/cards. Cards grid + fallback Cards carry
+  `relative z-10` (paint above the pinned hero). PageHeader is gone from this page.
+
+### 14.6 Gotchas learned (this redesign)
+1. **Small-angle vs tangent projection** — see 14.4; any future "fit the sphere" math must use
+   `asin(r/d)`.
+2. **rAF-throttled scroll handlers are headless-unverifiable** (hidden tab pauses rAF — same root
+   cause as the blank globe canvas). Verify sticky GEOMETRY headless (positions are synchronous);
+   verify scrub/wheel FEEL in a real browser. Synthetic WheelEvents don't trigger default scrolling
+   either (untrusted), so wheel etiquette is real-browser-only too.
+3. **Headless viewport can report height 0** (svh → min-h fallback) — don't trust `innerHeight`
+   there; `preview_resize` didn't fix it in this env.
+4. **JSX comments can't sit as a second root in a `return (…)` or ternary branch** — use `//` above
+   the expression (twice bitten this session).
+5. The user's dev server runs on **:5273** (launch.json `v2-dashboard`); agents should use
+   `v2-dashboard-alt` (:5280) to avoid the port clash.
+
+### 14.7 State / next steps
+- Committed & pushed: `071bb27` (landing + theme), `e79cceb` (pinned scroll hero + zoom/wheel).
+- tsc + oxlint + build clean; all 5 routes regression-checked structurally; user has verified the
+  hero feel in a real browser through the wheel-grace iteration.
+- Open design question deferred: whether Domestic/other pages get any landing-style treatment, and
+  whether the removed hero copy/CTAs return anywhere else. Merge to `v2` only when the user calls
+  the redesign done.
