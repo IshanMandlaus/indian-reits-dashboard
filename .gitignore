@@ -10,6 +10,10 @@
 /Nexus/
 /KRT/
 /Bagmane/
+/Global reits/
+
+# Working docs kept local-only by choice
+/REIT_Issuances_Concept_Paper_Sections.docx
 
 # Old/heavyweight copies & archives
 dashboard.zip
