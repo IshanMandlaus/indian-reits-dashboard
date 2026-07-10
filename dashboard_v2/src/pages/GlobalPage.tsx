@@ -45,15 +45,16 @@ export function GlobalPage() {
       />
 
       {global.error ? (
-        <Card title="Failed to load data">
+        <Card className="relative z-10" title="Failed to load data">
           <p className="text-[13px] text-neg">{global.error.message}</p>
         </Card>
       ) : !G ? (
-        <Card title="Loading…">
+        <Card className="relative z-10" title="Loading…">
           <div className="h-40 animate-pulse rounded-lg bg-surface-2" />
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        // relative z-10: paint above the hero globe's canvas, which bleeds down behind this grid
+        <div className="relative z-10 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card
             title="Listed REIT market capitalisation by country"
             note="US$ bn listed-REIT market cap — click a country slice to drill into its top listed REITs by market cap."

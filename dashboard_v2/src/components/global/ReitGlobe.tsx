@@ -26,9 +26,38 @@ interface Props {
   onPick: (ckey: string, ri: number) => void
   /** Height/sizing classes for the wrapper; defaults to the card-sized h-[560px]. */
   className?: string
+  /**
+   * Height classes for the canvas itself. When set (taller than the wrapper),
+   * the canvas is absolutely positioned and CENTERED on the wrapper band, giving
+   * the globe transparent headroom: at rest it's framed to fit the band; zooming
+   * grows it past the band, under whatever surrounds it — surrounding content
+   * must be positioned (e.g. `relative z-10`) to paint above the overflow.
+   */
+  canvasClassName?: string
 }
 
 const ACCENT = '#2dd4bf'
+
+// Zoom-in cap: the globe + its atmosphere aura must NEVER reach the canvas's
+// left/right edges — a clipped aura reads as a bounding box. A sphere of radius
+// r at camera distance d projects with half-angle asin(r/d) (tangent lines, NOT
+// the small-angle r/d — near the camera the outline is much fatter), i.e. its
+// on-screen tangent is r/√(d²−r²). Horizontal fit needs that ≤ tan(hfov/2)
+// = tan(vfov/2)·w/h, which solves to d ≥ r·√(1 + 1/T²):
+// After the user has been zooming, wheel events at a zoom limit stay consumed
+// for this long past the LAST wheel tick — they must pause before the wheel
+// hands off to page scroll. Stops zoom-out momentum from ramming into the cards.
+const ZOOM_SCROLL_GRACE_MS = 600
+
+const AURA = 1.35 // atmosphere shell ≈ 1.26·R (altitude 0.26) + fade padding
+const SAFETY = 1.04 // stop a touch before the geometric limit
+const FOV_TAN = Math.tan((25 * Math.PI) / 180) // globe.gl camera: vertical fov 50°
+const GLOBE_R = 100 // globe.gl's fixed globe radius (world units)
+function zoomInLimit(w: number, h: number): number {
+  const t = (FOV_TAN * w) / h // tan of horizontal half-fov
+  const r = AURA * GLOBE_R
+  return r * Math.sqrt(1 + 1 / (t * t)) * SAFETY
+}
 
 // Each continent gets its own on-brand palette family (dark → bright); a country picks a
 // shade within its continent's family by name-hash, so the honeycomb reads with per-country
@@ -62,7 +91,7 @@ function hexColor(feat: object): string {
   return pal[h % pal.length]
 }
 
-export function ReitGlobe({ points, onPick, className }: Props) {
+export function ReitGlobe({ points, onPick, className, canvasClassName }: Props) {
   const elRef = useRef<HTMLDivElement>(null)
   const globeRef = useRef<GlobeInstance | null>(null)
   // Live refs so imperative globe callbacks never read stale props.
@@ -74,6 +103,7 @@ export function ReitGlobe({ points, onPick, className }: Props) {
   // Init once.
   useEffect(() => {
     let disposed = false
+    let wheelGuard: ((e: WheelEvent) => void) | null = null
     const el = elRef.current
     if (!el) return
 
@@ -152,14 +182,42 @@ export function ReitGlobe({ points, onPick, className }: Props) {
         .ringPropagationSpeed(1.6)
         .ringRepeatPeriod((d) => 1400 - 500 * (d as GlobePoint).size)
 
-      // Auto-rotate, framed on a lively 3/4 view.
+      // Auto-rotate, framed on a lively 3/4 view. The camera is framed to the
+      // WRAPPER band (the visible slot), not the canvas: with an oversized canvas
+      // the same on-screen globe size needs a proportionally higher altitude
+      // (altitude 2.4 is the tuned fit when canvas == band). Rest = max zoom-out,
+      // so on a fresh load the globe sits exactly in the band and can only grow.
+      const band = node.parentElement?.clientHeight || node.clientHeight
+      const ratio = node.clientHeight / band
+      const restAlt = 3.4 * ratio - 1
       const controls = g.controls()
       controls.autoRotate = true
       controls.autoRotateSpeed = 0.55
       controls.enableZoom = true
-      controls.minDistance = 180
-      controls.maxDistance = 600
-      g.pointOfView({ lat: 20, lng: 60, altitude: 2.4 }, 0)
+      controls.maxDistance = GLOBE_R * (1 + restAlt)
+      controls.minDistance = Math.min(zoomInLimit(node.clientWidth, node.clientHeight), controls.maxDistance)
+      g.pointOfView({ lat: 20, lng: 60, altitude: restAlt }, 0)
+
+      // Don't trap page scroll: OrbitControls consumes every wheel event over the
+      // canvas (which can fill the viewport). If the wheel's direction can't zoom
+      // any further (already at min/max distance) AND the user has paused since
+      // their last zoom tick (grace window), stop the event in the CAPTURE phase
+      // so OrbitControls never sees it and the browser scrolls the page instead.
+      // During the grace window the event still goes to OrbitControls, which
+      // preventDefaults it (a clamped no-op) — so momentum never leaks into the page.
+      let lastWheelTs = 0
+      wheelGuard = (e: WheelEvent) => {
+        const now = performance.now()
+        const c = g.controls()
+        const dist = g.camera().position.distanceTo(c.target)
+        const atLimit = e.deltaY > 0 ? dist >= c.maxDistance - 1 : dist <= c.minDistance + 1
+        if (!atLimit || now - lastWheelTs < ZOOM_SCROLL_GRACE_MS) {
+          lastWheelTs = now
+          return
+        }
+        e.stopPropagation()
+      }
+      node.addEventListener('wheel', wheelGuard, { capture: true, passive: true })
 
       if (elRef.current) elRef.current.style.cursor = 'grab'
       applyData() // push whatever points arrived before init finished
@@ -170,7 +228,11 @@ export function ReitGlobe({ points, onPick, className }: Props) {
     const resize = () => {
       const g = globeRef.current
       const node = elRef.current
-      if (g && node) g.width(node.clientWidth).height(node.clientHeight)
+      if (!g || !node) return
+      g.width(node.clientWidth).height(node.clientHeight)
+      // Aspect changed → recompute the no-horizontal-clip zoom cap.
+      const c = g.controls()
+      c.minDistance = Math.min(zoomInLimit(node.clientWidth, node.clientHeight), c.maxDistance)
     }
     window.addEventListener('resize', resize)
     const ro = new ResizeObserver(resize)
@@ -179,6 +241,7 @@ export function ReitGlobe({ points, onPick, className }: Props) {
     return () => {
       disposed = true
       window.removeEventListener('resize', resize)
+      if (wheelGuard) el.removeEventListener('wheel', wheelGuard, { capture: true })
       ro.disconnect()
       globeRef.current?._destructor()
       globeRef.current = null
@@ -201,7 +264,14 @@ export function ReitGlobe({ points, onPick, className }: Props) {
 
   return (
     <div className={['relative w-full', className ?? 'h-[560px]'].join(' ')}>
-      <div ref={elRef} className="h-full w-full" />
+      <div
+        ref={elRef}
+        className={
+          canvasClassName
+            ? `absolute inset-x-0 top-1/2 -translate-y-1/2 ${canvasClassName}`
+            : 'h-full w-full'
+        }
+      />
     </div>
   )
 }
