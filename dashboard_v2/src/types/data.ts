@@ -275,6 +275,8 @@ export interface GlobalCountry {
 }
 /** [name, ticker, sector, mcap|null, manager] */
 export type GlobalTopReit = [string, string, string, number | null, string]
+/** [name, Yahoo ticker, sector (matches sector_breakdown label), seed mcap US$ bn] */
+export type GlobalSectorReit = [string, string, string, number]
 export interface GlobalCase {
   tag: string
   title: string
@@ -292,6 +294,7 @@ export interface Global {
   top5: Record<string, GlobalTopReit[]>
   mcap_breakdown: Record<string, [string, number][]> // { country: [name, mcap$bn][] }
   sector_breakdown: Record<string, [string, number][]> // { country: [sector, aum$bn][] }
+  sector_reits?: Record<string, GlobalSectorReit[]> // { country: [name, ticker, sector, seed$bn][] }
   cases: GlobalCase[]
   temasek: GlobalTemasek
 }

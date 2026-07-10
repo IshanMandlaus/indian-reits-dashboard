@@ -57,6 +57,8 @@ export function InvitsPage() {
   const trusts = IV.trusts
   const hasData = invitHasData(ctx, trusts)
   const asof = 'NHIT · Raajmarg · PGInvIT · fundamentals as of ' + IV.asof + (ctx.liveAsof ? ' · prices to ' + ctx.liveAsof : '')
+  // Stamped under the title in exported SVGs (live price charts lose the date otherwise).
+  const exportAsof = ctx.liveAsof ? 'Prices to ' + ctx.liveAsof + ' · NSE' : 'Fundamentals as of ' + IV.asof
 
   return (
     <>
@@ -76,6 +78,7 @@ export function InvitsPage() {
         note="Government-sponsored infrastructure trusts — NHAI's two road InvITs and PowerGrid's transmission InvIT · click a card for the full price chart + metrics"
         exportable="panel"
         exportName="invits-snapshot"
+        exportAsof={exportAsof}
       >
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           {trusts.map((t) => (
@@ -96,6 +99,7 @@ export function InvitsPage() {
           note="Daily closes from NSE (populated by Refresh) · wheel to zoom, double-click resets"
           exportable="chart"
           exportName="invits-unit-price"
+          exportAsof={exportAsof}
         >
           {hasData ? (
             <InvitPriceChart ctx={ctx} trusts={trusts} />
@@ -104,7 +108,7 @@ export function InvitsPage() {
           )}
         </Card>
 
-        <Card title="InvITs vs NIFTY 50 vs FD — rebased to 100" exportable="chart" exportName="invits-rebased">
+        <Card title="InvITs vs NIFTY 50 vs FD — rebased to 100" exportable="chart" exportName="invits-rebased" exportAsof={exportAsof}>
           {hasData ? <InvitRebasedChart ctx={ctx} trusts={trusts} /> : <EmptyChart height={320} />}
         </Card>
 
@@ -113,6 +117,7 @@ export function InvitsPage() {
           note="InvIT DPU ÷ price vs Indian REITs combined distribution yield (FY26) vs SBI 1-yr FD & a flat 7% p.a. FD — InvITs are return-OF-capital heavy: yields are not directly comparable to a coupon"
           exportable="chart"
           exportName="invits-cash-yield"
+          exportAsof={exportAsof}
         >
           <InvitYieldChart ctx={ctx} trusts={trusts} reitYield={reitYield} />
         </Card>
@@ -123,6 +128,7 @@ export function InvitsPage() {
           note="Latest disclosed valuations — NHIT's FY26 valuation ₹56,988 cr dwarfs the newer vehicles"
           exportable="chart"
           exportName="invits-enterprise-value"
+          exportAsof={'Valuations as of ' + IV.asof}
         >
           <InvitEvChart trusts={trusts} />
         </Card>

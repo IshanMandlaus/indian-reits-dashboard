@@ -57,6 +57,64 @@ window.GLOBAL = {
     cn: [ ["Industrial parks",9], ["Logistics/Warehousing",7.5], ["Toll roads/Expressways",6], ["Affordable housing",3], ["Consumption infra/Retail",3], ["Other",1.5] ],
     in: [ ["Commercial office",49.14], ["Retail/Malls (Nexus)",7.56], ["Other (data centres/residential rental)",6.3] ],
   },
+  // --- EDITABLE ESTIMATES: per-country listed REITs by sector, for the 3rd-level c_aum drill-down
+  // (country → sector → REITs). Each row = [name, Yahoo ticker (live quote), sector, seed mcap US$ bn].
+  // The `sector` MUST match a label in sector_breakdown[country] above so the pie can group by it.
+  // The 3rd-level pie splits that sector's AUM across these REITs by live market cap (seed is the
+  // pre-refresh / non-USD fallback weight), showing the top 10 by estimated AUM + an "Others" slice.
+  // Tickers feed the refresh server so global-live.json carries a live quote for every name here.
+  sector_reits: {
+    us: [
+      ["Equinix","EQIX","Data centres",80], ["Digital Realty","DLR","Data centres",48],
+      ["Prologis","PLD","Industrial/Logistics",114], ["Rexford Industrial","REXR","Industrial/Logistics",12], ["EastGroup Properties","EGP","Industrial/Logistics",9], ["STAG Industrial","STAG","Industrial/Logistics",7], ["First Industrial","FR","Industrial/Logistics",7], ["Americold Realty","COLD","Industrial/Logistics",6],
+      ["Simon Property","SPG","Retail",55], ["Realty Income","O","Retail",50], ["Kimco Realty","KIM","Retail",15], ["Regency Centers","REG","Retail",13], ["Federal Realty","FRT","Retail",9], ["Brixmor Property","BRX","Retail",9], ["NNN REIT","NNN","Retail",8],
+      ["AvalonBay Communities","AVB","Residential",30], ["Equity Residential","EQR","Residential",26], ["Invitation Homes","INVH","Residential",21], ["Mid-America Apartment","MAA","Residential",19], ["Essex Property","ESS","Residential",18], ["Sun Communities","SUI","Residential",16], ["UDR","UDR","Residential",14],
+      ["Welltower","WELL","Healthcare",90], ["Ventas","VTR","Healthcare",28], ["Healthpeak Properties","DOC","Healthcare",14], ["Omega Healthcare","OHI","Healthcare",10],
+      ["Alexandria Real Estate","ARE","Office",15], ["BXP","BXP","Office",12], ["Vornado Realty","VNO","Office",8], ["Kilroy Realty","KRC","Office",5], ["Cousins Properties","CUZ","Office",5],
+      ["Public Storage","PSA","Self-storage",52], ["Extra Space Storage","EXR","Self-storage",32], ["CubeSmart","CUBE","Self-storage",10], ["National Storage Affiliates","NSA","Self-storage",4],
+      ["American Tower","AMT","Towers",95], ["Crown Castle","CCI","Towers",45], ["SBA Communications","SBAC","Towers",24],
+      ["VICI Properties","VICI","Other",32], ["Iron Mountain","IRM","Other",30], ["Weyerhaeuser","WY","Other",22], ["Gaming and Leisure","GLPI","Other",13], ["Lamar Advertising","LAMR","Other",12],
+    ],
+    jp: [
+      ["Nippon Building Fund","8951.T","Office",6.5], ["Japan Real Estate","8952.T","Office",5.5], ["Daiwa Office Investment","8976.T","Office",3],
+      ["Nippon Prologis REIT","3283.T","Logistics",6], ["GLP J-REIT","3281.T","Logistics",5], ["Mitsui Fudosan Logistics Park","3471.T","Logistics",3], ["LaSalle Logiport REIT","3466.T","Logistics",2.5], ["Mitsubishi Estate Logistics","3481.T","Logistics",2],
+      ["Japan Metropolitan Fund","8953.T","Retail",3.5], ["Frontier Real Estate","8964.T","Retail",2.5], ["AEON REIT","3292.T","Retail",2],
+      ["Advance Residence","3269.T","Residential",3.5], ["Comforia Residential","3282.T","Residential",1.8], ["Nippon Accommodations Fund","3226.T","Residential",1.5],
+      ["Invincible Investment","8963.T","Hotel",3], ["Japan Hotel REIT","8985.T","Hotel",2.5], ["Hoshino Resorts REIT","3287.T","Hotel",1.5],
+      ["Nomura Real Estate Master Fund","3462.T","Other",5], ["Daiwa House REIT","8984.T","Other",4], ["ORIX JREIT","8954.T","Other",3], ["United Urban Investment","8960.T","Other",3],
+    ],
+    au: [
+      ["Goodman Group","GMG.AX","Industrial/Logistics",38], ["Centuria Industrial","CIP.AX","Industrial/Logistics",1.5],
+      ["Scentre Group","SCG.AX","Retail",13], ["Vicinity Centres","VCX.AX","Retail",6], ["Region Group","RGN.AX","Retail",2], ["Charter Hall Retail","CQR.AX","Retail",1.5],
+      ["Dexus","DXS.AX","Office",6], ["Centuria Office","COF.AX","Office",0.6],
+      ["Stockland","SGP.AX","Diversified/Other",8], ["Mirvac","MGR.AX","Diversified/Other",7], ["GPT Group","GPT.AX","Diversified/Other",5], ["Charter Hall Group","CHC.AX","Diversified/Other",4], ["Charter Hall Long WALE","CLW.AX","Diversified/Other",2], ["National Storage REIT","NSR.AX","Diversified/Other",2],
+      ["Ingenia Communities","INA.AX","Residential",1.2], ["Lifestyle Communities","LIC.AX","Residential",0.8],
+    ],
+    sg: [
+      ["CapitaLand Integrated Commercial Trust","C38U.SI","Retail/Office",12], ["Mapletree Pan Asia Commercial","N2IU.SI","Retail/Office",5], ["Suntec REIT","T82U.SI","Retail/Office",3], ["Frasers Centrepoint Trust","J69U.SI","Retail/Office",3], ["Keppel REIT","K71U.SI","Retail/Office",2], ["Starhill Global REIT","P40U.SI","Retail/Office",1], ["Lendlease Global Commercial","JYEU.SI","Retail/Office",1],
+      ["Mapletree Logistics Trust","M44U.SI","Logistics",7], ["Frasers Logistics & Commercial","BUOU.SI","Logistics",3], ["ESR-LOGOS REIT","J91U.SI","Logistics",2],
+      ["Mapletree Industrial Trust","ME8U.SI","Industrial/DC",6], ["Keppel DC REIT","AJBU.SI","Industrial/DC",4], ["Digital Core REIT","DCRU.SI","Industrial/DC",1],
+      ["CapitaLand Ascott Trust","HMN.SI","Hospitality",2.5], ["CDL Hospitality Trusts","J85.SI","Hospitality",1.2], ["Far East Hospitality Trust","Q5T.SI","Hospitality",1],
+      ["CapitaLand Ascendas REIT","A17U.SI","Business parks",10], ["CapitaLand India Trust","CY6U.SI","Business parks",2.5],
+      ["CapitaLand China Trust","AU8U.SI","Other",1], ["Sasseur REIT","CRPU.SI","Other",0.7],
+    ],
+    hk: [
+      ["Link REIT","0823.HK","Retail",12], ["Fortune REIT","0778.HK","Retail",1], ["Yuexiu REIT","0405.HK","Retail",1.2],
+      ["Champion REIT","2778.HK","Office",1.8], ["Sunlight REIT","0435.HK","Office",0.5], ["Spring REIT","1426.HK","Office",0.4],
+      ["Prosperity REIT","0808.HK","Industrial",0.4],
+      ["Hui Xian REIT","0087.HK","Other",1.5], ["Regal REIT","1881.HK","Other",0.5],
+    ],
+    cn: [
+      ["China Merchants Shekou Ind. Park REIT","180101.SZ","Industrial parks",1.0], ["CCB Zhongguancun Industrial Park","508099.SS","Industrial parks",0.8],
+      ["CICC GLP Warehouse REIT","508056.SS","Logistics/Warehousing",1.2],
+      ["Ping An Guangzhou Guanghe Expressway","180201.SZ","Toll roads/Expressways",0.9],
+      ["CapitaLand Commercial C-REIT","508091.SS","Consumption infra/Retail",0.7],
+    ],
+    in: [
+      ["Knowledge Realty Trust","KRT.BO","Commercial office",4.5], ["Embassy REIT","EMBASSY.NS","Commercial office",9], ["Mindspace REIT","MINDSPACE.NS","Commercial office",5.5], ["Brookfield India REIT","BIRET.NS","Commercial office",3.5], ["Bagmane REIT","BAGMANE.BO","Commercial office",1.5],
+      ["Nexus Select Trust","NXST.NS","Retail/Malls (Nexus)",2.5],
+    ],
+  },
   cases: [
     { tag:"US · GOVERNMENT-TENANT REIT", title:"Easterly Government Properties (NYSE: DEA) — a listed REIT with the U.S. federal government as tenant",
       body:"As of March 2026, Easterly owns 106 properties (~10.7 msf): 93 leased to U.S. federal agencies through the General Services Administration (FBI field offices, VA outpatient facilities, courthouses), 8 to state/local government and 5 to private tenants. The weighted average remaining lease term is 9.4 years against a full-faith-and-credit counterparty, producing bond-like income backed by the government's covenant. Management is publicly advocating GSA leasing reform (longer firm terms) — the model's principal risk is federal lease-renewal policy rather than the economic cycle. A relevant template for how a government-annuity vehicle (compare NHAI's InvITs, page 3) can operate in listed form." },

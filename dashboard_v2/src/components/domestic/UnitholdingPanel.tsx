@@ -119,9 +119,12 @@ function Trend({ quarters }: { quarters: HoldingQuarter[] }) {
       <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-subtle">
         Sponsor share — quarter over quarter
       </div>
-      <div className="flex items-end gap-3">
-        {cols.map((q) => (
-          <div key={q.label} className="flex w-12 flex-col items-center gap-1">
+      {/* wraps: with the full filing history (~28 quarters for Embassy) one row would
+          overflow — and a scroll container would clip the panel's SVG export */}
+      <div className="flex flex-wrap items-end gap-x-3 gap-y-4">
+        {cols.map((q, i) => (
+          // NSE can return two filings for the same quarter → labels alone collide
+          <div key={`${q.date}-${i}`} className="flex w-12 flex-col items-center gap-1">
             <span className="text-[10.5px] font-semibold text-ink tnum">{fmtPct(q.sponsor)}</span>
             <div
               className="flex h-16 w-full flex-col-reverse overflow-hidden rounded ring-1 ring-border/50"

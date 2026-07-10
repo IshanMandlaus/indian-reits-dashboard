@@ -61,6 +61,8 @@ export function MarketPage() {
 
   const asof =
     'Prices to ' + ctx.asof + (LIVE?._asof ? ' · live quotes ' + LIVE._asof : '') + ' · sources: NSE/BSE + live refresh'
+  // Stamped under the title in exported SVGs (live price charts lose the date otherwise).
+  const exportAsof = 'Prices to ' + ctx.asof + ' · NSE/BSE'
 
   return (
     <>
@@ -73,6 +75,7 @@ export function MarketPage() {
         note="Ordered by market cap · click a card for the full price chart + NSE/BSE metrics"
         exportable="panel"
         exportName="market-snapshot"
+        exportAsof={exportAsof}
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {snapRows.map((row) => (
@@ -109,6 +112,7 @@ export function MarketPage() {
           note="Combined = sum of unit prices of all listed REITs (basket grows at each IPO: KRT Aug-25, Bagmane May-26)"
           exportable="chart"
           exportName="market-levels"
+          exportAsof={exportAsof}
         >
           <BenchLevels ctx={ctx} years={years} />
         </Card>
@@ -119,6 +123,7 @@ export function MarketPage() {
           note="Listed REITs (combined, growing basket) vs NIFTY 50 · SENSEX · NIFTY REALTY · SBI 1-yr FD (stepped) · a flat 7% p.a. FD · GoI 10Y G-Sec. SENSEX appears after the first live refresh."
           exportable="chart"
           exportName="market-rebased"
+          exportAsof={exportAsof}
         >
           <BenchRebased ctx={ctx} years={years} />
         </Card>
@@ -128,6 +133,7 @@ export function MarketPage() {
           note="Embassy + Mindspace + Brookfield + Nexus (KRT & Bagmane excluded owing to IPO recency)"
           exportable="chart"
           exportName="market-veterans"
+          exportAsof={exportAsof}
         >
           <BenchVets ctx={ctx} years={years} />
         </Card>
@@ -142,6 +148,7 @@ export function MarketPage() {
           note="REITs basket = Embassy + Mindspace + Brookfield + Nexus daily traded turnover · ▲ 24-Feb-26: Embassy block deal — PPFAS bought ~5.63 cr units (~6%) at ₹420 from exiting Capital Group funds"
           exportable="chart"
           exportName="market-turnover"
+          exportAsof={B ? 'Turnover data to ' + B.asof + ' (workbook basis)' : null}
         >
           <VolumeCharts ctx={ctx} years={years} />
         </Card>

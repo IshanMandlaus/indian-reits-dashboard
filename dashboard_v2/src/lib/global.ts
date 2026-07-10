@@ -39,9 +39,12 @@ export function countrySlices(G: Global, metric: 'mcap' | 'aum'): (PieSlice & { 
   }))
 }
 
+/** A pie slice that can be drilled one level deeper (its `key` identifies the child view). */
+export type DrillSlice = PieSlice & { key?: string }
+
 export interface Drill {
   title: string
-  slices: PieSlice[]
+  slices: DrillSlice[]
   total: number
 }
 
@@ -62,17 +65,94 @@ export function mcapDrill(G: Global, ckey: string): Drill {
   return { title: `${c.flag} ${c.name} — top listed REITs by market cap`, slices, total: c.mcap }
 }
 
-/** AUM drilldown for a country: gross assets by sector. */
+/** AUM drilldown for a country: gross assets by sector. Each sector slice is itself
+ *  drillable (→ the listed REITs in that sector) when we have a roster for it. */
 export function sectorDrill(G: Global, ckey: string): Drill {
   const c = G.countries.find((x) => x.key === ckey)!
   const bd = G.sector_breakdown[ckey] || []
-  const slices: PieSlice[] = bd.map(([label, value], i) => ({
+  const roster = G.sector_reits?.[ckey] || []
+  const drillable = new Set(roster.map((r) => r[2]))
+  const slices: DrillSlice[] = bd.map(([label, value], i) => ({
     label,
     value,
     color: BREAKCOLS[i % BREAKCOLS.length],
+    key: drillable.has(label) ? label : undefined,
   }))
   const total = bd.reduce((a, [, v]) => a + v, 0) || 1
   return { title: `${c.flag} ${c.name} — AUM by sector`, slices, total }
+}
+
+const median = (xs: number[]): number => {
+  const s = xs.slice().sort((a, b) => a - b)
+  const m = Math.floor(s.length / 2)
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2
+}
+
+/**
+ * Third-level AUM drilldown: a country's listed REITs within one sector, sized by
+ * *estimated* AUM share. The sector's gross AUM is split across the roster REITs in
+ * proportion to their live market cap (from `global-live.json`), so the pie total
+ * equals the parent sector slice. Yahoo mcap is in local currency while the seeds are
+ * US$ bn, so we never mix scales: an implied FX (median live/seed over names that have
+ * a live quote) rebases the seed-only names into the same basis; pre-refresh, or when a
+ * sector has no live quotes at all, every weight falls back to the US$ seed. Shows the
+ * top 10 REITs individually + an "Others" slice for the remainder. Returns null if the
+ * country has no roster for this sector.
+ */
+export function sectorReitDrill(
+  G: Global,
+  LIVE: GlobalLive | null,
+  ckey: string,
+  sector: string,
+): Drill | null {
+  const c = G.countries.find((x) => x.key === ckey)
+  const roster = (G.sector_reits?.[ckey] || []).filter((r) => r[2] === sector)
+  if (!c || !roster.length) return null
+
+  const sect = (G.sector_breakdown[ckey] || []).find((s) => s[0] === sector)
+  const sectorAum = sect ? sect[1] : roster.reduce((a, r) => a + r[3], 0)
+
+  // Live market cap in local-currency $bn where we have a quote, else null.
+  const rows = roster.map(([name, ticker, , seed]) => {
+    const q = LIVE?.quotes?.[ticker]
+    const liveBn = q?.mcap != null ? q.mcap / 1e9 : null
+    return { name, seed, liveBn }
+  })
+  const ratios = rows.filter((r) => r.liveBn != null && r.seed > 0).map((r) => r.liveBn! / r.seed)
+  const fx = ratios.length ? median(ratios) : null
+
+  const weighted = rows.map((r) => ({
+    name: r.name,
+    live: r.liveBn != null,
+    weight: r.liveBn != null ? r.liveBn : fx != null ? r.seed * fx : r.seed,
+  }))
+  const wsum = weighted.reduce((a, r) => a + r.weight, 0) || 1
+  const alloc = weighted
+    .map((r) => ({ label: r.name, value: (sectorAum * r.weight) / wsum, live: r.live }))
+    .sort((a, b) => b.value - a.value)
+
+  const TOP = 10
+  const head = alloc.slice(0, TOP)
+  const tail = alloc.slice(TOP)
+  const slices: DrillSlice[] = head.map((r, i) => ({
+    label: r.label,
+    value: r.value,
+    color: BREAKCOLS[i % BREAKCOLS.length],
+  }))
+  if (tail.length) {
+    const otherVal = tail.reduce((a, r) => a + r.value, 0)
+    slices.push({
+      label: `Others (${tail.length} smaller REIT${tail.length > 1 ? 's' : ''})`,
+      value: otherVal,
+      color: BREAKCOLS[slices.length % BREAKCOLS.length],
+    })
+  }
+  const anyLive = weighted.some((r) => r.live)
+  return {
+    title: `${c.flag} ${c.name} · ${sector} — est. AUM by REIT${anyLive ? '' : ' (seed est.)'}`,
+    slices,
+    total: sectorAum,
+  }
 }
 
 /**

@@ -1,12 +1,16 @@
 # Indian REITs Dashboard v2 — Session Handover
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
-> Last updated: 2026-07-10 (**Global page — case studies replaced by an interactive 3D REIT
-> globe**: globe.gl/three.js, **on-brand dark teal HEX-GRID globe** (no photo texture), 35 big-player
-> markers with live Yahoo quotes, click→SecurityModal. See §13 and the top Changelog entry.) Prior:
-> NEW 5th page — interactive
-> Portfolio Map (§11, `ca14bc2`/`5be9c70`); v2 fully STANDALONE (`8b0d9c5`); Phase E npm-only
-> refresh (`18a6348`). Update the **Status** and **Changelog** sections as you go.
+> Last updated: 2026-07-10, second session — **five changes, read the top five Changelog entries**:
+> (1) **Global AUM pie: 3rd drilldown level** country → sector → REITs (new `sector_reits` roster in
+> `global_data.js`; refresh pulls live quotes for every roster ticker); (2) **SVG exports: title +
+> as-of header** (vector text) and **no gridlines** in the export; (3) **SVG exports: high-res**
+> (charts 4×, panels 3× — plus the `resize()`+`draw()` Chart.js trap); (4) **complete-pairs rule**
+> on Domestic paired charts (a year missing one leg is omitted + noted — user-set design rule);
+> (5) **unitholding pattern: FULL NSE filing history** (8-quarter cap removed; trend wraps).
+> Prior: **Global 3D REIT globe** (§13); Portfolio Map (§11, `ca14bc2`/`5be9c70`); v2 fully
+> STANDALONE (`8b0d9c5`); Phase E npm-only refresh (`18a6348`).
+> Update the **Status** and **Changelog** sections as you go.
 
 ---
 
@@ -215,7 +219,8 @@ toggle, modal (EV/NAV/premium/yield/ADTV all correct), 0 console errors.
 **Global page (`src/pages/GlobalPage.tsx`) done + verified.** Domain layer
 `src/lib/global.ts`; components in `src/components/global/` (`PieDrilldown`,
 `CountryPanels`). Two country pies with per-country **slice drilldown** (market cap →
-top listed REITs + "Others" remainder; AUM → sectors), country panels with live
+top listed REITs + "Others" remainder; AUM → sectors **→ sector's listed REITs by est. AUM share** —
+3rd level added 2026-07-10, see Changelog), country panels with live
 Yahoo quotes (`global-live.json`, keyed by ticker). *(The case studies + Temasek deep-dive
 that shipped here were replaced 2026-07-10 by the interactive 3D REIT globe — see §13.)*
 `top5` rows are `[name, ticker, sector, quoteOverride|null, manager]` (element [3] is
@@ -515,6 +520,101 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-10** — **Unitholding pattern: FULL filing history (cap removed).** `server/fetchers/
+  holdings.ts` capped the NSE unit-holding history at 8 quarters (`MAX_QUARTERS`); the user asked
+  for all of it. Cap removed; dedup changed from by-date to **by label (month+year), newest-first**
+  — NSE re-files a revised pattern for the same quarter (the latest revision wins) while genuine
+  mid-quarter event filings (Brookfield "Jan 2022"/"Aug 2023"/"Apr 2026", Mindspace "May 2026")
+  keep their own label and are kept. `UnitholdingPanel` Trend row now **flex-wraps** (was a single
+  row — 24 columns would overflow, and a scroll container would clip the panel's SVG export).
+  Verified with a REAL NSE pull (ran the fetcher standalone via `node --experimental-strip-types`):
+  embassy 19 qtrs (Dec 2020→Mar 2026, sponsor 50.13%→7.69%), mindspace 18, **brookfield 24**
+  (54.37%→19.37%, wraps to 2 rows), nexus 12, krt 3, bagmane 1 — and copied that output into
+  `public/data/holdings.json` (identical to what ⟳ Refresh now writes). Browser-verified: Embassy
+  19 columns single row, Brookfield 24 columns wrapped, 0 console errors; tsc + oxlint + build clean.
+- **2026-07-10** — **Domestic charts: complete-pairs rule (user request) + dup-key fix.** Paired
+  bar charts no longer draw a year when one leg of the pair is missing — the year is omitted and a
+  note under the chart says so. Trigger: Embassy FY2019 showed revenue with no NDCF on
+  "4 · NDCF vs Revenue"; user: drop such years and "follow this throughout". Applied to:
+  **Chart4Ndcf** (FY mode year filter now `hasRev && ndcf != null`; note gains "FY2019 omitted —
+  NDCF not reported for that year") and **Chart3FvBv** (year filter `gav != null && bvTotal != null`
+  — was OR; Bagmane FY23–25 were book-value-only bars, now omitted with a note; helper `bvTotal` +
+  `pairYears` extracted). Chart5 already required both (ndcf && gav); quarterly mode has no
+  rev-without-NDCF quarters in the data; Chart1's DPU bars are a time-series overlay, not a pair —
+  all left alone. Data facts: the ONLY affected years are Embassy FY19 (C4) and Bagmane FY23/24/25
+  (C3 → now shows the single FY26 pair). Pre-existing omissions unchanged (e.g. Nexus C4 FY26 —
+  revenue breakdown not filed yet, note already said so). **Also fixed in passing:** React
+  duplicate-key console error in `UnitholdingPanel` Trend — NSE returns two filings for the same
+  quarter (Mindspace "Mar 2025", Brookfield "Sep/Dec 2025"), so `key={q.label}` collided; now
+  `key={date-i}`. Verified in browser across all 6 REIT tabs: expected label sets per REIT, notes
+  render, 0 console errors (dup-key gone); tsc + oxlint + build clean.
+- **2026-07-10** — **SVG exports: high-res capture (charts 4×, panels 3×).** Exports previously
+  captured the chart canvas at the SCREEN's pixel ratio (soft on 1× monitors, zoom, print). Now
+  `exportChartSvg` re-renders each chart's backing store at a fixed **4×** for the capture (new
+  `chartsHiRes(charts, dpr)` in `src/lib/svgExport.ts`, `CHART_EXPORT_DPR = 4`) and
+  `exportPanelSvg`'s foreignObject raster went 2×→**3×** (`PANEL_EXPORT_DPR`). The SVG document
+  keeps the same CSS/layout size — only the embedded PNG is denser — so files drop into Word at
+  the same size. On-screen charts are restored to their original resolution after capture.
+  **Chart.js trap (verified live):** setting `options.devicePixelRatio` + `chart.resize()` is NOT
+  enough — when the chart has a queued `_resizeBeforeDraw` (hidden tab; or a resize event racing
+  in), `resize()` only stashes the request for the *next draw*, which can land after the
+  synchronous capture. Fix: call `chart.draw()` right after `resize()` — it flushes the pending
+  resize immediately. Verified via toDataURL spy: levels chart captured at 4748×1440 (exactly 4×
+  of 1187×360, SVG doc unchanged at 1187×416), snapshot panel at 3×, Global pie at 4×; backing
+  store / dpr / grid / theme all restored post-export, no leftover `devicePixelRatio` key; sizes
+  ~460 KB (chart) / ~1.2 MB (big panel); tsc + oxlint + build clean, 0 console errors.
+- **2026-07-10** — **SVG exports: title + as-of header, gridlines removed (export-only).** Every
+  "↓ SVG" download now stamps a **vector-text header** above the image — the card title (bold 14px)
+  and, where wired, a **data as-of line** (11px grey) — and captures the chart **without gridlines**
+  (axis border/ticks/labels stay; the on-screen dark chart is untouched). Files: `src/lib/svgExport.ts`
+  (new `ExportMeta {title,asof}` param through `pngSvg`/`exportChartSvg`/`exportPanelSvg`; new
+  `gridsOff(charts)` alongside `themeChartsLight`), `Card.tsx` (new `exportAsof?: string|null` prop;
+  title auto-passed when it's a string), and per-page wiring: Market (snapshot/levels/rebased/veterans
+  → "Prices to <ctx.asof> · NSE/BSE"; turnover → "Turnover data to <bench asof> (workbook basis)"),
+  InvITs (live cards → "Prices to <liveAsof> · NSE", EV → "Valuations as of <IV.asof>"), Domestic
+  chart 1 → "Live price as of <lp.asof>", Global (pies + country panels → "Live quotes as of
+  <LIVE.asof> (Yahoo Finance) · estimates as of <G.asof>"). **Two Chart.js traps found in
+  verification (both real):** (1) toggling `Chart.defaults.scale.grid.display` does NOT affect
+  existing charts — scale defaults are merged into each chart's config at init; you must flip
+  `grid.display` on `chart.config.options.scales` (the plain merged config — never the proxied
+  resolved options, which recurse on mutation). (2) The restore MUST re-read the grid object **by
+  chart + scale id at restore time** and write the prior value back — `chart.update()` REPLACES the
+  config's scale/grid objects (a captured reference is detached), and deleting the key resolves to
+  no-grid, not back to the default. Verified in-browser via a `toDataURL` spy: at capture time y-grid
+  = false + light ink; after export the config/resolved grid and dark theme are fully restored; chart
+  + panel + pie exports all carry the header; tsc + oxlint + build clean, 0 console errors. (Chart
+  pixels are blank in the headless preview — known rAF limitation; header/grid logic verified
+  programmatically, look confirmed by the vector header rendering.)
+- **2026-07-10** — **Global AUM pie: new 3rd drilldown level (country → sector → REITs).** The
+  "Real-estate AUM by country" pie already drilled country → sector; clicking a sector now drills
+  once more into **the listed REITs in that sector**, sized by **estimated AUM share** — the sector's
+  gross AUM split across its REITs in proportion to their **live market cap** (top 10 + an "Others"
+  slice; pie total = the parent sector slice). The mcap pie is unchanged (still one level). **Data
+  enrichment (per the user's "enrich the dataset" + "estimated AUM share" choices):** added a new
+  `sector_reits` roster to `data-src/global_data.js` (regenerated `public/data/global.json` via
+  `npm run data`) — `{ country: [name, Yahoo ticker, sector, seed mcap US$ bn] }`, ~8–12 REITs per
+  country where the market has them (US deep; HK/CN/India thin — honest). The `sector` string **must**
+  match a `sector_breakdown` label so the pie groups by it. New type `GlobalSectorReit` + optional
+  `Global.sector_reits`. **Weighting avoids currency-mixing:** Yahoo `mcap` is local-currency while
+  seeds are US$ bn, so `sectorReitDrill` derives an implied FX (median live/seed over names that have
+  a live quote) to rebase seed-only names into the same basis; pre-refresh or a sector with no live
+  quotes falls back to pure seeds (title tagged " (seed est.)"). **Refresh server** (`server/fetchers/
+  global.ts`) now fetches a live quote for **every** roster ticker (was top-5 only); 5y **history**
+  stays top-5-only (drives the click-through SecurityModal), so the extra tickers add ~50 quote calls
+  (sleep trimmed 400→300ms). **Component:** `PieDrilldown.tsx` generalised from a single `drillKey`
+  to a **path stack** — a slice is drillable iff it carries a `key` AND `drill(path)` returns a view;
+  leaf slices lose `cursor-pointer`. `sectorDrill` slices now carry `key = sector label` when a roster
+  exists. Nav shows "← Back" + (at depth 2) a "countries" reset. Files: `data-src/global_data.js`,
+  `src/types/data.ts`, `src/lib/global.ts` (`sectorReitDrill`, `DrillSlice`), `src/components/global/
+  PieDrilldown.tsx`, `src/pages/GlobalPage.tsx`, `server/fetchers/global.ts`. tsc + oxlint + build
+  clean; **verified end-to-end in a real browser** (US → Retail → 7 REITs summing to the $375 bn Retail
+  AUM: Simon 34.6%, Realty Income 31.4%, … ; back-nav pops levels; leaf non-clickable; 0 console
+  errors). ⚠️ **Headless-preview gotcha:** the drilldown hit-test uses `getElementsAtEventForMode(…,
+  {intersect:true}, /*useFinalPosition*/ false)`; under headless rAF-pause the in-flight arc geometry
+  never settles, so synthetic clicks miss unless you first set `chart.options.animation=false;
+  chart.update('none')` (real browsers settle the animation → clicks land). Same rAF root cause as the
+  globe (§13 gotcha 4). New roster tickers only get live quotes after the next ⟳ Refresh; seeds render
+  a correct pie immediately in the meantime.
 - **2026-07-10** — **Global page: case studies → interactive 3D REIT globe (on-brand hex look).**
   Removed both narrative case-study blocks (the "Case studies" card — Easterly/BREIT/C-REITs — and the
   Temasek Singapore deep-dive panel) from `GlobalPage.tsx` and replaced them with a **fully-interactive

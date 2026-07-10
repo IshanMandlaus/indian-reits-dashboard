@@ -52,11 +52,12 @@ function note(D: ReitData, k: ReitKey, mode: 'fy' | 'q'): string {
   const rm = f.rev_maint || []
   const ix = (y: string) => f.years.indexOf(y)
   const hasRev = (y: string) => rr[ix(y)] != null || rm[ix(y)] != null
-  const dropped = f.years.filter((y, i) => f.ndcf[i] != null && !hasRev(y))
-  return (
-    'FY: rental + maintenance income (FS revenue note) vs NDCF. Toggle for quarterly (revenue from ops + PAT).' +
-    (dropped.length ? ' ' + dropped.join(', ') + ' omitted — annual revenue breakdown not yet available in filings.' : '')
-  )
+  const droppedRev = f.years.filter((y, i) => f.ndcf[i] != null && !hasRev(y))
+  const droppedNdcf = f.years.filter((y, i) => f.ndcf[i] == null && hasRev(y))
+  let omitted = ''
+  if (droppedRev.length) omitted += ' ' + droppedRev.join(', ') + ' omitted — annual revenue breakdown not yet available in filings.'
+  if (droppedNdcf.length) omitted += ' ' + droppedNdcf.join(', ') + ' omitted — NDCF not reported for that year.'
+  return 'FY: rental + maintenance income (FS revenue note) vs NDCF. Toggle for quarterly (revenue from ops + PAT).' + omitted
 }
 
 function build(D: ReitData, k: ReitKey, mode: 'fy' | 'q'): ChartConfiguration {
@@ -99,7 +100,9 @@ function build(D: ReitData, k: ReitKey, mode: 'fy' | 'q'): ChartConfiguration {
   const rm = f.rev_maint || []
   const ix = (y: string) => f.years.indexOf(y)
   const hasRev = (y: string) => rr[ix(y)] != null || rm[ix(y)] != null
-  const yrs = f.years.filter((y) => hasRev(y))
+  // Complete pairs only: a year missing either leg (e.g. Embassy FY19 — revenue
+  // reported but no NDCF) is omitted rather than drawn lopsided; note() says so.
+  const yrs = f.years.filter((y) => hasRev(y) && f.ndcf[ix(y)] != null)
   return {
     type: 'bar',
     data: {

@@ -119,6 +119,7 @@ export function DomesticReitsPage() {
           note="Traded price (NSE/BSE) against reported NAV per unit; bars = distribution per unit."
           exportable="chart"
           exportName={`${k}-1-price-vs-nav`}
+          exportAsof={lp.price ? `${lp.live ? 'Live price' : 'Price'} as of ${lp.asof} · NSE/BSE` : null}
         >
           <Chart1PriceNav D={D} k={k} LIVE={LIVE} />
         </Card>

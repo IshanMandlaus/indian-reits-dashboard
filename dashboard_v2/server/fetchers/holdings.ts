@@ -25,7 +25,6 @@ const REITS: Record<string, [string, string]> = {
   bagmane: ['BAGMANE', 'Bagmane Prime Office REIT'],
 }
 
-const MAX_QUARTERS = 8
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 const MONTHS: Record<string, number> = {
@@ -95,16 +94,20 @@ async function nseHoldings(s: NseSession, symbol: string, issuer: string): Promi
     if (iso == null || label == null || sponsor == null || pub == null) continue
     quarters.push({ date: iso, label, sponsor, public: pub, emp: num(firstKey(row, EMP_KEYS)) ?? 0 })
   }
-  // newest first, de-duplicated by as-on date, capped.
+  // Newest first, FULL history (no cap — the panel shows every filed quarter).
+  // De-duplicate by label (month + year): NSE re-files a revised pattern for the
+  // same quarter, and newest-first order means the latest revision wins; a genuine
+  // mid-quarter event filing (e.g. "May 2026" after an offering) has its own label
+  // and is kept.
   quarters.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
   const seen = new Set<string>()
   const deduped: Quarter[] = []
   for (const q of quarters) {
-    if (seen.has(q.date)) continue
-    seen.add(q.date)
+    if (seen.has(q.label)) continue
+    seen.add(q.label)
     deduped.push(q)
   }
-  return deduped.slice(0, MAX_QUARTERS)
+  return deduped
 }
 
 export async function fetchHoldings(dataDir: string, s: NseSession | null): Promise<FetchResult> {

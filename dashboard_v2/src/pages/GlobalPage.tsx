@@ -3,7 +3,7 @@ import { PageHeader } from '../components/ui/PageHeader'
 import { Card } from '../components/ui/Card'
 import { useDataset } from '../lib/useDataset'
 import { setupCharts } from '../lib/chartSetup'
-import { countrySlices, mcapDrill, sectorDrill, buildGlobalSecModal } from '../lib/global'
+import { countrySlices, mcapDrill, sectorDrill, sectorReitDrill, buildGlobalSecModal } from '../lib/global'
 import { buildGlobePoints } from '../lib/globe'
 import { PieDrilldown } from '../components/global/PieDrilldown'
 import { CountryPanels } from '../components/global/CountryPanels'
@@ -56,6 +56,10 @@ export function GlobalPage() {
   const asof =
     'US · Japan · Australia · Singapore · Hong Kong · China · India' +
     (LIVE?.asof ? ' · live quotes ' + LIVE.asof + ' (Yahoo Finance)' : ' · estimates in global_data')
+  // Stamped under the title in exported SVGs (live-quote charts lose the date otherwise).
+  const exportAsof = LIVE?.asof
+    ? 'Live quotes as of ' + LIVE.asof + ' (Yahoo Finance) · estimates as of ' + G.asof
+    : 'Estimates as of ' + G.asof
 
   return (
     <>
@@ -67,21 +71,33 @@ export function GlobalPage() {
           note="US$ bn listed-REIT market cap — click a country slice to drill into its top listed REITs by market cap."
           exportable="chart"
           exportName="global-mcap-by-country"
+          exportAsof={exportAsof}
         >
-          <PieDrilldown slices={mcapSlices} worldTotal={mcapWorld} drill={(k) => mcapDrill(G, k)} />
+          <PieDrilldown
+            slices={mcapSlices}
+            worldTotal={mcapWorld}
+            drill={(path) => (path.length === 1 ? mcapDrill(G, path[0]) : null)}
+          />
         </Card>
 
         <Card
           title="Real-estate AUM (gross assets) by country"
-          note="US$ bn gross real-estate AUM (US included — click its legend swatch to hide/show) — click a country slice to drill into its AUM by sector."
+          note="US$ bn gross real-estate AUM (US included — click its legend swatch to hide/show) — click a country → its AUM by sector → a sector to see the listed REITs in it (estimated AUM share, live market cap)."
           exportable="chart"
           exportName="global-aum-by-country"
+          exportAsof={exportAsof}
         >
           <PieDrilldown
             slices={aumSlices}
             worldTotal={aumWorld}
             tooltipSuffix=" gross assets"
-            drill={(k) => sectorDrill(G, k)}
+            drill={(path) =>
+              path.length === 1
+                ? sectorDrill(G, path[0])
+                : path.length === 2
+                  ? sectorReitDrill(G, LIVE, path[0], path[1])
+                  : null
+            }
           />
         </Card>
 
@@ -90,6 +106,7 @@ export function GlobalPage() {
           title="Country panels — top 5 listed REITs each (live quotes)"
           exportable="panel"
           exportName="global-market-leaders"
+          exportAsof={exportAsof}
           note={
             LIVE?.asof
               ? 'Live quotes as of ' + LIVE.asof + ' (Yahoo Finance) · local currency · click a row for the full chart + metrics'

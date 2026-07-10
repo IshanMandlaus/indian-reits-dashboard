@@ -24,6 +24,24 @@ import { Chart } from 'chart.js'
 
 const LIGHT_INK = '#0f172a'
 const LIGHT_GRID = '#e5e7eb'
+const LIGHT_MUT = '#64748b'
+
+/**
+ * Fixed pixel ratios for the exported rasters, independent of the user's screen
+ * (a 1× monitor would otherwise produce a soft export). Charts re-render their
+ * canvas at 4× for the capture; panels rasterise their DOM at 3× (the foreignObject
+ * pass is heavier, and panels are mostly text which stays legible at 3×).
+ */
+const CHART_EXPORT_DPR = 4
+const PANEL_EXPORT_DPR = 3
+
+/** Optional header stamped above the exported image (kept as real vector text). */
+export interface ExportMeta {
+  /** Chart title, rendered as a bold header line. */
+  title?: string
+  /** Data as-of line (e.g. "Live prices to 10 Jul 2026 10:28"), rendered under the title. */
+  asof?: string
+}
 
 /**
  * Switch Chart.js to a light theme globally (dark ink for ticks / legend / titles,
@@ -43,6 +61,69 @@ function themeChartsLight(): () => void {
   }
 }
 
+type ScalesConfig = Record<string, { grid?: Record<string, unknown> }>
+
+/**
+ * Hide every gridline on the given charts for the capture (export-only declutter;
+ * axis border, ticks and labels stay) and return a restore fn. Toggling
+ * `Chart.defaults.scale.grid` does NOT work here — scale defaults are merged into
+ * each chart's config at init, so live charts never re-read them. Instead we flip
+ * `grid.display` on `chart.config.options.scales` — the plain merged config object,
+ * NOT the proxied resolved options (mutating those recurses). Two traps, both hit
+ * in verification: (1) restore must WRITE the prior value back (deleting the key
+ * resolves to no-grid, not back to the default); (2) `chart.update()` REPLACES the
+ * config's scale/grid objects, so the restore must re-read them by chart + scale id
+ * at restore time — a captured object reference is detached by then.
+ */
+function gridsOff(charts: Chart[]): () => void {
+  const saved: [Chart, string, unknown][] = []
+  for (const ch of charts) {
+    const scales = (ch.config.options as { scales?: ScalesConfig } | undefined)?.scales
+    if (!scales) continue
+    for (const [id, sc] of Object.entries(scales)) {
+      if (!sc?.grid) continue
+      saved.push([ch, id, sc.grid.display])
+      sc.grid.display = false
+    }
+  }
+  return () => {
+    for (const [ch, id, display] of saved) {
+      const grid = (ch.config.options as { scales?: ScalesConfig } | undefined)?.scales?.[id]?.grid
+      if (grid) grid.display = display
+    }
+  }
+}
+
+/**
+ * Re-render each chart's backing canvas at a fixed high pixel ratio for the capture
+ * (CSS size is unchanged — the resize only recreates the backing store) and return a
+ * restore fn. Same config-mutation rules as `gridsOff` (touch the plain
+ * `chart.config.options`, re-read at restore time). The `draw()` after `resize()` is
+ * REQUIRED: when the chart has a queued `_resizeBeforeDraw` (hidden tab, or a resize
+ * event raced in), `resize()` only stashes the request for the next draw — which may
+ * come after our synchronous capture — while `draw()` flushes it immediately.
+ */
+function chartsHiRes(charts: Chart[], dpr: number): () => void {
+  const applyDpr = (ch: Chart, value: number | undefined) => {
+    const opts = ch.config.options as { devicePixelRatio?: number } | undefined
+    if (!opts) return
+    if (value === undefined) delete opts.devicePixelRatio
+    else opts.devicePixelRatio = value
+    ch.resize()
+    ch.draw()
+  }
+  const saved: [Chart, number | undefined][] = []
+  for (const ch of charts) {
+    const opts = ch.config.options as { devicePixelRatio?: number } | undefined
+    if (!opts) continue
+    saved.push([ch, opts.devicePixelRatio])
+    applyDpr(ch, dpr)
+  }
+  return () => {
+    for (const [ch, prev] of saved) applyDpr(ch, prev)
+  }
+}
+
 // ─── canvas compositing ──────────────────────────────────────────────────────
 
 /** Draw a canvas onto an opaque white canvas of the same device size. */
@@ -58,8 +139,7 @@ function whiteCanvas(cv: HTMLCanvasElement): HTMLCanvasElement {
 }
 
 /** Stack several chart canvases vertically onto one white canvas. */
-function stackCanvases(cvs: HTMLCanvasElement[]): { url: string; w: number; h: number } {
-  const dpr = window.devicePixelRatio || 1
+function stackCanvases(cvs: HTMLCanvasElement[], dpr: number): { url: string; w: number; h: number } {
   const gap = Math.round(16 * dpr)
   const W = Math.max(...cvs.map((c) => c.width))
   const H = cvs.reduce((a, c) => a + c.height, 0) + gap * (cvs.length - 1)
@@ -79,15 +159,38 @@ function stackCanvases(cvs: HTMLCanvasElement[]): { url: string; w: number; h: n
 
 // ─── SVG assembly + download ─────────────────────────────────────────────────
 
-/** Wrap a PNG data URL in a white-background SVG at the given CSS size. */
-function pngSvg(dataUrl: string, w: number, h: number): string {
+const esc = (s: string): string =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+const FONT = "Inter, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+
+/**
+ * Wrap a PNG data URL in a white-background SVG at the given CSS size, with an
+ * optional vector-text header: the chart title (bold) and the data as-of line.
+ */
+function pngSvg(dataUrl: string, w: number, h: number, meta?: ExportMeta): string {
   const W = Math.round(w)
-  const H = Math.round(h)
+  const pad = 16
+  let header = ''
+  let y = 10
+  if (meta?.title) {
+    y += 16
+    header += `<text x="${pad}" y="${y}" font-family="${FONT}" font-size="14" font-weight="600" fill="${LIGHT_INK}">${esc(meta.title)}</text>`
+    y += 6
+  }
+  if (meta?.asof) {
+    y += 12
+    header += `<text x="${pad}" y="${y}" font-family="${FONT}" font-size="11" fill="${LIGHT_MUT}">${esc(meta.asof)}</text>`
+    y += 4
+  }
+  const headerH = header ? y + 8 : 0
+  const H = Math.round(h) + headerH
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
     `<rect width="100%" height="100%" fill="#ffffff"/>` +
-    `<image x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid meet" href="${dataUrl}"/>` +
+    header +
+    `<image x="0" y="${headerH}" width="${W}" height="${Math.round(h)}" preserveAspectRatio="xMidYMid meet" href="${dataUrl}"/>` +
     `</svg>`
   )
 }
@@ -110,19 +213,26 @@ const slug = (s: string): string =>
 // ─── public: chart export ────────────────────────────────────────────────────
 
 /** Export every Chart.js canvas inside `node` as one white-background SVG. */
-export function exportChartSvg(node: HTMLElement, name: string): void {
+export function exportChartSvg(node: HTMLElement, name: string, meta?: ExportMeta): void {
   const cvs = Array.from(node.querySelectorAll('canvas')) as HTMLCanvasElement[]
   if (!cvs.length) return
   const charts = cvs.map((cv) => Chart.getChart(cv)).filter((c): c is Chart => !!c)
-  const restore = themeChartsLight()
+  const restoreTheme = themeChartsLight()
+  const restoreGrids = gridsOff(charts)
   charts.forEach((ch) => ch.update('none'))
+  const restoreDpr = chartsHiRes(charts, CHART_EXPORT_DPR) // after update: resize() re-renders themed
+  const restore = () => {
+    restoreGrids()
+    restoreTheme()
+    restoreDpr() // last — its resize() repaints with the dark theme back
+  }
   try {
     if (cvs.length === 1) {
       const cv = cvs[0]
-      download(slug(name), pngSvg(whiteCanvas(cv).toDataURL('image/png'), cv.clientWidth || cv.width, cv.clientHeight || cv.height))
+      download(slug(name), pngSvg(whiteCanvas(cv).toDataURL('image/png'), cv.clientWidth || cv.width, cv.clientHeight || cv.height, meta))
     } else {
-      const s = stackCanvases(cvs)
-      download(slug(name), pngSvg(s.url, s.w, s.h))
+      const s = stackCanvases(cvs, CHART_EXPORT_DPR)
+      download(slug(name), pngSvg(s.url, s.w, s.h, meta))
     }
   } finally {
     restore()
@@ -189,7 +299,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
  * (so the real Tailwind layout is preserved — no per-node style inlining), then
  * embeds the flattened PNG in an SVG.
  */
-export async function exportPanelSvg(node: HTMLElement, name: string): Promise<void> {
+export async function exportPanelSvg(node: HTMLElement, name: string, meta?: ExportMeta): Promise<void> {
   const w = node.offsetWidth
   const h = node.offsetHeight
   const css = collectCss()
@@ -206,7 +316,7 @@ export async function exportPanelSvg(node: HTMLElement, name: string): Promise<v
     `</foreignObject></svg>`
 
   const img = await loadImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(foreign))
-  const dpr = 2
+  const dpr = PANEL_EXPORT_DPR
   const c = document.createElement('canvas')
   c.width = w * dpr
   c.height = h * dpr
@@ -215,5 +325,5 @@ export async function exportPanelSvg(node: HTMLElement, name: string): Promise<v
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, w, h)
   ctx.drawImage(img, 0, 0, w, h)
-  download(slug(name), pngSvg(c.toDataURL('image/png'), w, h))
+  download(slug(name), pngSvg(c.toDataURL('image/png'), w, h, meta))
 }

@@ -16,6 +16,12 @@ type CardProps = {
   exportable?: 'chart' | 'panel'
   /** Base filename for the export (defaults to the title). */
   exportName?: string
+  /**
+   * Data as-of line stamped under the title in the exported SVG (e.g.
+   * "Live prices to 10 Jul 2026 10:28"). Pass it for live-data charts — the
+   * download otherwise loses the date context shown in the card note.
+   */
+  exportAsof?: string | null
 }
 
 /** The v2 panel primitive — replaces v1's flat `.card`. */
@@ -28,6 +34,7 @@ export function Card({
   bodyClassName = '',
   exportable,
   exportName,
+  exportAsof,
 }: CardProps) {
   const bodyRef = useRef<HTMLDivElement>(null)
 
@@ -35,8 +42,12 @@ export function Card({
     const node = bodyRef.current
     if (!node) return
     const name = exportName || (typeof title === 'string' ? title : 'chart')
-    if (exportable === 'panel') exportPanelSvg(node, name).catch(() => {})
-    else exportChartSvg(node, name)
+    const meta = {
+      title: typeof title === 'string' ? title : undefined,
+      asof: exportAsof || undefined,
+    }
+    if (exportable === 'panel') exportPanelSvg(node, name, meta).catch(() => {})
+    else exportChartSvg(node, name, meta)
   }
 
   const exportBtn = exportable ? (
