@@ -840,7 +840,7 @@ photographic earth-night texture — the user found it "cartoony", hence the hex
 - `src/components/global/ReitGlobe.tsx` — the globe. Init-once `useEffect` mirroring `IndiaMap`:
   `requestAnimationFrame` size-guard (lazy mount → 0-width) + `ResizeObserver`. Loads the world GeoJSON
   once (`ensureWorld()`), sets `hexPolygonsData` (`hexPolygonResolution:3`, `hexPolygonMargin:0.28`,
-  `hexPolygonColor` = per-country teal shade by name-hash), replaces the globe material with a
+  `hexPolygonColor` = `hexColor()` = per-continent palette, shade chosen by name-hash), replaces the globe material with a
   `MeshPhongMaterial`, then `pointsData`/`ringsData` accessors, rich HTML `pointLabel`, `onPointHover`
   pauses auto-rotate, `onPointClick` → `onPick(ckey,ri)`. `_destructor()` on unmount.
   `preserveDrawingBuffer:true` so the globe is screenshot-/export-able.
