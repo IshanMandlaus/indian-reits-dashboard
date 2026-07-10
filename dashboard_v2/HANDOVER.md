@@ -1,10 +1,11 @@
 # Indian REITs Dashboard v2 — Session Handover
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
-> Last updated: 2026-07-09 (**v2 is now fully STANDALONE** — the v1 `dashboard/` folder was
-> removed from the `v2` branch; images de-symlinked into a real `public/img/`, static data
-> sources vendored to `data-src/`. Committed on `v2` as `8b0d9c5`. Prior milestone: Phase E
-> npm-only refresh, `18a6348`.) Update the **Status** and **Changelog** sections as you go.
+> Last updated: 2026-07-10 (**NEW 5th page — interactive Portfolio Map** of every REIT asset,
+> ECharts + India GeoJSON, built from `reit-data.spv`. Committed on `v2` as `ca14bc2`, look
+> refined in `5be9c70`. See §11 Portfolio Map and the top Changelog entry.) Prior milestone:
+> v2 fully STANDALONE (`8b0d9c5`); Phase E npm-only refresh (`18a6348`). Update the **Status**
+> and **Changelog** sections as you go.
 
 ---
 
@@ -16,9 +17,10 @@ React SPA. **v2 is now feature-complete, production-ready, AND self-contained:**
 four pages are wired to real data (Phases A–C), the refresh pipeline is done, and as
 of Phase E it runs **npm-only** — one ⟳ Refresh data button in the top nav pulls live
 NSE/BSE/Yahoo data through a Vite plugin (`POST /api/refresh`); no Python, no serve.py,
-no v1 needed. **Nothing is outstanding.** Phase D2 is a deliberate won't-do (volume
+no v1 needed. **A 5th page was since added — the interactive Portfolio Map** (`/map`,
+ECharts) — see §11. **Nothing is outstanding.** Phase D2 is a deliberate won't-do (volume
 chart stays on workbook data by design). Read §10 Changelog top-to-bottom for the full
-build history; §6 Phase E for the refresh server.
+build history; §6 Phase E for the refresh server; §11 for the map.
 
 - **Repo:** https://github.com/IshanMandlaus/indian-reits-dashboard (private)
 - **Branch:** `v2` — now fully standalone; **`dashboard/` (v1) was removed from this branch.**
@@ -87,12 +89,13 @@ dashboard_v2/
     lib/{io,nse,yahoo,types}.ts #   fs + NSE session + yahoo-finance2 wrapper
     fetchers/{prices,holdings,market,global}.ts  # ports of the 4 refresh_*.py
   src/
-    components/layout/AppShell.tsx   # top nav + ONE global ⟳ Refresh data button
-    components/{domestic,market,invit,global,charts}/  # all real, wired charts
-    lib/{data,useDataset,bench,invit,global,reit,chartSetup,format,svgExport}.ts
-    pages/{Domestic,Market,Invits,Global}Page.tsx   # all fully wired to real data
+    components/layout/AppShell.tsx   # top nav (5 items) + ONE global ⟳ Refresh data button
+    components/{domestic,market,invit,global,charts,map}/  # all real, wired charts (+ map, §11)
+    lib/{data,useDataset,bench,invit,global,reit,chartSetup,format,svgExport,geo,echartsSetup}.ts
+    pages/{Domestic,Market,Invits,Global,Map}Page.tsx   # all fully wired to real data
     types/data.ts
   public/data/*.json            # 15 datasets; the 4 *-live + holdings refresh live
+  public/geo/india-districts.json  # India map for the Portfolio Map page (§11; fetched, not bundled)
   public/img/                   # committed annexure + structure images (~207 MB, real folder)
   data-src/*.js                 # vendored .js sources for the 11 STATIC datasets (npm run data)
   scripts/{convert-data,check-assets}.mjs
@@ -504,6 +507,21 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-10** — **NEW 5th page: interactive Portfolio Map (`/map`).** An India map of every
+  REIT asset (108 rows in `reit-data.spv`), built with **Apache ECharts** (tree-shaken, lazy
+  route → echarts isolated in its own ~585 KB chunk, out of the main bundle). District-level
+  choropleth base coloured by each state's aggregate REIT footprint + animated `effectScatter`
+  pins per asset (symbol = asset type, colour = REIT / occupancy / rent gradient, size =
+  leasable / completed / value). REIT + type filters, Assets↔Cities view, live totals bar,
+  hover-synced sortable asset list, click→detail drawer (all SPV fields incl. computed
+  mark-to-market) → reuses the existing `AnnexModal` for the valuation annexure. New files:
+  `src/lib/{geo,echartsSetup}.ts`, `src/components/map/{IndiaMap,MapControls,MapTotals,AssetList,
+  AssetDrawer}.tsx`, `src/pages/MapPage.tsx`, `public/geo/india-districts.json`; wired in
+  `router.tsx` (lazy) + `AppShell.tsx` (nav 05). Committed `ca14bc2`; look refined (brighter
+  choropleth, glow pins + type-symbol legend, layout-filled framing, radial backdrop, Card title
+  + dynamic note) in `5be9c70`. Verified end-to-end + 4 existing routes regression-clean; tsc +
+  oxlint + build clean; 0 console errors. **Full detail: §11.** The income/total-return analytics
+  from the same planning session are a deferred next wave (see §12).
 - **2026-07-09** — **v2 is now fully standalone; v1 `dashboard/` removed from the `v2` branch.**
   Severed the two remaining couplings to v1: (1) `public/img` was a committed symlink →
   `../../dashboard/img`; it is now a **real committed image folder** (918 files, ~207 MB) moved
@@ -683,3 +701,82 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
   embedding). Both emit raster-in-SVG (a `<foreignObject>` SVG won't render in Word).
   ⚠️ Headless preview exports charts blank (Chart.js doesn't repaint after resize there);
   verify chart exports in a real browser — the user confirmed both look correct.
+
+---
+
+## 11. Portfolio Map page (`/map`) — NEW, 2026-07-10
+
+A dedicated, fully-interactive India map of **every REIT asset**, built **only from data we
+already own** (`reit-data.spv` — 108 asset rows across the six REITs). No new data pulls. The
+user asked for its own page ("cool as f*ck, fully interactable").
+
+**Stack:** **Apache ECharts** (`echarts/core`, tree-shaken) on a raw `div` ref — *not*
+`echarts-for-react` (avoids React-19 peer-dep friction; matches our existing raw-canvas idiom).
+The route is **lazy** (`router.tsx`: `lazy: () => import('./pages/MapPage')`), so ECharts lands in
+its own ~585 KB chunk and never touches the other four routes' bundles. Chosen over react-simple-maps
+(would hand-roll ripple/tooltip/visualMap) and Leaflet/MapLibre (external tile host breaks the
+offline-JSON ethos). ECharts gives choropleth + `effectScatter` ripple pins + `visualMap` gradient +
+rich tooltips + roam + image export, all offline.
+
+**Files:**
+- `src/lib/geo.ts` — the data/coord layer. `REIT_COLOR`, `CITY_COORDS` (~25 canonical cities),
+  `CITY_TO_STATE` (state names must match the GeoJSON `st` prop), `CITY_ALIASES` (messy raw labels
+  → canonical), `ASSET_OVERRIDES` (marquee parks at true micro-market coords — applied to
+  non-Solar/Other only, so "One BKC Solar" in Dhule can't grab Mumbai-BKC's pin), golden-angle
+  `jitter` (fans a city's assets out from its centroid so pins don't stack), `assetsFromReitData(D)`
+  → flat `MapAsset[]` with `[lng,lat]` + `raw` (original `ReitSpv`, for `AnnexModal`),
+  `aggregateByCity` / `aggregateByState`, `totals`.
+- `src/lib/echartsSetup.ts` — `echarts.use([...])` (only MapChart, EffectScatterChart, Geo/VisualMap/
+  Tooltip/Toolbox/Title, CanvasRenderer) + `ensureIndiaMap()` (fetch `public/geo/india-districts.json`
+  once, `registerMap('india', …)`, resolves with the features for state mapping).
+- `src/components/map/IndiaMap.tsx` — the ECharts component. Geo base + `map` series (choropleth,
+  bound via `geoIndex:0`) + `effectScatter` pins. Two-way hover sync (list↔map via `dispatchAction`
+  highlight + `mouseover`/`mouseout` events), click→`onPick`, roam persistence (stashes center/zoom
+  on `georoam`).
+- `src/components/map/{MapControls,MapTotals,AssetList,AssetDrawer}.tsx` — control rail (REIT + type
+  chips, view/size/colour/shade toggles), live totals, hover-synced sortable list, slide-over drawer.
+- `src/pages/MapPage.tsx` — orchestrates filter state; drawer's "Open valuation annexure" reuses
+  `components/domestic/AnnexModal` (pass `k=asset.reit`, `asset=asset.raw`).
+- `public/geo/india-districts.json` — the India map (see gotcha 1). Wired: `router.tsx` (lazy `/map`)
+  + `AppShell.tsx` (nav item `05 Portfolio Map`).
+
+**Controls:** REIT chips (colour + live count) · asset-type chips · **View** Assets↔Cities ·
+**Bubble size** leasable/completed/value · **Bubble colour** REIT / occupancy-gradient /
+in-place-rent-gradient · **State shading** leasable/value/count. A filter selection can't go empty.
+
+**Gotchas (hard-won):**
+1. **India GeoJSON** — no lightweight *state-level* India file exists openly. Took udit-001/
+   india-maps-data's **district** file (759 features, 3.8 MB, has modern states incl. Telangana),
+   preprocessed to **0.48 MB**: round coords to 3 decimals, set each feature `name`→its index &
+   keep `st`. Colour each *district* by its parent state's aggregate → visually a state choropleth
+   with subtle district texture. `registerMap('india', …)` once; the file is **fetched, not bundled**.
+   If you ever need clean state polygons, dissolve districts by `st` (needs a geometry lib — none was
+   available here).
+2. **ECharts 0-size warning** — on a lazy route the container is 0-wide at init. `IndiaMap` defers
+   `echarts.init` via a `requestAnimationFrame` retry until `clientWidth>0`, plus a `ResizeObserver`.
+   Don't remove these or the map inits blank until a manual resize.
+3. **Lazy route needs a `HydrateFallback`** on the root route (`router.tsx`: `HydrateFallback: () =>
+   null`) or React-Router 7 warns "No HydrateFallback element provided" on a direct `/map` load.
+4. **ECharts `chart.on(event, {seriesIndex:1}, fn)`** — do NOT annotate the handler param (TS infers
+   `ECElementEvent`); read `(p as {data?:{id?:string}}).data?.id` inside.
+5. **Framing** — geo uses `layoutCenter/layoutSize` (fills the card) *until* the user roams, then the
+   stashed `center/zoom` take over (so a filter change doesn't reset their view).
+6. **Export** — the map uses ECharts' own toolbox `saveAsImage` (PNG), NOT the Card `↓ SVG` pipeline
+   (that's Chart.js-specific).
+
+**Coordinates are curated, not exact for all** — marquee parks (Manyata, TechVillage, Airoli, One BKC,
+Ecoworld, Bagmane parks, Sattva Knowledge City, …) sit at true micro-market coords via `ASSET_OVERRIDES`;
+the rest fan out from their city centroid. Refining more assets to true coords is pure polish in `geo.ts`.
+
+## 12. Deferred next wave — income & total-return analytics
+
+The same planning session explored (and the user green-lit as a *later* wave) a set of income /
+total-return charts, all buildable from data we already own, to fold into the existing pages:
+- **Price return vs total return** (distributions reinvested) for the listed-REIT basket vs NIFTY
+  REALTY — the gap between the two REIT lines is the dividend contribution both source reports flag
+  as the missing piece. (Market page.)
+- **Cumulative distributions per unit** since listing · **yield-gap ribbon** (REIT trailing yield
+  minus 10Y G-Sec / FD) · **DPU growth + NDCF payout ratio** vs the 90% mandate (Domestic).
+- Plus valuation-quality ideas: **mark-to-market rent upside** (`mkt_rent` vs `inplace_rent`, already
+  in SPV), **GAV growth & CAGR** (`val_hy`), **premium/discount-to-NAV over time**, a **relative-value
+  scoreboard**. Not started. Respect the plain-title / no-insight-box design rule.
