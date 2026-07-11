@@ -1,7 +1,9 @@
 # Indian REITs Dashboard v2 — Session Handover
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
-> Last updated: 2026-07-10, third session — **LANDING REDESIGN on branch `v2-redesign`, read §14**:
+> Last updated: 2026-07-11 — Domestic page gained per-REIT **P/B ratio** charts (7 · time series
+> vs 1.0× parity, 8 · cross-REIT bars); SPVs/Structure/Links renumbered 9/10/11 (see Changelog top).
+> Prior session (2026-07-10): **LANDING REDESIGN on branch `v2-redesign`, read §14**:
 > Global is now the landing page at `/` with a full-viewport, scroll-pinned, boundless 3D globe
 > hero (scroll-scrubbed recede, geometric zoom caps, wheel-scroll etiquette) and the whole app
 > moved to a **pure-black theme**. Stable pre-redesign v2 is tagged **`v2.0-stable`** (= `dba89fe`
@@ -519,6 +521,39 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-11 (branch `v2-redesign`)** — **GoI India boundary geojson finally COMMITTED.** Found while
+  committing the P/B work: the hand-spliced `public/geo/world-countries.geojson` (§13 — India-worldview
+  boundary, max lat 37.05°N) had been sitting **uncommitted** in the working tree; HEAD still held the
+  stock Natural Earth shape (35.49°N). Verified both versions programmatically (India feature max-lat)
+  and committed the GoI one alongside the day's live-data refresh. The §13 "do NOT re-vendor" warning
+  stands. Also gitignored `new grpahs materieal/` (C&W reference images, local-only like `Global reits/`).
+- **2026-07-11 (branch `v2-redesign`)** — **Domestic: two new P/B-ratio charts per REIT (charts 7 & 8);
+  later sections renumbered 9/10/11.** Source: user-supplied C&W Asia REIT report pages
+  (`new grpahs materieal/`), which define **P/B = market price per unit ÷ NAV per unit** — user confirmed
+  that basis (NOT price ÷ book equity, which would be ~2× for Embassy). New helpers in `src/lib/reit.ts`:
+  `navAtStrict` (like `navAt` but returns null before the first NAV report — no earliest-NAV backfill)
+  and `pbSeries` (daily closes ÷ NAV-as-of-date + a live point). **Complete-pairs rule applied:** the
+  P/B series starts at the first reported NAV, so Nexus starts 05 Apr 2024 (prices exist from May 2023
+  but its first NAV is FY24) and KRT starts 01 Apr 2026 — each shows a "P/B shown from … — no reported
+  NAV before that date" note; Embassy/Mindspace/Brookfield/Bagmane have full coverage, no note.
+  `Chart7Pb.tsx` = Chart1-style time series (RangeBar + zoom + `_xmin/_xmax` + dbl-click reset) with a
+  dashed 1.0× parity line and a `price ÷ NAV` tooltip; `Chart8PbPeers.tsx` = horizontal current-P/B bars
+  for all six REITs (Figure-12 style), selected REIT in teal, value labels via `afterDatasetsDraw`,
+  dashed 1.0× guide via a `beforeDatasetsDraw` plugin. Both cards `exportable="chart"` with `exportAsof`.
+  **`Chart8PbPeers` is also on the Market page** ("P/B across REITs (latest)" card, fills the half-slot
+  next to Distributions-vs-FD): its `k` prop is now optional — omit it for uniform teal bars with no
+  highlight (Market), pass it for the selected-REIT highlight (Domestic). Verified on both pages.
+  **Market also got the multi-REIT P/B time series** (`src/components/market/PbAllChart.tsx`, full-width
+  "P/B Ratio — Price to NAV per Unit, all REITs" card after the Volume card): all six REITs' `pbSeries`
+  on one axis via `<TimeSeriesChart>`, coloured with the map page's `REIT_COLOR` (geo.ts), dashed 1.0×
+  parity line, driven by the page's shared **Time window** filter (`years` prop; no own RangeBar). Each
+  line starts at that REIT's first reported NAV (strict rule) — the card note says so. Verified: paints
+  at 3Y and rewindows on 1Y (Mindspace's Apr-26 P/B step-down from the higher FY26 NAV is visible),
+  0 console errors.
+  Verified in a real browser on the user's :5273 dev server (agent-spawned :5280 failed — the spawn
+  shell resolved Node 18; Vite 8 needs ≥20, use `/opt/homebrew/bin/node`): all 6 tabs, values hand-checked
+  (Embassy 0.92× = 450.1/491.62 · Brookfield 1.44× · Nexus 1.88×), highlight follows tab, tooltips,
+  notes on Nexus/KRT only, range bar click, 0 console errors; tsc + oxlint + build clean.
 - **2026-07-10 (branch `v2-redesign`)** — **Landing redesign: Global at `/` with a full-viewport
   pinned globe hero + pure-black theme.** Stable v2 first protected with tag `v2.0-stable`
   (`dba89fe`); `Global reits/` PDFs + issuances docx gitignored (local-only, user choice). Then on
@@ -953,11 +988,23 @@ photographic earth-night texture — the user found it "cartoony", hence the hex
   `MeshPhongMaterial`, then `pointsData`/`ringsData` accessors, rich HTML `pointLabel`, `onPointHover`
   pauses auto-rotate, `onPointClick` → `onPick(ckey,ri)`. `_destructor()` on unmount.
   `preserveDrawingBuffer:true` so the globe is screenshot-/export-able.
-- `public/geo/world-countries.geojson` — Natural Earth **110m admin-0 countries** (177 features, 480 KB),
-  copied from `node_modules/globe.gl/example/datasets/`, fetched via `import.meta.env.BASE_URL +
+- `public/geo/world-countries.geojson` — Natural Earth **110m admin-0 countries** (177 features, ~490 KB),
+  originally copied from `node_modules/globe.gl/example/datasets/`, fetched via `import.meta.env.BASE_URL +
   'geo/world-countries.geojson'`. **Do NOT hotlink unpkg** — honours the offline-asset ethos (same
   reason Leaflet/MapLibre were rejected for the map). Committed, not gitignored.
   *(The earlier photographic textures under `public/textures/` were removed with the hex switch.)*
+  **⚠ HAND-EDITED for the Government-of-India-approved India boundary (2026-07-10, user request) — do
+  NOT re-vendor the stock file, it would silently revert this.** Stock Natural Earth uses the "de facto"
+  worldview (India capped at 35.49°N — no PoK/Gilgit-Baltistan/Aksai Chin; the standalone `/map` page's
+  `india-districts.json` was already GoI-correct). Fix: India's geometry replaced with the **Natural
+  Earth 10m India-worldview** shape (`ne_10m_admin_0_countries_ind.geojson`, github
+  nvkelso/natural-earth-vector `geojson/` — the *only* resolution published as geojson; 110m/50m POV
+  variants don't exist), simplified to ~110m density (337 pts, max lat 37.05°N, and it adds the
+  Andaman & Nicobar islands the 110m file lacked); then the new India (buffered 0.02°) was
+  **subtracted from Pakistan and China** so hex tiles don't double-render over the re-attributed
+  territory (Pakistan 81.9→72.5 deg², China 954.6→950.5; an orphaned 0.12 deg² Pakistan fragment left
+  inside Indian-claimed Gilgit was dropped — keep-largest). Splice script (shapely): scratchpad
+  `splice_india.py` from the 2026-07-10 session; trivially re-derivable from this note.
 - `src/pages/GlobalPage.tsx` — the two case-study `<Card>`s + the `TemasekPanel` function are gone;
   a `<Card title="Global REIT players — live 3D map">` now wraps `<Suspense><ReitGlobe …/></Suspense>`.
   `ReitGlobe` is **`React.lazy`-imported** → three.js in its own async chunk. `onPick` builds the modal

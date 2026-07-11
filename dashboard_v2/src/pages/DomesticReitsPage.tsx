@@ -13,6 +13,8 @@ import { Chart3FvBv } from '../components/domestic/Chart3FvBv'
 import { Chart4Ndcf } from '../components/domestic/Chart4Ndcf'
 import { Chart5Yield } from '../components/domestic/Chart5Yield'
 import { Chart6Capital } from '../components/domestic/Chart6Capital'
+import { Chart7Pb } from '../components/domestic/Chart7Pb'
+import { Chart8PbPeers } from '../components/domestic/Chart8PbPeers'
 import { SpvTable } from '../components/domestic/SpvTable'
 import { Structure } from '../components/domestic/Structure'
 import { LinksSection } from '../components/domestic/LinksSection'
@@ -111,7 +113,7 @@ export function DomesticReitsPage() {
       {/* Unit-holding pattern (Sponsor vs Public) for the selected REIT */}
       <UnitholdingPanel holdings={holdings.data} k={k} />
 
-      {/* Bento grid of the 9 sections */}
+      {/* Bento grid of the 11 sections */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card
           className="lg:col-span-2"
@@ -151,18 +153,38 @@ export function DomesticReitsPage() {
         </Card>
 
         <Card
+          title="7 · P/B Ratio — Price to NAV per Unit"
+          note="Traded price ÷ latest reported NAV per unit — above the dashed 1.0× line = premium to NAV, below = discount."
+          exportable="chart"
+          exportName={`${k}-7-pb-ratio`}
+          exportAsof={lp.price ? `${lp.live ? 'Live price' : 'Price'} as of ${lp.asof} · NSE/BSE` : null}
+        >
+          <Chart7Pb D={D} k={k} LIVE={LIVE} />
+        </Card>
+
+        <Card
+          title="8 · P/B Across REITs (latest)"
+          note="Latest price ÷ latest reported NAV per unit for all six listed REITs; the selected REIT is highlighted."
+          exportable="chart"
+          exportName={`${k}-8-pb-peers`}
+          exportAsof={LIVE?._asof ? `Live prices as of ${LIVE._asof} · NSE/BSE` : null}
+        >
+          <Chart8PbPeers D={D} k={k} LIVE={LIVE} />
+        </Card>
+
+        <Card
           className="lg:col-span-2"
-          title="7 · SPVs & Assets — value share of portfolio"
+          title="9 · SPVs & Assets — value share of portfolio"
           note="Click any row to open the full annexure (valuation-report pages) for that asset."
         >
           <SpvTable D={D} k={k} annexures={annexures.data} onOpen={setAnnexAsset} />
         </Card>
 
-        <Card className="lg:col-span-2" title="8 · REIT Structure">
+        <Card className="lg:col-span-2" title="10 · REIT Structure">
           <Structure D={D} k={k} structures={structures.data} />
         </Card>
 
-        <Card className="lg:col-span-2" title="9 · Reports & Filings — direct PDF links">
+        <Card className="lg:col-span-2" title="11 · Reports & Filings — direct PDF links">
           <LinksSection k={k} links={links.data} />
         </Card>
       </div>

@@ -10,6 +10,8 @@ import { AreaChart } from '../components/market/AreaChart'
 import { VolumeCharts } from '../components/market/VolumeCharts'
 import { DistributionChart } from '../components/market/DistributionChart'
 import { SecurityModal, type SecModalData } from '../components/charts/SecurityModal'
+import { Chart8PbPeers } from '../components/domestic/Chart8PbPeers'
+import { PbAllChart } from '../components/market/PbAllChart'
 
 setupCharts()
 
@@ -154,12 +156,33 @@ export function MarketPage() {
         </Card>
 
         <Card
+          className="lg:col-span-2"
+          title="P/B Ratio — Price to NAV per Unit, all REITs"
+          note="Traded price ÷ latest reported NAV per unit · dashed line = parity (1.0×) · each line starts at that REIT's first reported NAV (Nexus Apr 2024, KRT Apr 2026)"
+          exportable="chart"
+          exportName="market-pb-all-reits"
+          exportAsof={LIVE?._asof ? `Live prices as of ${LIVE._asof} · NSE/BSE` : null}
+        >
+          <PbAllChart D={D} LIVE={LIVE} years={years} />
+        </Card>
+
+        <Card
           title="Distributions vs FD"
           note="Total distributions paid per FY (₹ cr, stacked) · combined trailing distribution yield vs SBI 1-yr FD rate and a flat 7% p.a. FD"
           exportable="chart"
           exportName="market-distributions"
         >
           <DistributionChart ctx={ctx} D={D} />
+        </Card>
+
+        <Card
+          title="P/B across REITs (latest)"
+          note="Latest price ÷ latest reported NAV per unit for all six listed REITs · dashed line = parity (1.0×)"
+          exportable="chart"
+          exportName="market-pb-peers"
+          exportAsof={LIVE?._asof ? `Live prices as of ${LIVE._asof} · NSE/BSE` : null}
+        >
+          <Chart8PbPeers D={D} LIVE={LIVE} />
         </Card>
       </div>
 

@@ -70,6 +70,38 @@ export function navAt(D: ReitData, k: ReitKey, ts: number): number | null {
   return last != null ? last : s[0].nav
 }
 
+/**
+ * Latest reported NAV/unit at or before `ts` — strict: returns null before the
+ * first NAV report (no earliest-NAV backfill), so derived series don't divide
+ * early prices by a NAV that didn't exist yet (complete-pairs rule).
+ */
+export function navAtStrict(D: ReitData, k: ReitKey, ts: number): number | null {
+  let last: number | null = null
+  for (const p of navSteps(D, k)) if (p.ts <= ts) last = p.nav
+  return last
+}
+
+export interface PbPoint {
+  x: number
+  y: number
+}
+
+/** P/B series (traded price ÷ latest reported NAV/unit), plus a live point. */
+export function pbSeries(D: ReitData, k: ReitKey, LIVE: LivePrices | null): PbPoint[] {
+  const pts: PbPoint[] = []
+  for (const [d, close] of D.prices[k] || []) {
+    const ts = dTs(d)
+    const nav = navAtStrict(D, k, ts)
+    if (nav) pts.push({ x: ts, y: close / nav })
+  }
+  const lv = LIVE?.[k]
+  if (lv && lv.price) {
+    const nav = navAtStrict(D, k, Date.now())
+    if (nav) pts.push({ x: Date.now(), y: lv.price / nav })
+  }
+  return pts
+}
+
 export interface LastPrice {
   price: number | null
   asof: string
