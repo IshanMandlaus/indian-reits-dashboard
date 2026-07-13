@@ -1,8 +1,10 @@
 # Indian REITs Dashboard v2 — Session Handover
 
 > Living document for anyone (human or agent) picking up the v2 rebuild.
-> Last updated: 2026-07-11 — Domestic page gained per-REIT **P/B ratio** charts (7 · time series
-> vs 1.0× parity, 8 · cross-REIT bars); SPVs/Structure/Links renumbered 9/10/11 (see Changelog top).
+> Last updated: 2026-07-13 — **SVG exports fully print-ready** (Word-legible): black ink
+> everywhere, full-frame border, note footer, light Tailwind series palette (see Changelog top).
+> Before that (2026-07-11): Domestic per-REIT **P/B ratio** charts (7 · time series
+> vs 1.0× parity, 8 · cross-REIT bars); SPVs/Structure/Links renumbered 9/10/11.
 > Prior session (2026-07-10): **LANDING REDESIGN on branch `v2-redesign`, read §14**:
 > Global is now the landing page at `/` with a full-viewport, scroll-pinned, boundless 3D globe
 > hero (scroll-scrubbed recede, geometric zoom caps, wheel-scroll etiquette) and the whole app
@@ -521,6 +523,34 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-13 (branch `v2-redesign`)** — **SVG exports: print-ready overhaul (Word-legible).** User
+  feedback: exports pasted into Word had grey unreadable text and neon dark-theme series colours that
+  washed out on white. All in `src/lib/svgExport.ts` unless noted. (1) **All text pure black** —
+  `LIGHT_INK #000000`; new `scaleTextInk()` sets explicit `ticks.color`/scale `title.color` because the
+  `Chart.defaults.color` override reaches the legend but NOT axis ticks (scale resolver caches the old
+  default — verified: ticks exported `#93a1b3` without it); new `titlesInk()` overrides chart-internal
+  `plugins.title.color` (PieDrilldown hardcodes near-white `#e8eef4`); `.svg-export-light` tokens
+  `--color-ink/muted/subtle` → `#000000` (index.css, panels); `Card.tsx` passes the card footnote
+  (`noteRef` textContent) into the export. (2) **Note footer + border** — `ExportMeta.note` word-wrapped
+  (canvas-metric `wrapText`) below the image; 1px black rect frames header+chart+note. (3) **Light series
+  palette** — `SERIES_LIGHT` maps each dark neon (keyed by exact r,g,b; alpha preserved incl. hex8/rgba)
+  to a Tailwind 500–700 shade (teal-400→teal-600, gold→amber-700, blue-400→blue-600, `#e8eef4` basket
+  line→slate-900, pie pastels→500s, …); `seriesLight()` remaps dataset colour props; `chartPaletteLight()`
+  swaps the shared `CHART` object so draw-time canvas plugins recolour too (Chart 2 block labels now read
+  `CHART.info`, Chart 8 P/B labels read `Chart.defaults.color` instead of hardcoded grey). (4)
+  **`gridsOff` walks LIVE scales** so config-less scales (VolumeCharts y) also drop gridlines.
+  ⚠️ **Two traps burned into this session, don't regress:** (a) colour changes MUST go through a FULL
+  `chart.update()` — `update('none')` never re-resolves per-element option caches, so bars kept stale
+  colours in the capture AND the live dark page kept export colours after restore (new `animationsOff()`
+  disables animation for the export so the full update is capture-safe; painting is rAF-async — only
+  `ch.draw()` inside `chartsHiRes` is synchronous). (b) `scaleTextInk`'s restore must RE-READ scale
+  objects by chart+id (like `gridsOff`) — `update()` replaces them; a saved object reference is detached,
+  which left black (invisible) ticks on the live dark page until fixed. Verified in-browser by
+  intercepting `URL.createObjectURL` + anchor click and pixel-sampling the embedded PNG per export shape
+  (chart / multi-canvas / panel / pie / P/B bars), plus live-canvas + config restore checks; tsc + oxlint
+  + build clean. Root workbook `REIT_AUM_MSF_History.gen.mjs` got the same treatment (border, black
+  notes, gridlines dropped except zero axis) **plus a panel content swap** (middle = total incl. future
+  dev, bottom = completed-only) — regenerated `.svg` committed alongside.
 - **2026-07-13 (branch `v2-redesign`)** — **Market: new "Distribution yield vs index dividend yields"
   chart + `index-yields.json` live dataset.** Companion card to Distributions-vs-FD (fills the half-slot
   before "P/B across REITs"): combined REIT basket trailing distribution yield per FY as teal bars

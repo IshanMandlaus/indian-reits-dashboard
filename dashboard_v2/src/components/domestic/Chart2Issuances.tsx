@@ -139,7 +139,7 @@ function build(
       ch.getDatasetMeta(2).data.forEach((el, i) => {
         const p = blk[i]
         if (p && p.pd != null) {
-          ctx.fillStyle = 'rgba(96,165,250,.9)'
+          ctx.fillStyle = CHART.info // draw-time read so the SVG export's light palette applies
           ctx.fillText(pct(p.pd), el.x, el.y - 11)
         }
       })

@@ -112,12 +112,12 @@ for (const s of Object.values(SERIES)) {
 
 const panels = {
   gav: { top: 128, bot: 424, max: 75000, ticks: [0, 15000, 30000, 45000, 60000, 75000], title: "AUM — gross asset value (₹ cr)", idx: 10, fmt: (v) => Math.round(v).toLocaleString("en-IN"), minStep: 0.05 },
-  msf: { top: 500, bot: 748, max: 55, ticks: [0, 10, 20, 30, 40, 50], title: "Portfolio area — completed + under construction (msf)", idx: 8, fmt: (v) => v.toFixed(1), minStep: 1.0 },
-  tot: { top: 824, bot: 1072, max: 55, ticks: [0, 10, 20, 30, 40, 50], title: "Total portfolio area — completed + UC + future development combined (msf)", idx: 2, fmt: (v) => v.toFixed(1), minStep: 1.0 },
+  msf: { top: 500, bot: 748, max: 55, ticks: [0, 10, 20, 30, 40, 50], title: "Total portfolio area — completed + UC + future development combined (msf)", idx: 2, fmt: (v) => v.toFixed(1), minStep: 1.0 },
+  tot: { top: 824, bot: 1072, max: 55, ticks: [0, 10, 20, 30, 40, 50], title: "Portfolio area — completed / operational only (msf)", idx: 3, fmt: (v) => v.toFixed(1), minStep: 1.0 },
 };
 const Y = (p, v) => p.bot - (v / p.max) * (p.bot - p.top);
 
-const ink = "#0b0b0b", ink2 = "#52514e", muted = "#898781", grid = "#e1e0d9", axis = "#c3c2b7", surface = "#ffffff";
+const ink = "#0b0b0b", ink2 = "#000000", muted = "#000000", grid = "#e1e0d9", axis = "#c3c2b7", surface = "#ffffff";
 const F = `system-ui,-apple-system,'Segoe UI',sans-serif`;
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 let out = [];
@@ -125,6 +125,7 @@ const add = (s) => out.push(s);
 
 add(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${F}">`);
 add(`<rect width="${W}" height="${H}" fill="${surface}"/>`);
+add(`<rect x="6.5" y="6.5" width="${W - 13}" height="${H - 13}" fill="none" stroke="${ink}" stroke-width="1"/>`);
 
 // title + legend
 add(`<text x="${PLOT_L}" y="34" font-size="17" font-weight="600" fill="${ink}">Indian REITs — AUM (GAV) and portfolio area, IPO to latest disclosure</text>`);
@@ -145,7 +146,7 @@ for (const key of ["gav", "msf", "tot"]) {
   add(`<text x="${PLOT_L}" y="${p.top - 14}" font-size="13" font-weight="600" fill="${ink}">${p.title}</text>`);
   for (const v of p.ticks) {
     const y = Y(p, v);
-    add(`<line x1="${PLOT_L}" y1="${y}" x2="${PLOT_R}" y2="${y}" stroke="${v === 0 ? axis : grid}" stroke-width="1"/>`);
+    if (v === 0) add(`<line x1="${PLOT_L}" y1="${y}" x2="${PLOT_R}" y2="${y}" stroke="${axis}" stroke-width="1"/>`);
     add(`<text x="${PLOT_L - 8}" y="${y + 4}" font-size="11" fill="${muted}" text-anchor="end" font-variant-numeric="tabular-nums">${v.toLocaleString()}</text>`);
   }
   for (const xt of xticks) {
@@ -220,11 +221,10 @@ for (const key of ["gav", "msf", "tot"]) {
 // footnotes
 const notes = [
   "◆ = IPO baseline (offer-document valuation date; Bagmane listed May 2026 — first post-listing portfolio disclosure not yet published).",
-  "Middle panel = completed + under-construction msf (future dev excluded); where a deck prints only a combined development bucket, the last",
-  "disclosed UC is carried. Bottom panel = headline total incl. future development (Brookfield stopped printing a total from FY25 — total there",
-  "= operating + dev potential). Nexus is 100%-completed retail. Values label IPO and material jumps only; full quarterly split in the CSV.",
-  "Embassy's early dip (27.3→26.2) is definitional: the offer doc counted 2.5 msf as UC, FY20 decks count only 1.4 msf active construction.",
-  "GAV in Jun / Dec quarters carries the preceding Mar / Sep valuation. Gaps where a deck printed no aggregate GAV (Brookfield Q1/Q3 FY24, Q3 FY26; Nexus Q1/Q3 FY26) are bridged.",
+  "Middle panel = headline total portfolio incl. future development (Brookfield stopped printing a total from FY25 — total there = operating + dev",
+  "potential). Bottom panel = completed / operational area only (under construction and future development excluded). Nexus is 100%-completed retail.",
+  "Values label IPO and material jumps only; full quarterly split in the CSV. GAV in Jun / Dec quarters carries the preceding Mar / Sep valuation.",
+  "Gaps where a deck printed no aggregate GAV (Brookfield Q1/Q3 FY24, Q3 FY26; Nexus Q1/Q3 FY26) are bridged.",
 ];
 notes.forEach((n, i) => add(`<text x="${PLOT_L}" y="${H - 96 + i * 15}" font-size="10.5" fill="${muted}">${esc(n)}</text>`));
 add(`</svg>`);

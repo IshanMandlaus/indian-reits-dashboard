@@ -134,9 +134,10 @@
   --color-surface-3: #f1f5f9;
   --color-border: #e2e8f0;
   --color-border-soft: #eef2f6;
-  --color-ink: #0f172a;
-  --color-muted: #475569;
-  --color-subtle: #64748b;
+  /* all text pure black — grey tones were hard to read once pasted into Word */
+  --color-ink: #000000;
+  --color-muted: #000000;
+  --color-subtle: #000000;
   --color-gold: #a16207;
   background: #ffffff;
 }

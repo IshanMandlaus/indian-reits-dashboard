@@ -21,10 +21,67 @@
  * render.
  */
 import { Chart } from 'chart.js'
+import { CHART } from './chartSetup'
 
-const LIGHT_INK = '#0f172a'
+// Pure black ink for ALL export text (ticks, legend, title, as-of, note) — the
+// previous slate/grey pair read poorly when the SVG was dropped into Word.
+const LIGHT_INK = '#000000'
 const LIGHT_GRID = '#e5e7eb'
-const LIGHT_MUT = '#64748b'
+
+/**
+ * Export remap for series colours, keyed by exact `r,g,b` triplet (alpha, hex or
+ * rgba(), is preserved). The dark theme's neon 300/400-tier hues wash out on the
+ * white export, so each maps to a Tailwind 500–700 shade of the same family.
+ */
+const SERIES_LIGHT: Record<string, string> = {
+  '45,212,191': '#0d9488', // teal-400 accent (price / fair value) → teal-600
+  '45,181,181': '#0d9488', // revenue-bar teal → teal-600
+  '127,212,200': '#0f766e', // FD @7% pale-teal guide → teal-700
+  '52,211,153': '#059669', // emerald-400 (NDCF / premium) → emerald-600
+  '248,113,113': '#dc2626', // red-400 (debt / discount) → red-600
+  '96,165,250': '#2563eb', // blue-400 (DPU / blocks / PAT) → blue-600
+  '167,139,250': '#7c3aed', // violet-400 → violet-600
+  '251,191,36': '#d97706', // amber-400 (Nifty Realty) → amber-600
+  '217,196,138': '#b45309', // gold (NAV / yield) → amber-700
+  '147,161,179': '#475569', // muted (SBI FD line) → slate-600
+  '147,160,184': '#475569',
+  '143,160,184': '#64748b', // book-value dashed → slate-500
+  '140,160,185': '#64748b',
+  '232,238,244': '#0f172a', // near-white ink line (basket yield) → slate-900
+  '232,168,106': '#ea580c', // TechVillage orange → orange-600
+  '195,155,211': '#9333ea', // SENSEX lilac → purple-600
+  '90,107,128': '#475569', // pie slate → slate-600
+  '217,143,156': '#e11d48', // pie rose → rose-600
+  '143,217,196': '#14b8a6', // pie mint → teal-500
+  '201,160,220': '#a855f7', // pie lavender → purple-500
+  '255,180,84': '#f97316', // pie orange → orange-500
+  '124,217,146': '#16a34a', // pie green → green-600
+  '224,224,122': '#ca8a04', // pie yellow → yellow-600
+  '176,176,176': '#6b7280', // pie grey → gray-500
+}
+
+/** Remap one colour value (hex6/hex8/rgb/rgba string, or array of them) via SERIES_LIGHT. */
+function remapColor(v: unknown): unknown {
+  if (Array.isArray(v)) {
+    const next = v.map(remapColor)
+    return next.some((c, i) => c !== v[i]) ? next : v
+  }
+  if (typeof v !== 'string') return v
+  const hex = v.match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i)
+  if (hex) {
+    const rgb = [0, 2, 4].map((i) => parseInt(hex[1].slice(i, i + 2), 16)).join(',')
+    const to = SERIES_LIGHT[rgb]
+    return to ? to + (hex[2] ?? '') : v
+  }
+  const rgba = v.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([0-9.]+)\s*)?\)$/)
+  if (rgba) {
+    const to = SERIES_LIGHT[`${rgba[1]},${rgba[2]},${rgba[3]}`]
+    if (!to) return v
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(to.slice(i, i + 2), 16))
+    return rgba[4] !== undefined ? `rgba(${r},${g},${b},${rgba[4]})` : `rgb(${r},${g},${b})`
+  }
+  return v
+}
 
 /**
  * Fixed pixel ratios for the exported rasters, independent of the user's screen
@@ -35,12 +92,14 @@ const LIGHT_MUT = '#64748b'
 const CHART_EXPORT_DPR = 4
 const PANEL_EXPORT_DPR = 3
 
-/** Optional header stamped above the exported image (kept as real vector text). */
+/** Optional vector-text framing around the exported image (title/as-of above, note below). */
 export interface ExportMeta {
   /** Chart title, rendered as a bold header line. */
   title?: string
   /** Data as-of line (e.g. "Live prices to 10 Jul 2026 10:28"), rendered under the title. */
   asof?: string
+  /** Card footnote/source text, word-wrapped below the image (footnote style). */
+  note?: string
 }
 
 /**
@@ -69,27 +128,177 @@ type ScalesConfig = Record<string, { grid?: Record<string, unknown> }>
  * `Chart.defaults.scale.grid` does NOT work here — scale defaults are merged into
  * each chart's config at init, so live charts never re-read them. Instead we flip
  * `grid.display` on `chart.config.options.scales` — the plain merged config object,
- * NOT the proxied resolved options (mutating those recurses). Two traps, both hit
+ * NOT the proxied resolved options (mutating those recurses). We walk the chart's
+ * LIVE scales (`ch.scales`), not just the config-declared ones: a scale whose
+ * config never mentions `grid` (e.g. VolumeCharts' y-axis) still draws default
+ * gridlines, so we create the missing config entry for it. Two traps, both hit
  * in verification: (1) restore must WRITE the prior value back (deleting the key
  * resolves to no-grid, not back to the default); (2) `chart.update()` REPLACES the
  * config's scale/grid objects, so the restore must re-read them by chart + scale id
  * at restore time — a captured object reference is detached by then.
  */
+const GRID_CREATED = Symbol('grid-created') // marker: config had no grid key — default (visible)
 function gridsOff(charts: Chart[]): () => void {
   const saved: [Chart, string, unknown][] = []
   for (const ch of charts) {
-    const scales = (ch.config.options as { scales?: ScalesConfig } | undefined)?.scales
-    if (!scales) continue
-    for (const [id, sc] of Object.entries(scales)) {
-      if (!sc?.grid) continue
-      saved.push([ch, id, sc.grid.display])
+    const opts = ch.config.options as { scales?: ScalesConfig } | undefined
+    if (!opts) continue
+    opts.scales ??= {}
+    for (const id of Object.keys(ch.scales)) {
+      const sc = (opts.scales[id] ??= {})
+      saved.push([ch, id, sc.grid ? sc.grid.display : GRID_CREATED])
+      sc.grid ??= {}
       sc.grid.display = false
     }
   }
   return () => {
     for (const [ch, id, display] of saved) {
       const grid = (ch.config.options as { scales?: ScalesConfig } | undefined)?.scales?.[id]?.grid
-      if (grid) grid.display = display
+      // a created grid had been resolving to the default (visible), so restore to true
+      if (grid) grid.display = display === GRID_CREATED ? true : display
+    }
+  }
+}
+
+/**
+ * Force axis tick labels (and axis titles) to export ink and return a restore fn.
+ * `themeChartsLight`'s `Chart.defaults.color` override reaches the legend but NOT
+ * scale ticks: each scale holds a resolver built at init whose per-key cache keeps
+ * serving the old default (verified — exported ticks stayed `#93a1b3`). An explicit
+ * `ticks.color` on the plain merged config outranks the default and is read fresh.
+ * Same mutation rules as `gridsOff`; call it AFTER `gridsOff` so `opts.scales`
+ * entries exist for every live scale.
+ */
+function scaleTextInk(charts: Chart[]): () => void {
+  type TextScales = Record<string, { ticks?: { color?: unknown }; title?: { color?: unknown } }>
+  const scalesOf = (ch: Chart) => (ch.config.options as { scales?: TextScales } | undefined)?.scales
+  const saved: [Chart, string, 'ticks' | 'title', unknown][] = []
+  for (const ch of charts) {
+    const scales = scalesOf(ch)
+    if (!scales) continue
+    for (const id of Object.keys(ch.scales)) {
+      const sc = scales[id]
+      if (!sc) continue
+      for (const part of ['ticks', 'title'] as const) {
+        const o = (sc[part] ??= {})
+        saved.push([ch, id, part, o.color])
+        o.color = LIGHT_INK
+      }
+    }
+  }
+  return () => {
+    // re-read by chart + scale id — update() replaced the config's scale objects
+    for (const [ch, id, part, color] of saved) {
+      const o = scalesOf(ch)?.[id]?.[part]
+      if (!o) continue
+      if (color === undefined) delete o.color
+      else o.color = color
+    }
+  }
+}
+
+/**
+ * Recolour every dataset's colour props to the light export palette (SERIES_LIGHT)
+ * and return a restore fn. Dataset objects are plain user config — safe to mutate
+ * directly. Scriptable colours and canvas gradients are left alone (only plain
+ * strings / arrays are remapped).
+ */
+const COLOR_KEYS = [
+  'borderColor',
+  'backgroundColor',
+  'pointBackgroundColor',
+  'pointBorderColor',
+  'pointHoverBackgroundColor',
+  'pointHoverBorderColor',
+  'hoverBackgroundColor',
+  'hoverBorderColor',
+] as const
+function seriesLight(charts: Chart[]): () => void {
+  const saved: [Record<string, unknown>, string, unknown][] = []
+  for (const ch of charts) {
+    for (const ds of ch.config.data.datasets as unknown as Record<string, unknown>[]) {
+      for (const key of COLOR_KEYS) {
+        if (!(key in ds)) continue
+        const prev = ds[key]
+        const next = remapColor(prev)
+        if (next !== prev) {
+          saved.push([ds, key, prev])
+          ds[key] = next
+        }
+      }
+    }
+  }
+  return () => {
+    for (const [ds, key, prev] of saved) ds[key] = prev
+  }
+}
+
+/**
+ * Swap the shared CHART palette itself to the light shades and return a restore
+ * fn. Custom canvas plugins (Chart 2 issuance labels, Chart 5 yield labels,
+ * Chart 8 P/B labels + parity line) read `CHART.*` at draw time, so this is what
+ * recolours plugin-drawn text/lines — dataset colours were baked at build() and
+ * are handled by `seriesLight`.
+ */
+function chartPaletteLight(): () => void {
+  const c = CHART as unknown as Record<string, string>
+  const saved = { ...c }
+  for (const k of Object.keys(c)) {
+    if (k === 'grid') continue // gridline colour is handled by themeChartsLight
+    c[k] = remapColor(saved[k]) as string
+  }
+  return () => Object.assign(c, saved)
+}
+
+/**
+ * Force chart-internal titles to export ink for the capture and return a restore
+ * fn. `themeChartsLight` only flips `Chart.defaults`, so a title with an explicit
+ * `color` in its config (e.g. PieDrilldown's `#e8eef4` — near-white) would stay
+ * unreadable on the white export. Same config-mutation rules as `gridsOff`
+ * (mutate the plain `chart.config.options`, re-read by chart at restore time).
+ */
+function titlesInk(charts: Chart[]): () => void {
+  type TitleConfig = { plugins?: { title?: { color?: unknown } } }
+  const saved: [Chart, unknown][] = []
+  for (const ch of charts) {
+    const title = (ch.config.options as TitleConfig | undefined)?.plugins?.title
+    if (!title) continue // no title config → color resolves from defaults, already themed
+    saved.push([ch, title.color])
+    title.color = LIGHT_INK
+  }
+  return () => {
+    for (const [ch, color] of saved) {
+      const title = (ch.config.options as TitleConfig | undefined)?.plugins?.title
+      if (!title) continue
+      if (color === undefined) delete title.color
+      else title.color = color
+    }
+  }
+}
+
+/**
+ * Disable animations on the given charts and return a restore fn. The export
+ * re-theme/recolour must go through a FULL `chart.update()` — `update('none')`
+ * skips re-resolving per-element option caches, so dataset colour changes (both
+ * applying the light palette and restoring the dark one — verified: bars kept
+ * stale colours in the capture, and the live page kept export colours after) never
+ * land. A full update animates by default, which would leave the synchronous
+ * capture mid-tween — so animations are switched off for the export's duration.
+ */
+function animationsOff(charts: Chart[]): () => void {
+  const saved: [Chart, unknown, boolean][] = []
+  for (const ch of charts) {
+    const opts = ch.config.options as { animation?: unknown } | undefined
+    if (!opts) continue
+    saved.push([ch, opts.animation, 'animation' in opts])
+    opts.animation = false
+  }
+  return () => {
+    for (const [ch, prev, existed] of saved) {
+      const opts = ch.config.options as { animation?: unknown } | undefined
+      if (!opts) continue
+      if (existed) opts.animation = prev
+      else delete opts.animation
     }
   }
 }
@@ -165,8 +374,33 @@ const esc = (s: string): string =>
 const FONT = "Inter, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 /**
- * Wrap a PNG data URL in a white-background SVG at the given CSS size, with an
- * optional vector-text header: the chart title (bold) and the data as-of line.
+ * Word-wrap `text` to `maxWidth` CSS px using real canvas text metrics (the same
+ * font stack the SVG declares), so the footnote lines break where the renderer will.
+ */
+let measureCtx: CanvasRenderingContext2D | null = null
+function wrapText(text: string, maxWidth: number, font: string): string[] {
+  measureCtx ??= document.createElement('canvas').getContext('2d')
+  if (!measureCtx) return [text]
+  measureCtx.font = font
+  const lines: string[] = []
+  let line = ''
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    const test = line ? line + ' ' + word : word
+    if (line && measureCtx.measureText(test).width > maxWidth) {
+      lines.push(line)
+      line = word
+    } else {
+      line = test
+    }
+  }
+  if (line) lines.push(line)
+  return lines
+}
+
+/**
+ * Wrap a PNG data URL in a white-background, black-bordered SVG at the given CSS
+ * size, with optional vector text: the chart title (bold) and data as-of line
+ * above the image, and the card's footnote word-wrapped below it.
  */
 function pngSvg(dataUrl: string, w: number, h: number, meta?: ExportMeta): string {
   const W = Math.round(w)
@@ -180,17 +414,30 @@ function pngSvg(dataUrl: string, w: number, h: number, meta?: ExportMeta): strin
   }
   if (meta?.asof) {
     y += 12
-    header += `<text x="${pad}" y="${y}" font-family="${FONT}" font-size="11" fill="${LIGHT_MUT}">${esc(meta.asof)}</text>`
+    header += `<text x="${pad}" y="${y}" font-family="${FONT}" font-size="11" fill="${LIGHT_INK}">${esc(meta.asof)}</text>`
     y += 4
   }
   const headerH = header ? y + 8 : 0
-  const H = Math.round(h) + headerH
+  const imgH = Math.round(h)
+  let footer = ''
+  let footerH = 0
+  if (meta?.note) {
+    const lineH = 15
+    const lines = wrapText(meta.note, W - pad * 2, `11px ${FONT}`)
+    lines.forEach((line, i) => {
+      footer += `<text x="${pad}" y="${headerH + imgH + 14 + i * lineH}" font-family="${FONT}" font-size="11" fill="${LIGHT_INK}">${esc(line)}</text>`
+    })
+    footerH = 14 + (lines.length - 1) * lineH + 10
+  }
+  const H = headerH + imgH + footerH
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
     `<rect width="100%" height="100%" fill="#ffffff"/>` +
     header +
-    `<image x="0" y="${headerH}" width="${W}" height="${Math.round(h)}" preserveAspectRatio="xMidYMid meet" href="${dataUrl}"/>` +
+    `<image x="0" y="${headerH}" width="${W}" height="${imgH}" preserveAspectRatio="xMidYMid meet" href="${dataUrl}"/>` +
+    footer +
+    `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" fill="none" stroke="#000000" stroke-width="1"/>` +
     `</svg>`
   )
 }
@@ -217,14 +464,25 @@ export function exportChartSvg(node: HTMLElement, name: string, meta?: ExportMet
   const cvs = Array.from(node.querySelectorAll('canvas')) as HTMLCanvasElement[]
   if (!cvs.length) return
   const charts = cvs.map((cv) => Chart.getChart(cv)).filter((c): c is Chart => !!c)
+  const restoreAnim = animationsOff(charts)
   const restoreTheme = themeChartsLight()
   const restoreGrids = gridsOff(charts)
-  charts.forEach((ch) => ch.update('none'))
-  const restoreDpr = chartsHiRes(charts, CHART_EXPORT_DPR) // after update: resize() re-renders themed
+  const restoreScaleText = scaleTextInk(charts) // after gridsOff: it created the scale entries
+  const restoreTitles = titlesInk(charts)
+  const restorePalette = chartPaletteLight()
+  const restoreSeries = seriesLight(charts)
+  charts.forEach((ch) => ch.update()) // FULL update (see animationsOff) — 'none' keeps stale colours
+  const restoreDpr = chartsHiRes(charts, CHART_EXPORT_DPR) // after update: resize()+draw() renders themed synchronously
   const restore = () => {
+    restoreSeries()
+    restorePalette()
+    restoreTitles()
+    restoreScaleText()
     restoreGrids()
     restoreTheme()
-    restoreDpr() // last — its resize() repaints with the dark theme back
+    charts.forEach((ch) => ch.update()) // FULL update — re-resolves the dark palette into element caches
+    restoreDpr() // last — its resize()+draw() then repaints the restored dark theme synchronously
+    restoreAnim()
   }
   try {
     if (cvs.length === 1) {
@@ -236,7 +494,6 @@ export function exportChartSvg(node: HTMLElement, name: string, meta?: ExportMet
     }
   } finally {
     restore()
-    charts.forEach((ch) => ch.update('none'))
   }
 }
 

@@ -37,6 +37,7 @@ export function Card({
   exportAsof,
 }: CardProps) {
   const bodyRef = useRef<HTMLDivElement>(null)
+  const noteRef = useRef<HTMLParagraphElement>(null)
 
   const doExport = () => {
     const node = bodyRef.current
@@ -45,6 +46,8 @@ export function Card({
     const meta = {
       title: typeof title === 'string' ? title : undefined,
       asof: exportAsof || undefined,
+      // rendered textContent so JSX notes flatten to plain text for the SVG footnote
+      note: noteRef.current?.textContent || undefined,
     }
     if (exportable === 'panel') exportPanelSvg(node, name, meta).catch(() => {})
     else exportChartSvg(node, name, meta)
@@ -74,7 +77,11 @@ export function Card({
             {title && (
               <h3 className="text-[13.5px] font-semibold tracking-tight text-ink">{title}</h3>
             )}
-            {note && <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{note}</p>}
+            {note && (
+              <p ref={noteRef} className="mt-1 text-[11.5px] leading-relaxed text-muted">
+                {note}
+              </p>
+            )}
           </div>
           {(actions || exportBtn) && (
             <div className="flex shrink-0 items-center gap-2">

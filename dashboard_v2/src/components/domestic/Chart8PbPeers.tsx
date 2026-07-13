@@ -9,7 +9,7 @@ import { CHART, baseOptions } from '../../lib/chartSetup'
 import { REIT_KEYS, REIT_SHORT, lastPrice, navAtStrict } from '../../lib/reit'
 import { inr } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
-import type { ChartConfiguration, Plugin } from 'chart.js'
+import { Chart, type ChartConfiguration, type Plugin } from 'chart.js'
 
 export function Chart8PbPeers({
   D,
@@ -52,7 +52,9 @@ function build(D: ReitData, k: ReitKey | null, LIVE: LivePrices | null): ChartCo
       ctx.textAlign = 'left'
       ctx.textBaseline = 'middle'
       mt.data.forEach((el, i) => {
-        ctx.fillStyle = k && rows[i].key === k ? CHART.acc : CHART.mut
+        // defaults.color === CHART.mut normally, but flips to black ink while the
+        // SVG export's light re-theme is active — hardcoding CHART.mut exported grey
+        ctx.fillStyle = k && rows[i].key === k ? CHART.acc : (Chart.defaults.color as string)
         ctx.fillText(rows[i].pb.toFixed(2) + '×', el.x + 6, el.y)
       })
       ctx.restore()
