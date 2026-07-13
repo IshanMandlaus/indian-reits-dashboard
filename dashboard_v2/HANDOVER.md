@@ -21,8 +21,8 @@
 
 We rebuilt the Indian REITs dashboard as **v2**: same functionality as v1, new
 implementation. v1 is a static multi-page vanilla-JS + Chart.js app; v2 is a modern
-React SPA. **v2 is now feature-complete, production-ready, AND self-contained:** all
-four pages are wired to real data (Phases A–C), the refresh pipeline is done, and as
+React SPA. **v2 is now feature-complete, production-ready, AND self-contained:** every
+page is wired to real data (Phases A–C), the refresh pipeline is done, and as
 of Phase E it runs **npm-only** — one ⟳ Refresh data button in the top nav pulls live
 NSE/BSE/Yahoo data through a Vite plugin (`POST /api/refresh`); no Python, no serve.py,
 no v1 needed. **A 5th page was since added — the interactive Portfolio Map** (`/map`,
@@ -43,7 +43,8 @@ build history; §6 Phase E for the refresh server; §11 for the map.
   change*.
 - Build on **React + Tailwind**. v1 "looks too rudimentary."
 - Want **better layouts and cleaner colors**.
-- Theme decision: **refined dark only** (no light mode for now).
+- Theme decision: **dark only** (no light mode for now) — originally "refined dark",
+  evolved to **pure black** in the 2026-07-10 redesign (§14).
 - Language: **TypeScript**. Charts: **Chart.js via react-chartjs-2** (chosen for
   fidelity — v1 leans on Chart.js-specific zoom/pan/custom-plugin behavior that would
   be costly to reproduce in Recharts).
@@ -79,7 +80,9 @@ Typecheck: `npx tsc -b`  ·  Build: `npm run build`  ·  Lint: `npm run lint` (o
 Regenerate static data: `npm run data` (from vendored `data-src/`).
 
 There is a `.claude/launch.json` at repo root with the **`v2-dashboard`** config (npm dev,
-:5273) plus alt-port variants. (The old `v1-dashboard`/serve.py config was removed.)
+:5273) plus alt-port variants, including **`v2-dashboard-node23`** (:5286) which runs Vite via
+`/opt/homebrew/bin/node` — use it (and that node for tsc/build) when the shell's default Node
+is <20 (Vite 8 needs ≥20; Node 18 fails with a `styleText` import error — see §15 tooling notes).
 
 ---
 
@@ -295,8 +298,9 @@ Vite plugin in BOTH dev and preview) re-pulls prices + unitholding (NSE/BSE) and
 - `lib/types.ts` — `FetchResult`, `nowStamp()`.
 - `fetchers/{prices,holdings,global,market}.ts` — faithful ports of the four `refresh_*.py`;
   each returns `{source,ok,asof,count,error?}` and writes JSON **only if it got data**.
-- `index.ts` — `runAll(dataDir)`: two-lane `Promise.allSettled` (NSE lane prices→holdings on
-  one shared primed session; Yahoo lane market→global). Per-source try/catch.
+- `index.ts` — `runAll(dataDir)`: lane-parallel `Promise.allSettled` (NSE lane prices→holdings on
+  one shared primed session; Yahoo lane market→global; **since 2026-07-13 a third lane** —
+  `fetchers/indexYields.ts` → `index-yields.json`). Per-source try/catch.
 - `refreshPlugin.ts` — registers `POST /api/refresh` on `configureServer`+`configurePreviewServer`;
   lazy `await import('./index.ts')` in the handler; responds `{ok,results}`.
 
@@ -421,24 +425,24 @@ Confirm no `serve.py`/`:8742`/`/refresh*` refs remain in `dashboard_v2`.
 
 </details>
 
-### Shared building blocks to extract early
-`<TimeSeriesChart>`, `<SecurityModal>`, `<DataTable>` (sortable), `<Sparkline>`,
-`<PieDrilldown>`, a `useReitData()` loader hook, and a central Chart.js theme
-(defaults: colors, grid, fonts, tooltip styling matching §7).
+### Shared building blocks (all built)
+`<TimeSeriesChart>`, `<SecurityModal>`, `<Sparkline>` (`src/components/charts/`),
+`<PieDrilldown>` (`global/`), the `useDataset()` loader hook, and the central Chart.js
+theme in `src/lib/chartSetup.ts` — see Phase C above for how each is used.
 
 ---
 
-## 7. Design system (refined dark)
+## 7. Design system (pure black — re-themed 2026-07-10, §14.2)
 
 Tokens live in `src/index.css` under `@theme` (Tailwind v4). Use as utilities:
 `bg-surface`, `text-muted`, `border-border`, `text-accent`, `text-pos`, etc.
 
 | Token | Value | Use |
 |---|---|---|
-| `--color-bg` | `#0a0e14` | page background (+ faint teal radial glow) |
-| `--color-surface` | `#111721` | cards |
-| `--color-surface-2` / `-3` | `#161d29` / `#1c2532` | nested / hover surfaces |
-| `--color-border` / `-soft` | `#232d3b` / `#1a2230` | borders |
+| `--color-bg` | `#000000` | page background (+ faint teal radial glow) |
+| `--color-surface` | `#0c1117` | cards |
+| `--color-surface-2` / `-3` | `#11161e` / `#161c26` | nested / hover surfaces |
+| `--color-border` / `-soft` | `#1c2431` / `#141b25` | borders |
 | `--color-ink` | `#e8eef4` | primary text |
 | `--color-muted` / `--color-subtle` | `#93a1b3` / `#61707f` | secondary / tertiary text |
 | `--color-accent` / `-strong` | `#2dd4bf` / `#14b8a6` | primary teal |
@@ -493,8 +497,10 @@ From `../dashboard/*.js`. Parallel arrays are indexed by fiscal year.
   hist:{ticker:{date:close}}}`.
 
 **Full v1 functional map** (every page, section, interaction) is in the project memory
-and the session that scaffolded v2. If more detail is needed, read the v1 source in
-`../dashboard/` — `dashboard.html` (~950 lines, all page-1 logic inline) is the key file.
+and the session that scaffolded v2. If more detail is needed, read the v1 source — it
+exists **only on the `main` branch** now (`dashboard/`, removed from `v2` in the standalone
+move); `dashboard.html` (~950 lines, all page-1 logic inline) is the key file. The static
+`.js` data sources themselves are vendored on this branch under `dashboard_v2/data-src/`.
 
 ---
 
@@ -502,8 +508,8 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 - Static data sources (`data-src/*.js`) assign `window.*` — `convert-data.mjs` sandbox-
   evaluates them (`node:vm`), not `JSON.parse`. `npm run data` regenerates only the 11 STATIC
-  datasets; the 4 live ones (live-prices, bench-live, global-live, holdings) are owned by the
-  refresh server and must NOT be added back to `SOURCES`.
+  datasets; the **5 live ones** (live-prices, bench-live, global-live, holdings, index-yields)
+  are owned by the refresh server and must NOT be added back to `SOURCES`.
 - Embassy is a special case in several places (structure = static PNG `public/img/structure_embassy.png`;
   annexure = image mode; chart 2 has extra TechVillage fair-value lines).
 - Large JSON must be code-split / fetched, not bundled, to keep the initial load fast.
