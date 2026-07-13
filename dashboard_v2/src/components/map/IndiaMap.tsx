@@ -266,7 +266,9 @@ export function IndiaMap({ assets, view, sizeMetric, colorMode, stateMetric, hov
           ...(roamRef.current.center
             ? { center: roamRef.current.center, zoom: roamRef.current.zoom }
             : { layoutCenter: ['50%', '53%'], layoutSize: '132%' }),
-          scaleLimit: { min: 1, max: 12 },
+          // min < 1 so max zoom-OUT shows ALL of India: rest layout is 132% (fills
+          // the card, crops the extremes) → 132% × 0.65 ≈ 86% fits the whole country.
+          scaleLimit: { min: 0.65, max: 12 },
           itemStyle: { areaColor: '#161f2b', borderColor: 'rgba(140,160,185,.16)', borderWidth: 0.5 },
           emphasis: { disabled: true },
           silent: true, // choropleth is drawn by the map series below; geo is just the canvas

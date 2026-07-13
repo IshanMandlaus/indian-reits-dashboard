@@ -17,6 +17,10 @@
 
 # Old/heavyweight copies & archives
 dashboard.zip
+dashboard_v2.zip
+
+# LibreOffice lock files
+.~lock.*#
 
 # Raw slide/source assets (the derived PNGs under dashboard_v2/public/img ARE tracked)
 *.key
