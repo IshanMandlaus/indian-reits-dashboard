@@ -1,6 +1,6 @@
 /**
- * Development-pipeline stacked bar (v1 c_area): completed vs under-construction /
- * future development area per REIT, ordered by total area. Category axis, no zoom.
+ * Development-pipeline stacked bar (v1 c_area): completed vs under-construction vs
+ * future-development area per REIT, ordered by total area. Category axis, no zoom.
  */
 import type { ChartConfiguration } from 'chart.js'
 import { CHART } from '../../lib/chartSetup'
@@ -24,7 +24,8 @@ function build(ctx: BenchCtx): ChartConfiguration {
       labels: rows.map((r) => SHORTNM[r.security] || r.name),
       datasets: [
         { label: 'Completed', data: rows.map((r) => r.completed_msf), backgroundColor: CHART.acc, stack: 'a' },
-        { label: 'U/C + future dev', data: rows.map((r) => r.uc_msf), backgroundColor: CHART.info, stack: 'a' },
+        { label: 'Under construction', data: rows.map((r) => r.uc_msf), backgroundColor: CHART.info, stack: 'a' },
+        { label: 'Future development', data: rows.map((r) => r.future_msf), backgroundColor: CHART.mut, stack: 'a' },
       ],
     },
     options: {

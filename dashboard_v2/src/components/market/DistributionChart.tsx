@@ -5,7 +5,7 @@
  */
 import type { ChartConfiguration } from 'chart.js'
 import type { ReitData } from '../../types/data'
-import { type BenchCtx, KEY, PALETTE, REIT_SECS, SHORTNM } from '../../lib/bench'
+import { type BenchCtx, basketDistYield, KEY, PALETTE, REIT_SECS, SHORTNM } from '../../lib/bench'
 import { useChartCanvas } from '../charts/useChartCanvas'
 
 const FYS = ['FY2020', 'FY2021', 'FY2022', 'FY2023', 'FY2024', 'FY2025', 'FY2026']
@@ -38,23 +38,7 @@ function build(ctx: BenchCtx, D: ReitData): ChartConfiguration {
     })
   }
   // combined trailing distribution yield (%)
-  const yieldLine = FYS.map((fy) => {
-    let dist = 0
-    let mcap = 0
-    for (const sec of REIT_SECS) {
-      const f = D.fin[KEY[sec]]
-      const i = f.years.indexOf(fy)
-      if (i < 0) continue
-      const dt = f.dist_total[i]
-      const px = f.price_eoy[i]
-      const un = f.units_mn[i]
-      if (dt != null && px != null && un != null) {
-        dist += dt
-        mcap += (px * un) / 10
-      }
-    }
-    return mcap ? +((dist / mcap) * 100).toFixed(2) : null
-  })
+  const yieldLine = FYS.map((fy) => basketDistYield(D, fy))
   // SBI 1-yr FD rate at each FY end
   const fdLine = FYS.map((fy) => {
     const d = '20' + fy.slice(4) + '-03-31'

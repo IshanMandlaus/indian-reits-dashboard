@@ -328,6 +328,49 @@ function lastNN(a: (number | null)[]): number | null {
   return null
 }
 
+// ─── combined-basket distribution yield ──────────────────────────────────────
+
+/** Combined-basket trailing distribution yield for one FY (%): Σ distributions ÷ Σ FY-end market cap. */
+export function basketDistYield(D: ReitData, fy: string): number | null {
+  let dist = 0
+  let mcap = 0
+  for (const sec of REIT_SECS) {
+    const f = D.fin[KEY[sec]]
+    const i = f.years.indexOf(fy)
+    if (i < 0) continue
+    const dt = f.dist_total[i]
+    const px = f.price_eoy[i]
+    const un = f.units_mn[i]
+    if (dt != null && px != null && un != null) {
+      dist += dt
+      mcap += (px * un) / 10
+    }
+  }
+  return mcap ? +((dist / mcap) * 100).toFixed(2) : null
+}
+
+/** Combined-basket trailing yield at today's prices (%): Σ latest-FY distributions ÷ Σ current market cap. */
+export function basketDistYieldLatest(ctx: BenchCtx, D: ReitData, LIVE: LivePrices | null, fy = 'FY2026'): number | null {
+  let dist = 0
+  let mcap = 0
+  for (const sec of REIT_SECS) {
+    const key = KEY[sec]
+    const f = D.fin[key]
+    const i = f.years.indexOf(fy)
+    if (i < 0) continue
+    const dt = f.dist_total[i]
+    const src = ctx.prices[sec] || {}
+    const dates = Object.keys(src).sort()
+    const lastP = LIVE?.[key]?.price ?? (dates.length ? src[dates[dates.length - 1]] : null)
+    const un = lastNN(f.units_mn)
+    if (dt != null && lastP != null && un != null) {
+      dist += dt
+      mcap += (lastP * un) / 10
+    }
+  }
+  return mcap ? +((dist / mcap) * 100).toFixed(2) : null
+}
+
 /** Build the snapshot rows, ordered by (live-adjusted) market cap, each with a 1Y sparkline. */
 export function buildSnapRows(ctx: BenchCtx, D: ReitData, LIVE: LivePrices | null): SnapRow[] {
   const rows = ctx.overview.map((r): SnapRow => {

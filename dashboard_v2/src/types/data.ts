@@ -206,6 +206,7 @@ export interface BenchOverview {
   area_msf: number
   completed_msf: number
   uc_msf: number
+  future_msf: number
   sponsor: string
   stake: string
   cagr: number
@@ -328,4 +329,19 @@ export interface ReitHolding {
 export type Holdings = ByReit<ReitHolding> & {
   _asof: string
   _seed?: boolean // true while showing seed data, before the first live refresh
+}
+
+// ─── index-yields.json (live, server/fetchers/indexYields.ts) ───────────────
+// Nifty index dividend yields from niftyindices.com: FY-end points + latest print.
+export interface IndexYieldPoint {
+  date: string // ISO date of the print, e.g. "2020-03-31"
+  dy: number // dividend yield %
+}
+export interface IndexYieldSeries {
+  fy: Record<string, IndexYieldPoint> // keyed "FY2020"…
+  latest: IndexYieldPoint | null
+}
+export interface IndexYields {
+  asof: string
+  yields: Record<string, IndexYieldSeries> // keyed "NIFTY 50" | "NIFTY REALTY"
 }

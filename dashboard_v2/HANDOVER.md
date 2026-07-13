@@ -91,16 +91,16 @@ There is a `.claude/launch.json` at repo root with the **`v2-dashboard`** config
 dashboard_v2/
   server/                       # Phase E — npm-only refresh (Node/TS, Vite plugin)
     refreshPlugin.ts            #   POST /api/refresh on dev + preview
-    index.ts                    #   runAll() — two-lane fetch orchestration
+    index.ts                    #   runAll() — three-lane fetch orchestration
     lib/{io,nse,yahoo,types}.ts #   fs + NSE session + yahoo-finance2 wrapper
-    fetchers/{prices,holdings,market,global}.ts  # ports of the 4 refresh_*.py
+    fetchers/{prices,holdings,market,global,indexYields}.ts  # 4 refresh_*.py ports + index div yields
   src/
     components/layout/AppShell.tsx   # top nav (5 items) + ONE global ⟳ Refresh data button
     components/{domestic,market,invit,global,charts,map}/  # all real, wired charts (+ map, §11)
     lib/{data,useDataset,bench,invit,global,reit,chartSetup,format,svgExport,geo,echartsSetup}.ts
     pages/{Domestic,Market,Invits,Global,Map}Page.tsx   # all fully wired to real data
     types/data.ts
-  public/data/*.json            # 15 datasets; the 4 *-live + holdings refresh live
+  public/data/*.json            # 16 datasets; the 5 live ones (*-live, holdings, index-yields) refresh live
   public/geo/india-districts.json  # India map for the Portfolio Map page (§11; fetched, not bundled)
   public/img/                   # committed annexure + structure images (~207 MB, real folder)
   data-src/*.js                 # vendored .js sources for the 11 STATIC datasets (npm run data)
@@ -521,6 +521,24 @@ and the session that scaffolded v2. If more detail is needed, read the v1 source
 
 ## 10. Changelog
 
+- **2026-07-13 (branch `v2-redesign`)** — **Market: new "Distribution yield vs index dividend yields"
+  chart + `index-yields.json` live dataset.** Companion card to Distributions-vs-FD (fills the half-slot
+  before "P/B across REITs"): combined REIT basket trailing distribution yield per FY as teal bars
+  (`basketDistYield` in `bench.ts` — the computation extracted from `DistributionChart`, which now calls
+  it) vs **Nifty 50** (blue line) and **Nifty Realty** (amber line, rectRot points) dividend yields at
+  FY-end, plus a final **"Latest"** category: basket = FY2026 distributions ÷ current market cap at live
+  prices (`basketDistYieldLatest`, same price-resolution as the security modal), indices = last NSE print.
+  `BenchmarkYieldChart.tsx`; single % axis, category x, no zoom. Data: NEW live dataset
+  `index-yields.json` (5th live file — do NOT add to converter `SOURCES`) written by
+  `server/fetchers/indexYields.ts`, run as a **third lane** in `runAll()`. Source endpoint:
+  `POST https://www.niftyindices.com/BackPage/getpepbHistoricaldataDBtoString` — quirks: payload is a
+  **string-wrapped JSON** `{cinfo: "{'name':…,'startDate':…,'endDate':…,'indexName':…}"}` with
+  `DD-Mon-YYYY` dates (the old `Backpage.aspx/...` path 404s/errors — endpoint found in their
+  `IISLComponet.js`); server caps each request at a **1-year range**; daily rows
+  `{pe, pb, divYield, DATE:"31 Mar 2020"}`; `divYield` may lack a leading zero (".33"); no cookies
+  needed. FY-end prints never change, so cached FY windows are **skipped** — a steady-state refresh
+  makes only the two trailing-window "latest" requests; union-merge with cache, never reduces coverage.
+  Line colours: violet failed the CVD check against blue (deutan ΔE 0.3) → Realty uses amber `#fbbf24`.
 - **2026-07-11 (branch `v2-redesign`)** — **GoI India boundary geojson finally COMMITTED.** Found while
   committing the P/B work: the hand-spliced `public/geo/world-countries.geojson` (§13 — India-worldview
   boundary, max lat 37.05°N) had been sitting **uncommitted** in the working tree; HEAD still held the
@@ -1128,3 +1146,53 @@ the hero is globe-only now; don't re-add copy without asking).
 - Open design question deferred: whether Domestic/other pages get any landing-style treatment, and
   whether the removed hero copy/CTAs return anywhere else. Merge to `v2` only when the user calls
   the redesign done.
+
+## 15. REIT AUM & MSF history workbook + Market-page area split — 2026-07-13
+
+**Deliverable (repo root):** `REIT_AUM_MSF_History.svg` (3-panel chart), `REIT_AUM_MSF_History.csv`
+(92 quarterly data points), `REIT_AUM_MSF_History.gen.mjs` (generator — edit data/layout there and
+run `node REIT_AUM_MSF_History.gen.mjs <svg> <csv>`), and `REIT_AUM_MSF_sources/*.json` (per-REIT
+extraction results **with page-level citations** into the offer documents / quarterly filings).
+
+**What it is:** AUM (GAV) and portfolio-area history for all 6 REITs from each one's final offer
+document (IPO baseline, ◆ on the chart) through Q4 FY26 (Mar 2026), extracted from the PDFs in
+`Final Offer Documents/` and the per-REIT folders by parallel subagents (PyMuPDF text extraction;
+numbers verified against actual filing text, never memory).
+
+**Panels / basis (all user-driven):**
+1. AUM = GAV in **₹ cr, full figures** (not bn — user asked for cr).
+2. Portfolio area = **completed + under-construction** msf, future dev excluded. Where a deck
+   prints only a combined dev bucket, the **last disclosed UC is carried** (`uc_is_carried` in CSV).
+3. Total area = completed + UC + future dev **combined** (headline basis, matches Market page).
+Labels: IPO + material jumps only (≥5% GAV / ≥1 msf), collision-avoided; end labels carry latest.
+
+**Hard-won data facts (documented in `REIT_AUM_MSF_sources/`):**
+- All six value **semi-annually (Mar/Sep)**; Jun/Dec decks reprint the prior valuation.
+- **Brookfield changed msf definition** at Q4 FY24 (total → operating-only headline) and stopped
+  printing a total from FY25 (total = operating + "dev potential" there); GAV counts 100% of
+  50%-interest assets from Q1 FY25.
+- **Embassy FY20–Q1FY23 UC** is not in the portfolio tables (only "Completed vs Development");
+  backfilled from each deck's "ongoing on-campus development" statements (1.4→2.6→2.7→5.7 after
+  ETV→4.6). Offer doc's 2.5 UC vs FY20's 1.4 is definitional (active-construction basis) — hence
+  the small 27.3→26.2 dip.
+- **Nexus is 100%-completed retail** throughout (no UC ever); growth = completed-mall acquisitions.
+- **Misfiled PDFs:** `KRT/Detailed-Valuation-Report-Q4-FY26.pdf` is actually a Nexus report;
+  `Nexus/earnings_presentation_q4_fy26_v1.pdf` is an Embassy deck. Scanned/no-text-layer PDFs:
+  Nexus Q3 FY26 financials, KRT Q2 FY26 earnings update.
+- **Bagmane** listed May 14 2026; no post-IPO portfolio disclosure exists yet (first will be
+  Q1 FY27). Its FY26 "financials" are Trust-standalone pre-acquisition — no portfolio data.
+
+**Market-page change:** "Total area breakdown (msf)" is now a **3-segment stack**
+(Completed / Under construction / Future development). `data-src/bench.js` overview gained
+`future_msf` (uc_msf is now true UC); types + `AreaChart.tsx` + card note updated. Also fixed
+stale overview data: Embassy was Dec-2025 vintage (now Mar-2026: 52.6/43.6 total/completed) and
+Mindspace was **pro-forma incl. unclosed Chennai acquisitions** (44.2 → as-filed 39.3/32.0).
+UC for Embassy/Mindspace/Brookfield follows each REIT's last disclosed split (their latest decks
+print only a combined bucket) — same carry convention as the CSV.
+
+**Tooling notes:** the preview harness's Node 18 cannot run Vite 8 (`styleText` import error) —
+use the `v2-dashboard-node23` launch config (runs `/opt/homebrew/bin/node node_modules/vite/bin/
+vite.js` on :5286). Headless viewport can report width 0 → Chart.js canvases size 0×600 and pixel
+sampling fails; verify via bench.json + served-module content + console errors, and eyeball in a
+real browser. PDF extraction recipe: `python3 -m venv && pip install pymupdf`, then a small
+grep/text-by-page CLI (see `REIT_AUM_MSF_History.gen.mjs` header comment for the data shape).

@@ -1,6 +1,6 @@
 /** Per-source outcome returned by every fetcher and surfaced in the API response. */
 export interface FetchResult {
-  source: 'prices' | 'holdings' | 'market' | 'global'
+  source: 'prices' | 'holdings' | 'market' | 'global' | 'index-yields'
   ok: boolean
   asof: string | null
   count: number

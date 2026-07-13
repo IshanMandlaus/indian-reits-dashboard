@@ -9,6 +9,7 @@ import { BenchLevels, BenchRebased, BenchVets } from '../components/market/Bench
 import { AreaChart } from '../components/market/AreaChart'
 import { VolumeCharts } from '../components/market/VolumeCharts'
 import { DistributionChart } from '../components/market/DistributionChart'
+import { BenchmarkYieldChart } from '../components/market/BenchmarkYieldChart'
 import { SecurityModal, type SecModalData } from '../components/charts/SecurityModal'
 import { Chart8PbPeers } from '../components/domestic/Chart8PbPeers'
 import { PbAllChart } from '../components/market/PbAllChart'
@@ -30,11 +31,13 @@ export function MarketPage() {
   const benchLive = useDataset('bench-live')
   const reit = useDataset('reit-data')
   const prices = useDataset('live-prices')
+  const indexYields = useDataset('index-yields')
 
   const B = bench.data
   const L = benchLive.data
   const D = reit.data
   const LIVE = prices.data
+  const IY = indexYields.data
 
   const ctx = useMemo(() => (B ? makeBenchCtx(B, L) : null), [B, L])
   const snapRows = useMemo(() => (ctx && D ? buildSnapRows(ctx, D, LIVE) : []), [ctx, D, LIVE])
@@ -140,7 +143,7 @@ export function MarketPage() {
           <BenchVets ctx={ctx} years={years} />
         </Card>
 
-        <Card title="Total area breakdown (msf)" note="Completed vs under-construction / future development" exportable="chart" exportName="market-development-pipeline">
+        <Card title="Total area breakdown (msf)" note="Completed vs under construction vs future development · UC for Embassy, Mindspace & Brookfield per last disclosed split" exportable="chart" exportName="market-development-pipeline">
           <AreaChart ctx={ctx} />
         </Card>
 
@@ -173,6 +176,16 @@ export function MarketPage() {
           exportName="market-distributions"
         >
           <DistributionChart ctx={ctx} D={D} />
+        </Card>
+
+        <Card
+          title="Distribution yield vs index dividend yields"
+          note="Combined REIT basket trailing distribution yield per FY (bars) vs Nifty 50 and Nifty Realty dividend yields at FY-end · Latest = live prices / last NSE print · Source: niftyindices.com P/E, P/B & div-yield data"
+          exportable="chart"
+          exportName="market-yield-vs-indices"
+          exportAsof={IY?.asof ? `Index yields as of ${IY.asof} · niftyindices.com` : null}
+        >
+          <BenchmarkYieldChart ctx={ctx} D={D} LIVE={LIVE} IY={IY} />
         </Card>
 
         <Card

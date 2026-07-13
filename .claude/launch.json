@@ -4,21 +4,50 @@
     {
       "name": "v2-dashboard",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 5273,
       "cwd": "dashboard_v2"
     },
     {
       "name": "v2-dashboard-alt",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "5280", "--strictPort"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5280",
+        "--strictPort"
+      ],
       "port": 5280,
       "cwd": "dashboard_v2"
     },
     {
       "name": "v2-dashboard-alt2",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "5286", "--strictPort"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5286",
+        "--strictPort"
+      ],
+      "port": 5286,
+      "cwd": "dashboard_v2"
+    },
+    {
+      "name": "v2-dashboard-node23",
+      "runtimeExecutable": "/opt/homebrew/bin/node",
+      "runtimeArgs": [
+        "node_modules/vite/bin/vite.js",
+        "--port",
+        "5286",
+        "--strictPort"
+      ],
       "port": 5286,
       "cwd": "dashboard_v2"
     }
