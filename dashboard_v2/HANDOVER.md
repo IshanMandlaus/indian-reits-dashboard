@@ -1232,3 +1232,44 @@ vite.js` on :5286). Headless viewport can report width 0 → Chart.js canvases s
 sampling fails; verify via bench.json + served-module content + console errors, and eyeball in a
 real browser. PDF extraction recipe: `python3 -m venv && pip install pymupdf`, then a small
 grep/text-by-page CLI (see `REIT_AUM_MSF_History.gen.mjs` header comment for the data shape).
+
+
+## 16. Per-REIT leverage & AUM/MSF charts + workbook gap-fill — 2026-07-15
+
+**Two new Domestic-page cards (every REIT):**
+- **6b · Debt & Leverage Profile** (`Chart6bDebt.tsx`) — gross debt bars (₹cr/FY, the debt leg of
+  chart 6 without equity) with **LTV** (gold) and **COF — cost of financing** (blue) stacked above
+  each bar. Chart-local `leverageLabels` plugin draws them always (screen + export); on export it
+  re-inks black and adds the ₹cr debt value as a third row (global `barValueLabels` opted out).
+- **3b · AUM & Leasable Area** (`Chart3cAumMsf.tsx`) — AUM/GAV bars (₹cr, left axis) + total
+  leasable and operational area lines (msf, right axis). Export labels: **one chart-local
+  `exportValueLabels` plugin draws bar values AND line-point msf values through a single
+  `LabelPlacer`** — two independent placers can't avoid each other (verified overlap: "52.5" over
+  "69.9k cr" on Embassy FY26). Total-line labels go above points, operational below. y/y1 have
+  `grace: '12%'` + top padding because opting out of `barValueLabels` also loses svgExport's
+  label headroom.
+
+**New `fin` fields** (data-src/data.js → reit-data.json → `types/data.ts ReitFin`): `ltv`,
+`cost_debt` (fractions), `msf_total`, `msf_op` — all extracted from
+`Indian_REITs_Key_Financials_FILLED.xlsx` by year-label matching (not column position).
+
+**Workbook gap-fill (filings researched by parallel subagents, sources in cell hover-comments):**
+- Mindspace FY23: cash ₹406.2 cr, GAV 28,026.5, gross debt 5,453.5 (col G was empty → LTV formula
+  now yields 18.0%; the deck's own print is 17.9% on minority-adjusted net debt), COF 7.6%
+  (Q4 FY23 deck), GLA 32.0 / operational 25.8 msf.
+- Brookfield FY21: COF 7.15% (Q1 FY22 deck p.20; IPO-refinanced debt unchanged Feb→Jun '21),
+  14.0 / 10.3 msf.
+- Embassy FY20: COF ~9.5% **blended estimate** (Q3 FY20 deck in-place ~9.65% Dec-19 + CFO's
+  "original 9.4% at listing" — flagged as estimate in the comment).
+- **Genuinely undisclosed, left blank:** Embassy FY19 COF (pre-IPO SPV debt, repaid at IPO);
+  Bagmane FY24/25 GAV+LTV (only valuation date in the RHP is 31-Dec-2025) and Bagmane COF all
+  years (RHP has only facility ranges 6–11%; implied ~7.9%/9.4% from interest expense = derived,
+  not disclosed — kept out).
+- Workbook edits via openpyxl on the formula copy, then **fresh-profile LibreOffice convert to
+  bake values** (skill recalc.py no-ops here); `Comment(text, 'Source')` mirrors the existing
+  hover convention.
+
+**Verification notes:** headless canvas pixel-readback only worked on the first paint after a
+fresh load; afterwards `getImageData` returns all-transparent (GPU compositing). Reliable export
+check instead: hook `URL.createObjectURL`, click the card's SVG button, pull the captured blob,
+decode the embedded PNG data-URI into a fresh canvas → pixel-count / render to file and eyeball.

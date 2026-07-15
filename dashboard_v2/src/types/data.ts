@@ -43,6 +43,10 @@ export interface ReitFin {
   gross_debt: (number | null)[]
   cash: (number | null)[]
   networth: (number | null)[]
+  ltv: (number | null)[] // Loan-to-Value = Net Debt / GAV (fraction)
+  cost_debt: (number | null)[] // Weighted-avg cost of debt (fraction)
+  msf_total: (number | null)[] // Total leasable area (GLA), msf
+  msf_op: (number | null)[] // Operational / completed area, msf
   nav: (number | null)[]
   units_mn: (number | null)[]
   price_eoy: (number | null)[]

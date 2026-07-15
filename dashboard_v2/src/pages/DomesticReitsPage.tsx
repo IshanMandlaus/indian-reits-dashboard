@@ -13,6 +13,8 @@ import { Chart3FvBv } from '../components/domestic/Chart3FvBv'
 import { Chart4Ndcf } from '../components/domestic/Chart4Ndcf'
 import { Chart5Yield } from '../components/domestic/Chart5Yield'
 import { Chart6Capital } from '../components/domestic/Chart6Capital'
+import { Chart3cAumMsf } from '../components/domestic/Chart3cAumMsf'
+import { Chart6bDebt } from '../components/domestic/Chart6bDebt'
 import { Chart7Pb } from '../components/domestic/Chart7Pb'
 import { Chart8PbPeers } from '../components/domestic/Chart8PbPeers'
 import { SpvTable } from '../components/domestic/SpvTable'
@@ -140,6 +142,15 @@ export function DomesticReitsPage() {
           <Chart3FvBv D={D} k={k} />
         </Card>
 
+        <Card
+          title="3b · AUM & Leasable Area"
+          note="AUM / GAV (bars, ₹ cr) with total leasable and operational area (lines, msf, right axis) per fiscal year."
+          exportable="chart"
+          exportName={`${k}-3b-aum-msf`}
+        >
+          <Chart3cAumMsf D={D} k={k} />
+        </Card>
+
         <Card title="4 · NDCF vs Revenue" exportable="chart" exportName={`${k}-4-ndcf`}>
           <Chart4Ndcf D={D} k={k} />
         </Card>
@@ -150,6 +161,15 @@ export function DomesticReitsPage() {
 
         <Card title="6 · Capital Structure (consolidated)" note="Latest FY debt vs unitholders’ equity — click the chart for the year-by-year split." exportable="chart" exportName={`${k}-6-capital-structure`}>
           <Chart6Capital D={D} k={k} />
+        </Card>
+
+        <Card
+          title="6b · Debt & Leverage Profile"
+          note="Gross debt per fiscal year on its own (the debt leg of chart 6), with LTV and cost of financing shown above each bar."
+          exportable="chart"
+          exportName={`${k}-6b-debt-leverage`}
+        >
+          <Chart6bDebt D={D} k={k} />
         </Card>
 
         <Card
