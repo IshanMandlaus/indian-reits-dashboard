@@ -1,0 +1,26 @@
+{
+  "reit": "Embassy",
+  "ipo": {
+    "listing": "Apr 2019",
+    "issue_price_inr": 300,
+    "total_units_mn": 771.67,
+    "market_cap_inr_cr": 23150,
+    "fresh_cr": 4750,
+    "ofs_cr": 0,
+    "total_offer_cr": 4750,
+    "pct_sold": 20.52,
+    "sponsor_pct": 70.27,
+    "gav_inr_cr": 31480
+  },
+  "sources": {
+    "total_units": "offer doc p402 (Capital Structure: 'Units issued and outstanding after the Issue 771,665,343*'; pre-issue 613,332,143). Also cover & Summary of the Offer Document p377.",
+    "offer": "cover + p399 (Issue Structure: 'Initial Public Offering of 158,333,200* Units for cash at price of Rs.300 per Unit aggregating to Rs.47,499.96* million ... 20.52%* of total outstanding Units on a post-Issue basis'). All-fresh issue; 'Offer for Sale' does not appear in the document (OFS = nil).",
+    "sponsor_pct": "offer doc p402 ('The Embassy Sponsor together with the Blackstone Sponsor and the Blackstone Sponsor Group shall hold 70.27% of Units on a post-Issue basis, aggregating to 542,248,390 Units'). Split: Embassy Sponsor 14.97% (115,484,802); Blackstone Sponsor & Group 55.30% (426,763,588).",
+    "gav": "REIT_AUM_MSF_sources/embassy.json ipo (offer doc p137; GAV Dec 2018 = ₹314.8 bn = ₹31,480 cr)"
+  },
+  "notes": [
+    "Sponsor % = Sponsor + Sponsor Group, post-issue.",
+    "Market cap at IPO = ₹300 × 771,665,343 units = ₹23,150 cr. % sold = ₹4,750cr offer ÷ ₹23,150cr mkt cap = 20.52% (matches RHP's stated 20.52% of post-issue units).",
+    "Bid/Issue dates 18-20 Mar 2019; listed Apr 2019. Figures marked '*' subject to Basis of Allotment."
+  ]
+}

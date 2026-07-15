@@ -21,7 +21,8 @@
  * render.
  */
 import { Chart } from 'chart.js'
-import { CHART } from './chartSetup'
+import { CHART, EXPORT_STATE } from './chartSetup'
+import { chartHasBarLabels } from './barValueLabels'
 
 // Pure black ink for ALL export text (ticks, legend, title, as-of, note) — the
 // previous slate/grey pair read poorly when the SVG was dropped into Word.
@@ -91,6 +92,41 @@ function remapColor(v: unknown): unknown {
  */
 const CHART_EXPORT_DPR = 4
 const PANEL_EXPORT_DPR = 3
+
+/**
+ * Print sizing for chart exports. Word inserts an SVG at its intrinsic px size
+ * (96px/in) and shrinks anything wider to the ~6.5in text column — so a chart
+ * captured at its on-screen size (often 900–1100px wide) prints with ~7px
+ * effective fonts. Instead the capture RESIZES every chart canvas to the print
+ * width itself (624px ≈ 6.5in, no downscale in Word) and bumps fonts a modest
+ * 1.25× (≈11pt printed ticks). Scaling fonts alone doesn't work: 1.7× fonts in
+ * a 260px-tall canvas collapse the plot area (verified — giant legend, squashed
+ * bars). EXPORT_STATE carries the scale to draw-time plugins (marker/bar labels).
+ */
+/**
+ * Print type ramp — ABSOLUTE px at print width (relative multipliers fight the
+ * layout: verified over two pilot rounds). 13px at 624px width prints at ~10pt
+ * in a 6.5in Word column.
+ */
+const EXPORT_TICK_FONT = 13 // scale ticks, axis titles, legend
+const EXPORT_TITLE_FONT = 14 // chart-internal titles (frame title is separate)
+const EXPORT_LABEL_SCALE = 1.2 // plugin-drawn labels: 10px → 12px (via EXPORT_STATE)
+const EXPORT_LEGEND_BOX = 10 // slimmer legend swatches/padding → fewer wrapped rows
+const EXPORT_LEGEND_PAD = 8
+const EXPORT_WIDTH = 624
+/** Export canvas height: keep the on-screen aspect, clamped to a printable band. */
+const exportHeight = (w: number, h: number): number =>
+  Math.max(280, Math.min(460, Math.round((h * EXPORT_WIDTH) / Math.max(w, 1))))
+/**
+ * Minimum plot-area height in the capture. Legends live inside the canvas and
+ * wrap at the narrow print width — a 7-series legend at print font takes ~5
+ * rows and squeezed the plot to a sliver (verified on Chart 2). After the first
+ * print-size layout, the canvas is grown by the plot's deficit so axes, legend
+ * AND a readable plot all fit. Height is the free dimension: Word only shrinks
+ * width, so up to ~640px (≈6.7in) still prints on one page with title+caption.
+ */
+const EXPORT_MIN_PLOT = 260
+const EXPORT_MAX_HEIGHT = 640
 
 /** Optional vector-text framing around the exported image (title/as-of above, note below). */
 export interface ExportMeta {
@@ -277,6 +313,138 @@ function titlesInk(charts: Chart[]): () => void {
 }
 
 /**
+ * Force every chart font to the ABSOLUTE print type ramp for the capture and
+ * return a restore fn. `Chart.defaults.font.size` covers anything resolving
+ * from defaults, but — same resolver-cache trap as `scaleTextInk` — scale ticks
+ * and titles keep serving their init-time size, so explicit values are also
+ * written onto the plain merged config (scale ticks/titles, legend labels,
+ * chart title). Legend swatches/padding are slimmed at the same time so long
+ * legends wrap to fewer rows at the narrow print width. Also flips EXPORT_STATE
+ * so draw-time plugins (marker/bar value labels) pick up the print scale. Call
+ * AFTER `scaleTextInk` — it created the `ticks`/`title` config objects.
+ */
+function fontsLarge(charts: Chart[]): () => void {
+  const defaultSize = Chart.defaults.font.size
+  Chart.defaults.font.size = EXPORT_TICK_FONT
+  EXPORT_STATE.active = true
+  EXPORT_STATE.fontScale = EXPORT_LABEL_SCALE
+  type Holder = Record<string, unknown>
+  type Path = ['scales', string, 'ticks' | 'title'] | ['plugins', 'legend' | 'title', 'labels' | null]
+  // [chart, path, key, print value, saved value]
+  const saved: [Chart, Path, string, unknown, unknown][] = []
+  type AnyOpts = Record<string, Record<string, Holder | undefined> | undefined>
+  // resolve the config object a path points at, creating missing levels on apply
+  const holderAt = (ch: Chart, p: Path, create: boolean): Holder | null => {
+    const opts = ch.config.options as unknown as AnyOpts | undefined
+    if (!opts) return null
+    if (create) opts[p[0]] ??= {}
+    const lvl1 = opts[p[0]]
+    if (!lvl1) return null
+    if (create) lvl1[p[1]!] ??= {}
+    const lvl2 = lvl1[p[1]!]
+    if (!lvl2) return null
+    if (p[2] == null) return lvl2
+    if (create) lvl2[p[2]] ??= {}
+    return (lvl2[p[2]] as Holder) ?? null
+  }
+  for (const ch of charts) {
+    const entries: [Path, string, unknown][] = [
+      ...Object.keys(ch.scales).flatMap((id): [Path, string, unknown][] => [
+        [['scales', id, 'ticks'], 'font', { size: EXPORT_TICK_FONT }],
+        [['scales', id, 'title'], 'font', { size: EXPORT_TICK_FONT }],
+      ]),
+      [['plugins', 'legend', 'labels'], 'font', { size: EXPORT_TICK_FONT }],
+      [['plugins', 'legend', 'labels'], 'boxWidth', EXPORT_LEGEND_BOX],
+      [['plugins', 'legend', 'labels'], 'boxHeight', EXPORT_LEGEND_BOX],
+      [['plugins', 'legend', 'labels'], 'padding', EXPORT_LEGEND_PAD],
+      [['plugins', 'title', null], 'font', { size: EXPORT_TITLE_FONT }],
+    ]
+    for (const [p, key, value] of entries) {
+      const o = holderAt(ch, p, true)
+      if (!o) continue
+      saved.push([ch, p, key, value, o[key]])
+      o[key] = value
+    }
+  }
+  return () => {
+    Chart.defaults.font.size = defaultSize
+    EXPORT_STATE.active = false
+    EXPORT_STATE.fontScale = 1
+    // re-read by path — update() replaced the config's nested objects
+    for (const [ch, p, key, , prev] of saved) {
+      const o = holderAt(ch, p, false)
+      if (!o) continue
+      if (prev === undefined) delete o[key]
+      else o[key] = prev
+    }
+  }
+}
+
+/**
+ * Drop legend-toggled-off series from the export legend and return a restore
+ * fn. On screen Chart.js renders hidden series struck-through (the toggle UX);
+ * in a print export a struck-through entry is noise — filter it out entirely.
+ * Same config-mutation rules as `gridsOff`.
+ */
+function legendHideHidden(charts: Chart[]): () => void {
+  type LegendLabels = { filter?: unknown }
+  type LegendOpts = { plugins?: { legend?: { labels?: LegendLabels } } }
+  const labelsOf = (ch: Chart) => (ch.config.options as LegendOpts | undefined)?.plugins?.legend?.labels
+  const saved: [Chart, unknown, boolean][] = []
+  for (const ch of charts) {
+    const opts = ch.config.options as LegendOpts | undefined
+    if (!opts) continue
+    opts.plugins ??= {}
+    opts.plugins.legend ??= {}
+    const labels = (opts.plugins.legend.labels ??= {})
+    saved.push([ch, labels.filter, 'filter' in labels])
+    labels.filter = (item: { hidden?: boolean }) => !item.hidden
+  }
+  return () => {
+    for (const [ch, prev, existed] of saved) {
+      const labels = labelsOf(ch)
+      if (!labels) continue
+      if (existed) labels.filter = prev
+      else delete labels.filter
+    }
+  }
+}
+
+/**
+ * Give bar-label charts axis headroom for the capture and return a restore fn.
+ * Charts with export bar-value labels enabled get `grace` on their value scales
+ * so the tallest bar never reaches the plot top — labels then always fit ABOVE
+ * the bar instead of flipping inside it (black on the bar colour, verified on
+ * Chart 3's max bar). Same config-mutation rules as `gridsOff`.
+ */
+function labelHeadroom(charts: Chart[]): () => void {
+  type GraceScales = Record<string, { grace?: unknown }>
+  const scalesOf = (ch: Chart) => (ch.config.options as { scales?: GraceScales } | undefined)?.scales
+  const saved: [Chart, string, unknown, boolean][] = []
+  for (const ch of charts) {
+    if (!chartHasBarLabels(ch)) continue
+    const scales = scalesOf(ch)
+    if (!scales) continue
+    const horizontal = (ch.options as { indexAxis?: string }).indexAxis === 'y'
+    for (const id of Object.keys(ch.scales)) {
+      if (id === (horizontal ? 'y' : 'x')) continue // index axis — no grace needed
+      const sc = scales[id]
+      if (!sc) continue
+      saved.push([ch, id, sc.grace, 'grace' in sc])
+      sc.grace = '12%'
+    }
+  }
+  return () => {
+    for (const [ch, id, grace, existed] of saved) {
+      const sc = scalesOf(ch)?.[id]
+      if (!sc) continue
+      if (existed) sc.grace = grace
+      else delete sc.grace
+    }
+  }
+}
+
+/**
  * Disable animations on the given charts and return a restore fn. The export
  * re-theme/recolour must go through a FULL `chart.update()` — `update('none')`
  * skips re-resolving per-element option caches, so dataset colour changes (both
@@ -304,32 +472,50 @@ function animationsOff(charts: Chart[]): () => void {
 }
 
 /**
- * Re-render each chart's backing canvas at a fixed high pixel ratio for the capture
- * (CSS size is unchanged — the resize only recreates the backing store) and return a
- * restore fn. Same config-mutation rules as `gridsOff` (touch the plain
- * `chart.config.options`, re-read at restore time). The `draw()` after `resize()` is
- * REQUIRED: when the chart has a queued `_resizeBeforeDraw` (hidden tab, or a resize
- * event raced in), `resize()` only stashes the request for the next draw — which may
- * come after our synchronous capture — while `draw()` flushes it immediately.
+ * Re-render each chart at print geometry for the capture — canvas resized to
+ * EXPORT_WIDTH × a clamped-aspect height (so Word never scales it down) at a
+ * fixed high pixel ratio — and return a restore fn. Same config-mutation rules
+ * as `gridsOff` (touch the plain `chart.config.options`, re-read at restore
+ * time); the restore's argless `resize()` re-measures the parent container,
+ * undoing the explicit style set by `resize(w, h)`. The `draw()` after
+ * `resize()` is REQUIRED: when the chart has a queued `_resizeBeforeDraw`
+ * (hidden tab, or a resize event raced in), `resize()` only stashes the request
+ * for the next draw — which may come after our synchronous capture — while
+ * `draw()` flushes it immediately.
  */
-function chartsHiRes(charts: Chart[], dpr: number): () => void {
-  const applyDpr = (ch: Chart, value: number | undefined) => {
-    const opts = ch.config.options as { devicePixelRatio?: number } | undefined
-    if (!opts) return
-    if (value === undefined) delete opts.devicePixelRatio
-    else opts.devicePixelRatio = value
-    ch.resize()
-    ch.draw()
-  }
-  const saved: [Chart, number | undefined][] = []
+function chartsHiRes(charts: Chart[], dpr: number, panelMaxH?: number): () => void {
+  const saved: [Chart, number | undefined, number, number][] = []
   for (const ch of charts) {
     const opts = ch.config.options as { devicePixelRatio?: number } | undefined
     if (!opts) continue
-    saved.push([ch, opts.devicePixelRatio])
-    applyDpr(ch, dpr)
+    // fall back to the container when the canvas measured 0 (chart mid-mount)
+    const cssW = ch.canvas.clientWidth || ch.canvas.parentElement?.offsetWidth || ch.width
+    const cssH = ch.canvas.clientHeight || ch.canvas.parentElement?.offsetHeight || ch.height
+    saved.push([ch, opts.devicePixelRatio, cssW, cssH])
+    opts.devicePixelRatio = dpr
+    // multi-panel cards share a one-page height budget — cap each panel so the
+    // stacked export isn't taller than a Word page (Word would shrink it back)
+    const maxH = panelMaxH ?? EXPORT_MAX_HEIGHT
+    const baseH = Math.min(exportHeight(cssW, cssH), maxH)
+    ch.resize(EXPORT_WIDTH, baseH)
+    // grow by the plot deficit — the legend/axes just claimed their print-size share
+    const plotH = ch.chartArea ? ch.chartArea.bottom - ch.chartArea.top : baseH
+    if (plotH < EXPORT_MIN_PLOT) {
+      ch.resize(EXPORT_WIDTH, Math.min(maxH, baseH + (EXPORT_MIN_PLOT - plotH)))
+    }
+    ch.draw()
   }
   return () => {
-    for (const [ch, prev] of saved) applyDpr(ch, prev)
+    for (const [ch, prev, cssW, cssH] of saved) {
+      const opts = ch.config.options as { devicePixelRatio?: number } | undefined
+      if (!opts) continue
+      if (prev === undefined) delete opts.devicePixelRatio
+      else opts.devicePixelRatio = prev
+      // restore the saved CSS size explicitly — an argless resize() re-measures
+      // the container mid-restore and collapsed the canvas to 0 width (verified)
+      ch.resize(cssW, cssH)
+      ch.draw()
+    }
   }
 }
 
@@ -405,29 +591,38 @@ function wrapText(text: string, maxWidth: number, font: string): string[] {
 function pngSvg(dataUrl: string, w: number, h: number, meta?: ExportMeta): string {
   const W = Math.round(w)
   const pad = 16
+  // the capture is already at print width (no downscale in Word), so these are
+  // true printed sizes: ~13.5pt title, ~10pt as-of/footnote
+  const titleSize = 18
+  const metaSize = 13
   let header = ''
-  let y = 10
+  let y = 12
   if (meta?.title) {
-    y += 16
-    header += `<text x="${pad}" y="${y}" font-family="${FONT}" font-size="14" font-weight="600" fill="${LIGHT_INK}">${esc(meta.title)}</text>`
-    y += 6
+    // word-wrap — long card titles were clipped at the fixed print width
+    for (const line of wrapText(meta.title, W - pad * 2, `600 ${titleSize}px ${FONT}`)) {
+      y += titleSize + 2
+      header += `<text x="${pad}" y="${y}" font-family="${FONT}" font-size="${titleSize}" font-weight="600" fill="${LIGHT_INK}">${esc(line)}</text>`
+    }
+    y += 8
   }
   if (meta?.asof) {
-    y += 12
-    header += `<text x="${pad}" y="${y}" font-family="${FONT}" font-size="11" fill="${LIGHT_INK}">${esc(meta.asof)}</text>`
-    y += 4
+    for (const line of wrapText(meta.asof, W - pad * 2, `${metaSize}px ${FONT}`)) {
+      y += metaSize + 2
+      header += `<text x="${pad}" y="${y}" font-family="${FONT}" font-size="${metaSize}" fill="${LIGHT_INK}">${esc(line)}</text>`
+    }
+    y += 5
   }
-  const headerH = header ? y + 8 : 0
+  const headerH = header ? y + 10 : 0
   const imgH = Math.round(h)
   let footer = ''
   let footerH = 0
   if (meta?.note) {
-    const lineH = 15
-    const lines = wrapText(meta.note, W - pad * 2, `11px ${FONT}`)
+    const lineH = 20
+    const lines = wrapText(meta.note, W - pad * 2, `${metaSize}px ${FONT}`)
     lines.forEach((line, i) => {
-      footer += `<text x="${pad}" y="${headerH + imgH + 14 + i * lineH}" font-family="${FONT}" font-size="11" fill="${LIGHT_INK}">${esc(line)}</text>`
+      footer += `<text x="${pad}" y="${headerH + imgH + 20 + i * lineH}" font-family="${FONT}" font-size="${metaSize}" fill="${LIGHT_INK}">${esc(line)}</text>`
     })
-    footerH = 14 + (lines.length - 1) * lineH + 10
+    footerH = 20 + (lines.length - 1) * lineH + 12
   }
   const H = headerH + imgH + footerH
   return (
@@ -469,13 +664,28 @@ export function exportChartSvg(node: HTMLElement, name: string, meta?: ExportMet
   const restoreGrids = gridsOff(charts)
   const restoreScaleText = scaleTextInk(charts) // after gridsOff: it created the scale entries
   const restoreTitles = titlesInk(charts)
+  const restoreFonts = fontsLarge(charts) // after scaleTextInk: it created the ticks/title config objects
+  const restoreHeadroom = labelHeadroom(charts)
+  const restoreLegend = legendHideHidden(charts)
   const restorePalette = chartPaletteLight()
   const restoreSeries = seriesLight(charts)
   charts.forEach((ch) => ch.update()) // FULL update (see animationsOff) — 'none' keeps stale colours
-  const restoreDpr = chartsHiRes(charts, CHART_EXPORT_DPR) // after update: resize()+draw() renders themed synchronously
+  // multi-panel cards: split a one-page image budget across the stacked panels
+  // (16px gaps between them) so Word doesn't shrink the export to fit the page.
+  // ~700px leaves room for a wrapped title + multi-line footnote inside Word's
+  // ~9in (≈864px) printable height.
+  const PAGE_IMG_BUDGET = 700
+  const panelMaxH =
+    charts.length > 1
+      ? Math.max(200, Math.floor((PAGE_IMG_BUDGET - 16 * (charts.length - 1)) / charts.length))
+      : undefined
+  const restoreDpr = chartsHiRes(charts, CHART_EXPORT_DPR, panelMaxH) // after update: resize()+draw() renders themed synchronously
   const restore = () => {
     restoreSeries()
     restorePalette()
+    restoreLegend()
+    restoreHeadroom()
+    restoreFonts()
     restoreTitles()
     restoreScaleText()
     restoreGrids()

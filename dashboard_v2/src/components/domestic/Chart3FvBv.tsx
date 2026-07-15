@@ -5,6 +5,7 @@
  */
 import type { ReitData, ReitKey } from '../../types/data'
 import { CHART, baseOptions } from '../../lib/chartSetup'
+import { fmtCrLabel } from '../../lib/barValueLabels'
 import { inr } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
 import type { ChartConfiguration } from 'chart.js'
@@ -58,6 +59,8 @@ function build(D: ReitData, k: ReitKey): ChartConfiguration {
       scales: { x: { grid: { display: false } }, y: { title: { display: true, text: '₹ crore' } } },
       plugins: {
         ...baseOptions().plugins,
+        // export-only value above each bar, in thousand-crore units ("31.6k cr")
+        barValueLabels: { format: fmtCrLabel },
         tooltip: { callbacks: { label: (it) => it.dataset.label + ': ' + inr(it.parsed.y) + ' cr' } },
       },
     },

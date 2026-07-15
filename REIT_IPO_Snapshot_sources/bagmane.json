@@ -1,0 +1,26 @@
+{
+  "reit": "Bagmane",
+  "ipo": {
+    "listing": "May 2026",
+    "issue_price_inr": 100,
+    "total_units_mn": 3400.0,
+    "market_cap_inr_cr": 34000,
+    "fresh_cr": 2390,
+    "ofs_cr": 1015,
+    "total_offer_cr": 3405,
+    "pct_sold": 10.01,
+    "sponsor_pct": 82.81,
+    "gav_inr_cr": 40260
+  },
+  "sources": {
+    "total_units": "RHP p449 ('Units issued and outstanding after the Offer 3,400,000,000'; pre-Offer 3,161,000,000).",
+    "offer": "RHP cover p1 ('340,500,000 Units ... ₹100 per Unit aggregating to ₹34,050 million, consisting of a fresh issuance of 239,000,000 Units ... ₹23,900 million and an offer for sale of 101,500,000 Units ... ₹10,150 million'; Offer = 10.01% of post-Offer Units). = ₹3,405cr (₹2,390cr fresh + ₹1,015cr OFS).",
+    "sponsor_pct": "RHP p449 ('our Sponsor together with our Sponsor Group will hold 2,815,534,147 Units, aggregating to 82.81% of the total Units issued'). Sponsor alone (Bagmane Realty and Infrastructure LLP) = 79.25% (2,694,633,237).",
+    "gav": "REIT_AUM_MSF_sources/bagmane.json ipo (Final_Offer_Document (RHP).pdf p39; Total Market Value ₹402,634.9 mn ≈ ₹40,260 cr)"
+  },
+  "notes": [
+    "Sponsor % = Sponsor + Sponsor Group, post-issue = 82.81% (stated in RHP).",
+    "Market cap at IPO = ₹100 × 3,400,000,000 = ₹34,000 cr. % sold = ₹3,405cr ÷ ₹34,000cr = 10.01% (matches RHP's stated 10.01% of post-Offer units).",
+    "RHP dated 11 May 2026; listed 14 May 2026. Sponsor is Bagmane Realty and Infrastructure LLP."
+  ]
+}

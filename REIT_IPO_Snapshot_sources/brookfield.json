@@ -1,0 +1,26 @@
+{
+  "reit": "Brookfield",
+  "ipo": {
+    "listing": "Feb 2021",
+    "issue_price_inr": 275,
+    "total_units_mn": 302.80,
+    "market_cap_inr_cr": 8327,
+    "fresh_cr": 3800,
+    "ofs_cr": 0,
+    "total_offer_cr": 3800,
+    "pct_sold": 45.63,
+    "sponsor_pct": 54.36,
+    "gav_inr_cr": 11410
+  },
+  "sources": {
+    "total_units": "offer doc p289 (THE ISSUE: 'Units issued and outstanding immediately after the Issue: 302,801,601*'; pre-issue 164,619,801).",
+    "offer": "offer doc p289 + cover (Issue 138,181,800* Units aggregating to ₹38,000* million at ₹275; = 45.63% of post-issue units). All-fresh; no OFS.",
+    "sponsor_pct": "offer doc p67 (Risk Factor 70: 'Upon completion of the Issue, 17.87% of the total number of Units will be held by our Sponsor and 36.49% by our Sponsor Group (excluding our Sponsor)') = 54.36% (= 164,619,801 / 302,801,601).",
+    "gav": "REIT_AUM_MSF_sources/brookfield.json ipo (GAV Sep 2020 = ₹114.1 bn = ₹11,410 cr)"
+  },
+  "notes": [
+    "Sponsor % = Sponsor + Sponsor Group, post-issue (17.87% + 36.49%). Sponsor is BSREP India Office Holdings V Pte. Ltd.",
+    "Market cap at IPO = ₹275 × 302,801,601 = ₹8,327 cr. % sold = ₹3,800cr ÷ ₹8,327cr = 45.63% (matches RHP's stated 45.63% of post-issue units).",
+    "Bid/Issue open 3-5 Feb 2021; listed Feb 2021."
+  ]
+}

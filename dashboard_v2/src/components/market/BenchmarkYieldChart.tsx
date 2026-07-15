@@ -74,7 +74,10 @@ function build(ctx: BenchCtx, D: ReitData, LIVE: LivePrices | null, IY: IndexYie
     options: {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 12 } } },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 12 } },
+        barValueLabels: { format: (v) => v.toFixed(1) + '%' }, // export-only value above each bar
+      },
       scales: {
         x: { grid: { display: false } },
         y: { min: 0, title: { display: true, text: '%' } },

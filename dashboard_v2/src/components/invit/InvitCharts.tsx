@@ -11,6 +11,7 @@ import { useState } from 'react'
 import type { ChartConfiguration } from 'chart.js'
 import type { InvitTrust } from '../../types/data'
 import { baseOptions, zoomOptions, CHART, type RangeConfig } from '../../lib/chartSetup'
+import { fmtCrLabel } from '../../lib/barValueLabels'
 import { fmtM, fmtDay } from '../../lib/reit'
 import {
   type BenchCtx,
@@ -189,7 +190,10 @@ function buildYield(ctx: BenchCtx, trusts: InvitTrust[], reitYield: number | nul
     data: { labels: bars.map((b) => b.l), datasets: [{ data: bars.map((b) => b.v), backgroundColor: bars.map((b) => b.c) }] },
     options: {
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        barValueLabels: { format: (v) => v.toFixed(1) + '%' }, // export-only value above each bar
+      },
       scales: {
         x: { grid: { display: false } },
         y: { title: { display: true, text: '% p.a.' } },
@@ -219,7 +223,10 @@ function buildEv(trusts: InvitTrust[]): ChartConfiguration {
     options: {
       indexAxis: 'y',
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        barValueLabels: { format: fmtCrLabel }, // export-only value beside each bar
+      },
       scales: {
         x: { title: { display: true, text: '₹ cr' } },
         y: { grid: { display: false } },

@@ -105,6 +105,7 @@ function build(D: ReitData, k: ReitKey, view: 'pie' | 'bars', drill: () => void)
       },
       plugins: {
         ...baseOptions().plugins,
+        barValueLabels: { display: false }, // 100% stack — the total is always 100
         tooltip: {
           callbacks: {
             label: (it) => {

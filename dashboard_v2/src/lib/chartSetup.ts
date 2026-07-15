@@ -28,8 +28,22 @@ import {
   type Chart as ChartInstance,
 } from 'chart.js'
 import zoomPlugin from 'chartjs-plugin-zoom'
+import { barValueLabels } from './barValueLabels'
 
 let registered = false
+
+/**
+ * Live flags for the SVG-export capture window (svgExport.ts flips them around
+ * the synchronous capture). Draw-time canvas plugins read these so export-only
+ * decorations (bar value labels) and print-size fonts apply without touching
+ * the on-screen dark theme.
+ */
+export const EXPORT_STATE = { active: false, fontScale: 1 }
+
+/** Canvas font for plugin-drawn labels — scales up during the SVG export capture. */
+export function labelFont(): string {
+  return `600 ${Math.round(10 * EXPORT_STATE.fontScale)}px sans-serif`
+}
 
 /** Register Chart.js pieces + zoom plugin and set dark defaults (idempotent). */
 export function setupCharts(): void {
@@ -52,6 +66,7 @@ export function setupCharts(): void {
     Title,
     Filler,
     zoomPlugin,
+    barValueLabels,
   )
   Chart.defaults.color = CHART.mut
   Chart.defaults.borderColor = CHART.grid

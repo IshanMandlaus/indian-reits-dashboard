@@ -5,7 +5,7 @@
  * (Market page).
  */
 import type { ReitData, ReitKey, LivePrices } from '../../types/data'
-import { CHART, baseOptions } from '../../lib/chartSetup'
+import { CHART, baseOptions, labelFont } from '../../lib/chartSetup'
 import { REIT_KEYS, REIT_SHORT, lastPrice, navAtStrict } from '../../lib/reit'
 import { inr } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
@@ -48,7 +48,7 @@ function build(D: ReitData, k: ReitKey | null, LIVE: LivePrices | null): ChartCo
       const ctx = ch.ctx
       const mt = ch.getDatasetMeta(0)
       ctx.save()
-      ctx.font = '600 10px sans-serif'
+      ctx.font = labelFont() // scales up during the SVG export capture
       ctx.textAlign = 'left'
       ctx.textBaseline = 'middle'
       mt.data.forEach((el, i) => {
@@ -104,6 +104,7 @@ function build(D: ReitData, k: ReitKey | null, LIVE: LivePrices | null): ChartCo
       plugins: {
         ...baseOptions().plugins,
         legend: { display: false },
+        barValueLabels: { display: false }, // draws its own P/B labels (labelPlugin)
         tooltip: {
           callbacks: {
             label: (it) => {

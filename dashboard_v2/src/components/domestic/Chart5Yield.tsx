@@ -5,7 +5,7 @@
  */
 import { useState } from 'react'
 import type { ReitData, ReitKey } from '../../types/data'
-import { CHART, baseOptions } from '../../lib/chartSetup'
+import { CHART, baseOptions, labelFont } from '../../lib/chartSetup'
 import { inr } from '../../lib/format'
 import { perTs, fyTs } from '../../lib/reit'
 import { useChartCanvas } from '../charts/useChartCanvas'
@@ -93,10 +93,11 @@ function build(D: ReitData, k: ReitKey, mode: 'q' | 'fy'): ChartConfiguration {
   const labelPlugin: Plugin = {
     id: 'yieldLabels',
     afterDatasetsDraw(ch) {
+      if (!ch.isDatasetVisible(0)) return // legend-hidden series keeps no labels
       const ctx = ch.ctx
       const mt = ch.getDatasetMeta(0)
       ctx.save()
-      ctx.font = '600 10px sans-serif'
+      ctx.font = labelFont() // scales up during the SVG export capture
       ctx.textAlign = 'center'
       ctx.fillStyle = CHART.gold
       mt.data.forEach((el, i) => ctx.fillText(yl[i] + '%', el.x, el.y - 10))

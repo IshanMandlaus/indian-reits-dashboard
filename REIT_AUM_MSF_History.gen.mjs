@@ -94,8 +94,11 @@ const MONTH = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, 
 const t = (asof) => { const [m, y] = asof.split(" "); return +y + MONTH[m] / 12; };
 
 // ---- layout ----
-const W = 1180, H = 1224;
-const PLOT_L = 64, PLOT_R = 1020;
+// Print sizing: Word shrinks the canvas to its 6.5in column (×~0.5), so text is
+// sized ~1.5× the original draft (ticks 16px ≈ 8px printed) with the collision
+// metrics scaled to match.
+const W = 1240, H = 1290;
+const PLOT_L = 72, PLOT_R = 1030;
 const T0 = t("Dec 2018") - 0.12, T1 = t("Mar 2026") + 0.12;
 const X = (asof) => PLOT_L + ((t(asof) - T0) / (T1 - T0)) * (PLOT_R - PLOT_L);
 
@@ -111,9 +114,9 @@ for (const s of Object.values(SERIES)) {
 }
 
 const panels = {
-  gav: { top: 128, bot: 424, max: 75000, ticks: [0, 15000, 30000, 45000, 60000, 75000], title: "AUM — gross asset value (₹ cr)", idx: 10, fmt: (v) => Math.round(v).toLocaleString("en-IN"), minStep: 0.05 },
-  msf: { top: 500, bot: 748, max: 55, ticks: [0, 10, 20, 30, 40, 50], title: "Total portfolio area — completed + UC + future development combined (msf)", idx: 2, fmt: (v) => v.toFixed(1), minStep: 1.0 },
-  tot: { top: 824, bot: 1072, max: 55, ticks: [0, 10, 20, 30, 40, 50], title: "Portfolio area — completed / operational only (msf)", idx: 3, fmt: (v) => v.toFixed(1), minStep: 1.0 },
+  gav: { top: 168, bot: 464, max: 75000, ticks: [0, 15000, 30000, 45000, 60000, 75000], title: "AUM — gross asset value (₹ cr)", idx: 10, fmt: (v) => Math.round(v).toLocaleString("en-IN"), minStep: 0.05 },
+  msf: { top: 544, bot: 792, max: 55, ticks: [0, 10, 20, 30, 40, 50], title: "Total portfolio area — completed + UC + future development combined (msf)", idx: 2, fmt: (v) => v.toFixed(1), minStep: 1.0 },
+  tot: { top: 872, bot: 1120, max: 55, ticks: [0, 10, 20, 30, 40, 50], title: "Portfolio area — completed / operational only (msf)", idx: 3, fmt: (v) => v.toFixed(1), minStep: 1.0 },
 };
 const Y = (p, v) => p.bot - (v / p.max) * (p.bot - p.top);
 
@@ -127,14 +130,17 @@ add(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox=
 add(`<rect width="${W}" height="${H}" fill="${surface}"/>`);
 add(`<rect x="6.5" y="6.5" width="${W - 13}" height="${H - 13}" fill="none" stroke="${ink}" stroke-width="1"/>`);
 
-// title + legend
-add(`<text x="${PLOT_L}" y="34" font-size="17" font-weight="600" fill="${ink}">Indian REITs — AUM (GAV) and portfolio area, IPO to latest disclosure</text>`);
-add(`<text x="${PLOT_L}" y="54" font-size="12" fill="${ink2}">From final offer documents and quarterly filings · valuations are semi-annual (Mar / Sep) · latest: Mar 2026 (Q4 FY26)</text>`);
-let lx = PLOT_L;
+// title + legend (legend wraps to two rows at print font size)
+add(`<text x="${PLOT_L}" y="38" font-size="25" font-weight="600" fill="${ink}">Indian REITs — AUM (GAV) and portfolio area, IPO to latest disclosure</text>`);
+add(`<text x="${PLOT_L}" y="64" font-size="17" fill="${ink2}">From final offer documents and quarterly filings · valuations are semi-annual (Mar / Sep) · latest: Mar 2026 (Q4 FY26)</text>`);
+let lx = PLOT_L, lrow = 0;
 for (const [name, s] of Object.entries(SERIES)) {
-  add(`<line x1="${lx}" y1="78" x2="${lx + 18}" y2="78" stroke="${s.color}" stroke-width="3" stroke-linecap="round"/>`);
-  add(`<text x="${lx + 24}" y="82" font-size="12" fill="${ink2}">${name} <tspan fill="${muted}" font-size="11">(${s.ipoNote})</tspan></text>`);
-  lx += 24 + 6.4 * (name.length + s.ipoNote.length + 3) + 26;
+  const entryW = 28 + 9.2 * (name.length + s.ipoNote.length + 3) + 30;
+  if (lx + entryW > W - 40) { lx = PLOT_L; lrow++; }
+  const ly = 92 + lrow * 27;
+  add(`<line x1="${lx}" y1="${ly - 5}" x2="${lx + 20}" y2="${ly - 5}" stroke="${s.color}" stroke-width="4" stroke-linecap="round"/>`);
+  add(`<text x="${lx + 28}" y="${ly}" font-size="17" fill="${ink2}">${name} <tspan fill="${muted}" font-size="15">(${s.ipoNote})</tspan></text>`);
+  lx += entryW;
 }
 
 // x ticks: Mar of each year
@@ -143,17 +149,17 @@ for (let y = 2019; y <= 2026; y++) xticks.push(`Mar ${y}`);
 
 for (const key of ["gav", "msf", "tot"]) {
   const p = panels[key];
-  add(`<text x="${PLOT_L}" y="${p.top - 14}" font-size="13" font-weight="600" fill="${ink}">${p.title}</text>`);
+  add(`<text x="${PLOT_L}" y="${p.top - 16}" font-size="19" font-weight="600" fill="${ink}">${p.title}</text>`);
   for (const v of p.ticks) {
     const y = Y(p, v);
     if (v === 0) add(`<line x1="${PLOT_L}" y1="${y}" x2="${PLOT_R}" y2="${y}" stroke="${axis}" stroke-width="1"/>`);
-    add(`<text x="${PLOT_L - 8}" y="${y + 4}" font-size="11" fill="${muted}" text-anchor="end" font-variant-numeric="tabular-nums">${v.toLocaleString()}</text>`);
+    add(`<text x="${PLOT_L - 8}" y="${y + 5}" font-size="16" fill="${muted}" text-anchor="end" font-variant-numeric="tabular-nums">${v.toLocaleString()}</text>`);
   }
   for (const xt of xticks) {
     const x = X(xt);
     add(`<line x1="${x}" y1="${p.bot}" x2="${x}" y2="${p.bot + 4}" stroke="${axis}" stroke-width="1"/>`);
     const [m, yy] = xt.split(" ");
-    add(`<text x="${x}" y="${p.bot + 18}" font-size="11" fill="${muted}" text-anchor="middle">${m} ’${yy.slice(2)}</text>`);
+    add(`<text x="${x}" y="${p.bot + 22}" font-size="16" fill="${muted}" text-anchor="middle">${m} ’${yy.slice(2)}</text>`);
   }
 
   const endLabels = [];
@@ -181,23 +187,23 @@ for (const key of ["gav", "msf", "tot"]) {
   const placed = []; // {x: center, y: center, w}
   endLabels.sort((a, b) => a.y - b.y);
   for (let i = 1; i < endLabels.length; i++)
-    if (endLabels[i].y - endLabels[i - 1].y < 15) endLabels[i].y = endLabels[i - 1].y + 15;
+    if (endLabels[i].y - endLabels[i - 1].y < 22) endLabels[i].y = endLabels[i - 1].y + 22;
   for (const l of endLabels) {
-    const w = 7 * l.text.length;
+    const w = 9.6 * l.text.length;
     if (l.lone) {
-      add(`<text x="${l.x}" y="${l.y + 24}" font-size="11.5" font-weight="600" fill="${ink2}" text-anchor="middle">${esc(l.text)}</text>`);
-      placed.push({ x: l.x, y: l.y + 21, w });
+      add(`<text x="${l.x}" y="${l.y + 30}" font-size="16" font-weight="600" fill="${ink2}" text-anchor="middle">${esc(l.text)}</text>`);
+      placed.push({ x: l.x, y: l.y + 26, w });
       placed.push({ x: l.x, y: l.origY, w: 16 }); // the lone diamond itself
     } else {
       if (l.y !== l.origY)
         add(`<line x1="${l.x + 5}" y1="${l.origY}" x2="${l.x + 10}" y2="${l.y}" stroke="${grid}" stroke-width="1"/>`);
-      add(`<text x="${l.x + 12}" y="${l.y + 4}" font-size="11.5" fill="${ink2}"><tspan font-weight="600">${esc(l.text.split(" ")[0])}</tspan> ${esc(l.text.split(" ").slice(1).join(" "))}</text>`);
+      add(`<text x="${l.x + 12}" y="${l.y + 5}" font-size="16" fill="${ink2}"><tspan font-weight="600">${esc(l.text.split(" ")[0])}</tspan> ${esc(l.text.split(" ").slice(1).join(" "))}</text>`);
       placed.push({ x: l.x + 12 + w / 2, y: l.y, w });
     }
   }
 
   // value labels only at IPO and material jumps (collision-avoided: try near/far, above/below; else drop)
-  const collides = (x, y, w) => placed.some((b) => Math.abs(b.x - x) < (b.w + w) / 2 + 4 && Math.abs(b.y - y) < 11);
+  const collides = (x, y, w) => placed.some((b) => Math.abs(b.x - x) < (b.w + w) / 2 + 4 && Math.abs(b.y - y) < 16);
   for (const sp of seriesPts) {
     if (sp.pts.length < 2) continue;
     for (let i = 0; i < sp.pts.length - 1; i++) {
@@ -206,27 +212,27 @@ for (const key of ["gav", "msf", "tot"]) {
         : Math.abs(sp.pts[i][2] - sp.pts[i - 1][2]) >= 1.0);
       if (!(i === 0 || jump)) continue;
       const text = p.fmt(sp.pts[i][2]);
-      const w = 5.6 * text.length;
-      const cands = sp.above ? [-11, 13, -21, 23] : [13, -11, 23, -21];
+      const w = 8.2 * text.length;
+      const cands = sp.above ? [-16, 19, -31, 34] : [19, -16, 34, -31];
       let dy = null;
       for (const c of cands) if (!collides(sp.pts[i][0], sp.pts[i][1] + c, w)) { dy = c; break; }
       if (dy == null) continue;
       const ly = sp.pts[i][1] + dy;
-      add(`<text x="${sp.pts[i][0].toFixed(1)}" y="${(ly + 3).toFixed(1)}" font-size="9" fill="${ink2}" text-anchor="middle" font-variant-numeric="tabular-nums">${text}</text>`);
+      add(`<text x="${sp.pts[i][0].toFixed(1)}" y="${(ly + 4).toFixed(1)}" font-size="13" fill="${ink2}" text-anchor="middle" font-variant-numeric="tabular-nums">${text}</text>`);
       placed.push({ x: sp.pts[i][0], y: ly, w });
     }
   }
 }
 
-// footnotes
+// footnotes (re-wrapped for the 15px print size)
 const notes = [
   "◆ = IPO baseline (offer-document valuation date; Bagmane listed May 2026 — first post-listing portfolio disclosure not yet published).",
-  "Middle panel = headline total portfolio incl. future development (Brookfield stopped printing a total from FY25 — total there = operating + dev",
-  "potential). Bottom panel = completed / operational area only (under construction and future development excluded). Nexus is 100%-completed retail.",
+  "Middle panel = headline total portfolio incl. future development (Brookfield stopped printing a total from FY25 — total there = operating +",
+  "dev potential). Bottom panel = completed / operational area only (UC and future development excluded). Nexus is 100%-completed retail.",
   "Values label IPO and material jumps only; full quarterly split in the CSV. GAV in Jun / Dec quarters carries the preceding Mar / Sep valuation.",
   "Gaps where a deck printed no aggregate GAV (Brookfield Q1/Q3 FY24, Q3 FY26; Nexus Q1/Q3 FY26) are bridged.",
 ];
-notes.forEach((n, i) => add(`<text x="${PLOT_L}" y="${H - 96 + i * 15}" font-size="10.5" fill="${muted}">${esc(n)}</text>`));
+notes.forEach((n, i) => add(`<text x="${PLOT_L}" y="${H - 128 + i * 21}" font-size="15" fill="${muted}">${esc(n)}</text>`));
 add(`</svg>`);
 
 writeFileSync(process.argv[2] ?? "REIT_AUM_MSF_History.svg", out.join("\n"));

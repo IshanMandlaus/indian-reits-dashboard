@@ -6,6 +6,7 @@
 import type { ChartConfiguration } from 'chart.js'
 import type { ReitData } from '../../types/data'
 import { type BenchCtx, basketDistYield, KEY, PALETTE, REIT_SECS, SHORTNM } from '../../lib/bench'
+import { fmtCrLabel } from '../../lib/barValueLabels'
 import { useChartCanvas } from '../charts/useChartCanvas'
 
 const FYS = ['FY2020', 'FY2021', 'FY2022', 'FY2023', 'FY2024', 'FY2025', 'FY2026']
@@ -60,7 +61,10 @@ function build(ctx: BenchCtx, D: ReitData): ChartConfiguration {
     options: {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 12 } } },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 12 } },
+        barValueLabels: { format: fmtCrLabel }, // export-only stack totals
+      },
       scales: {
         x: { stacked: true, grid: { display: false } },
         y: { stacked: true, title: { display: true, text: '₹ cr paid' } },

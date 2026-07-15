@@ -5,7 +5,8 @@
  * overlay on a 2nd axis. Ported from v1 chart2().
  */
 import type { ReitData, ReitKey, ReitValHy, BlocksLive } from '../../types/data'
-import { CHART, baseOptions, zoomOptions, rescaleY, type ChartWithRange, type RangeConfig } from '../../lib/chartSetup'
+import { CHART, EXPORT_STATE, baseOptions, zoomOptions, rescaleY, labelFont, type ChartWithRange, type RangeConfig } from '../../lib/chartSetup'
+import { LabelPlacer } from '../../lib/barValueLabels'
 import { navSteps, navAt, fyTs, fmtM, fmtDay } from '../../lib/reit'
 import { inr, pct } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
@@ -127,22 +128,36 @@ function build(
     afterDatasetsDraw(ch) {
       const ctx = ch.ctx
       ctx.save()
-      ctx.font = '600 10px sans-serif'
+      ctx.font = labelFont() // scales up during the SVG export capture
       ctx.textAlign = 'center'
-      ch.getDatasetMeta(1).data.forEach((el, i) => {
-        const p = iss[i]
-        if (p && p.pd != null) {
-          ctx.fillStyle = p.pd >= 0 ? CHART.grn : CHART.red
-          ctx.fillText(pct(p.pd), el.x, el.y - 12)
-        }
-      })
-      ch.getDatasetMeta(2).data.forEach((el, i) => {
-        const p = blk[i]
-        if (p && p.pd != null) {
-          ctx.fillStyle = CHART.info // draw-time read so the SVG export's light palette applies
-          ctx.fillText(pct(p.pd), el.x, el.y - 11)
-        }
-      })
+      ctx.textBaseline = 'bottom'
+      // one shared placer: issuance %s step UP from above their diamond, block
+      // %s step DOWN from below their triangle — no label overprints another
+      const placer = new LabelPlacer()
+      const fontPx = Math.round(10 * EXPORT_STATE.fontScale)
+      // a legend-hidden series draws no markers — skip its labels too
+      if (ch.isDatasetVisible(1))
+        ch.getDatasetMeta(1).data.forEach((el, i) => {
+          const p = iss[i]
+          if (p && p.pd != null) {
+            ctx.fillStyle = p.pd >= 0 ? CHART.grn : CHART.red
+            const text = pct(p.pd)
+            const tw = ctx.measureText(text).width
+            const top = placer.place(el.x - tw / 2, el.y - 12 - fontPx, tw, fontPx, -1)
+            ctx.fillText(text, el.x, top + fontPx)
+          }
+        })
+      if (ch.isDatasetVisible(2))
+        ch.getDatasetMeta(2).data.forEach((el, i) => {
+          const p = blk[i]
+          if (p && p.pd != null) {
+            ctx.fillStyle = CHART.info // draw-time read so the SVG export's light palette applies
+            const text = pct(p.pd)
+            const tw = ctx.measureText(text).width
+            const top = placer.place(el.x - tw / 2, el.y + 8, tw, fontPx, 1)
+            ctx.fillText(text, el.x, top + fontPx)
+          }
+        })
       ctx.restore()
     },
   }

@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import type { ReitData, ReitKey } from '../../types/data'
 import { CHART, baseOptions } from '../../lib/chartSetup'
+import { fmtCrLabel } from '../../lib/barValueLabels'
 import { inr } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
 import type { ChartConfiguration } from 'chart.js'
@@ -79,6 +80,7 @@ function build(D: ReitData, k: ReitKey, mode: 'fy' | 'q'): ChartConfiguration {
         scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 14 } }, y: { title: { display: true, text: '₹ crore' } } },
         plugins: {
           ...baseOptions().plugins,
+          barValueLabels: { format: fmtCrLabel }, // export-only value above each bar
           tooltip: {
             callbacks: {
               label: (it) => (it.parsed.y != null ? it.dataset.label + ': ' + inr(it.parsed.y) + ' cr' : ''),
@@ -121,6 +123,7 @@ function build(D: ReitData, k: ReitKey, mode: 'fy' | 'q'): ChartConfiguration {
       },
       plugins: {
         ...baseOptions().plugins,
+        barValueLabels: { format: fmtCrLabel }, // export-only stack totals
         tooltip: {
           callbacks: {
             label: (it) => it.dataset.label + ': ' + inr(it.parsed.y) + ' cr',
