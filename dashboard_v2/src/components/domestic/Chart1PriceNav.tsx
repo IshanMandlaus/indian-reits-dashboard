@@ -1,7 +1,7 @@
 /** Chart 1 — traded price vs stepped NAV/unit, with DPU bars on a 2nd axis. */
-import type { ReitData, ReitKey, LivePrices } from '../../types/data'
+import type { ReitData, ReitKey, LivePrices, PriceHistory } from '../../types/data'
 import { CHART, baseOptions, zoomOptions, rescaleY, type ChartWithRange, type RangeConfig } from '../../lib/chartSetup'
-import { navSteps, navAt, dTs, perTs, fyTs, fmtM, fmtDay } from '../../lib/reit'
+import { navSteps, navAt, closeSeries, dTs, perTs, fyTs, fmtM, fmtDay } from '../../lib/reit'
 import { inr, pct } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
 import { RangeBar } from '../charts/RangeBar'
@@ -11,12 +11,14 @@ export function Chart1PriceNav({
   D,
   k,
   LIVE,
+  H,
 }: {
   D: ReitData
   k: ReitKey
   LIVE: LivePrices | null
+  H: PriceHistory | null
 }) {
-  const { canvasRef, chartRef } = useChartCanvas(() => build(D, k, LIVE), [D, k, LIVE])
+  const { canvasRef, chartRef } = useChartCanvas(() => build(D, k, LIVE, H), [D, k, LIVE, H])
   return (
     <>
       <div className="mb-2 flex justify-end">
@@ -42,11 +44,11 @@ function resetZoom(ch: ChartWithRange | null) {
   ch.update()
 }
 
-function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null): ChartConfiguration {
+function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory | null): ChartConfiguration {
   const f = D.fin[k]
-  const price = (D.prices[k] || []).map((p) => ({ x: dTs(p[0]), y: p[1] }))
+  const price = closeSeries(D, k, H).map((p) => ({ x: dTs(p[0]), y: p[1] }))
   const live = LIVE?.[k]
-  if (live && live.price) price.push({ x: Date.now(), y: live.price })
+  if (live && live.price && (!price.length || Date.now() > price[price.length - 1].x)) price.push({ x: Date.now(), y: live.price })
   const nav = navSteps(D, k).map((p) => ({ x: p.ts, y: p.nav }))
   const hasQ = (f.q || []).some((x) => x.dpu != null)
   const dpu = hasQ

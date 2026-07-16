@@ -1364,3 +1364,23 @@ White document versions live in `Indian REIT Structures - PNGs/` (project root,
 (`rPr` solidFill FFFFFF) → 111111 and the `<p:bg>` fill 1E1C1F → FFFFFF. Trap: slide 5 (KRT)
 colors its entity names with the *same hex as the background* (1E1C1F) — a global 1E1C1F swap
 turns names white/invisible; the bg replacement must be scoped to the `<p:bg>` element only.
+
+## 20. CSV close-price history is the price source of truth — 2026-07-16
+
+`Historical Close Prices/` (repo root; 9 CSVs, `"DateTime","TICKER"` rows) seeds
+`public/data/price-history.json` via `npm run data:prices`
+(`scripts/import-close-prices.mjs`). Coverage: Embassy 2019-04-01, Mindspace 2020-08-07,
+Brookfield 2021-02-16, Nexus 2023-05-19, KRT 2025-08-18, Bagmane 2026-05-14,
+NHIT 2021-11-11, PGInvIT 2021-05-14, RIIT 2026-03-24 — all through 2026-07-15.
+
+Merge order everywhere: workbook seed < live fetcher < CSV history (CSV wins on
+overlapping dates; live refresh still extends the tail past its asof).
+- Pipeline A: `makeBenchCtx(B, L, H?)` third arg overlays `H.secs` — MarketPage /
+  InvitsPage load the `price-history` dataset and pass it (SecurityModal, InvIT
+  price/rebase charts inherit).
+- Pipeline B: `closeSeries(D, k, H)` in `lib/reit.ts` (CSV else workbook weekly) now
+  feeds `Chart1PriceNav`, `pbSeries` (Chart7Pb, PbAllChart) and the `lastPrice`
+  fallback (Chart8PbPeers, snapshot header).
+To refresh history: drop updated CSVs in the folder, re-run `npm run data:prices`.
+Note: `CAL` still keys off NIFTY 50 (starts 2021-06-28), so basket/rebased market
+charts are unchanged; per-security charts show full history.

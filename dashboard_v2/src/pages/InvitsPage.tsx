@@ -8,6 +8,8 @@ import { invitCloses, invitHasData, buildInvitSecModal, combinedReitYieldFY26 } 
 import { InvitSnapshotCard } from '../components/invit/InvitSnapshotCard'
 import {
   InvitPriceChart,
+  InvitNavChart,
+  InvitPNavChart,
   InvitRebasedChart,
   InvitYieldChart,
   InvitEvChart,
@@ -21,6 +23,7 @@ export function InvitsPage() {
 
   const bench = useDataset('bench')
   const benchLive = useDataset('bench-live')
+  const priceHist = useDataset('price-history')
   const invit = useDataset('invit')
   const reit = useDataset('reit-data')
 
@@ -29,7 +32,8 @@ export function InvitsPage() {
   const IV = invit.data
   const D = reit.data
 
-  const ctx = useMemo(() => (B ? makeBenchCtx(B, L) : null), [B, L])
+  const H = priceHist.data
+  const ctx = useMemo(() => (B ? makeBenchCtx(B, L, H) : null), [B, L, H])
   const reitYield = useMemo(() => (D ? combinedReitYieldFY26(D) : null), [D])
 
   if (bench.error || invit.error) {
@@ -108,6 +112,27 @@ export function InvitsPage() {
           )}
         </Card>
 
+        <Card
+          className="lg:col-span-2"
+          title="Unit price vs NAV per unit"
+          note="Solid = daily close (NSE) · dashed steps = independent-valuation NAV/unit (NHIT quarterly per its Feb-2026 presentation; PGInvIT FY-end fair-value NAV per its annual reports; RIIT ₹100 issue reference — first valuation pending)"
+          exportable="chart"
+          exportName="invits-price-vs-nav"
+          exportAsof={exportAsof}
+        >
+          <InvitNavChart ctx={ctx} trusts={trusts} />
+        </Card>
+
+        <Card
+          title="Price to NAV (latest)"
+          note="Last close ÷ latest disclosed NAV/unit · dashed guide = 1.0× parity — NHIT trades above NAV, PGInvIT near it"
+          exportable="chart"
+          exportName="invits-price-to-nav"
+          exportAsof={exportAsof}
+        >
+          <InvitPNavChart ctx={ctx} trusts={trusts} />
+        </Card>
+
         <Card title="InvITs vs NIFTY 50 vs FD — rebased to 100" exportable="chart" exportName="invits-rebased" exportAsof={exportAsof}>
           {hasData ? <InvitRebasedChart ctx={ctx} trusts={trusts} /> : <EmptyChart height={320} />}
         </Card>
@@ -123,7 +148,6 @@ export function InvitsPage() {
         </Card>
 
         <Card
-          className="lg:col-span-2"
           title="Enterprise value (₹ cr)"
           note="Latest disclosed valuations — NHIT's FY26 valuation ₹56,988 cr dwarfs the newer vehicles"
           exportable="chart"

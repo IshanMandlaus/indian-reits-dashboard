@@ -6,7 +6,7 @@
  * config for a REIT. All series are emitted as `{x,y}` points on a linear time
  * axis so they can feed the reusable <TimeSeriesChart>.
  */
-import type { Bench, BenchLive, BenchOverview, BenchMetric, DateMap, LivePrices, ReitData, ReitKey } from '../types/data'
+import type { Bench, BenchLive, BenchOverview, BenchMetric, DateMap, LivePrices, PriceHistory, ReitData, ReitKey } from '../types/data'
 import type { SecModalData, StatPair } from '../components/charts/SecurityModal'
 
 const DAY = 864e5
@@ -80,7 +80,7 @@ export interface BenchCtx {
 }
 
 /** Merge the live refresh into the seeded series and build the forward-filled calendar. */
-export function makeBenchCtx(B: Bench, L: BenchLive | null): BenchCtx {
+export function makeBenchCtx(B: Bench, L: BenchLive | null, H?: PriceHistory | null): BenchCtx {
   const prices: Record<string, DateMap> = {}
   for (const [s, m] of Object.entries(B.prices)) prices[s] = { ...m }
   const turnover: Record<string, DateMap> = {}
@@ -101,6 +101,11 @@ export function makeBenchCtx(B: Bench, L: BenchLive | null): BenchCtx {
     // average. Re-enable per-security once the refresh pipeline (Phase D) emits
     // turnover on the same basis as the workbook.
   }
+  // The CSV close-price seed ("Historical Close Prices/") is the source of
+  // truth wherever it has a date — it both extends history back to listing
+  // (e.g. Embassy 2019) and overrides workbook/live values on overlap. Live
+  // updates still extend the tail beyond its asof date.
+  if (H) for (const [s, m] of Object.entries(H.secs || {})) prices[s] = { ...(prices[s] || {}), ...m }
   const CAL = Object.keys(prices['NIFTY 50'] || {}).sort()
   const FF: Record<string, DateMap> = {}
   for (const s of Object.keys(prices)) FF[s] = ffill(prices[s], CAL)

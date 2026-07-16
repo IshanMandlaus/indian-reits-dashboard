@@ -4,7 +4,7 @@
  * Pass `k` to highlight that REIT (Domestic page); omit it for uniform bars
  * (Market page).
  */
-import type { ReitData, ReitKey, LivePrices } from '../../types/data'
+import type { ReitData, ReitKey, LivePrices, PriceHistory } from '../../types/data'
 import { CHART, baseOptions, labelFont } from '../../lib/chartSetup'
 import { REIT_KEYS, REIT_SHORT, lastPrice, navAtStrict } from '../../lib/reit'
 import { inr } from '../../lib/format'
@@ -15,12 +15,14 @@ export function Chart8PbPeers({
   D,
   k = null,
   LIVE,
+  H = null,
 }: {
   D: ReitData
   k?: ReitKey | null
   LIVE: LivePrices | null
+  H?: PriceHistory | null
 }) {
-  const { canvasRef } = useChartCanvas(() => build(D, k, LIVE), [D, k, LIVE])
+  const { canvasRef } = useChartCanvas(() => build(D, k, LIVE, H), [D, k, LIVE, H])
   return (
     <div className="relative h-[240px]">
       <canvas ref={canvasRef} />
@@ -35,9 +37,9 @@ interface PeerRow {
   nav: number | null
 }
 
-function build(D: ReitData, k: ReitKey | null, LIVE: LivePrices | null): ChartConfiguration {
+function build(D: ReitData, k: ReitKey | null, LIVE: LivePrices | null, H: PriceHistory | null): ChartConfiguration {
   const rows: PeerRow[] = REIT_KEYS.flatMap((key) => {
-    const lp = lastPrice(D, LIVE, key)
+    const lp = lastPrice(D, LIVE, key, H)
     const nav = navAtStrict(D, key, Date.now())
     return lp.price && nav ? [{ key, pb: lp.price / nav, price: lp.price, nav }] : []
   })

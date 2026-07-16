@@ -31,6 +31,7 @@ export function DomesticReitsPage() {
 
   const reit = useDataset('reit-data')
   const prices = useDataset('live-prices')
+  const priceHist = useDataset('price-history')
   const valHy = useDataset('val-hy')
   const blocksLive = useDataset('blocks-live')
   const structures = useDataset('structures')
@@ -65,7 +66,7 @@ export function DomesticReitsPage() {
   }
 
   const m = D.meta[k]
-  const lp = lastPrice(D, LIVE, k)
+  const lp = lastPrice(D, LIVE, k, priceHist.data)
   const nav = navAt(D, k, Date.now())
   const pd = lp.price && nav ? lp.price / nav - 1 : null
 
@@ -125,7 +126,7 @@ export function DomesticReitsPage() {
           exportName={`${k}-1-price-vs-nav`}
           exportAsof={lp.price ? `${lp.live ? 'Live price' : 'Price'} as of ${lp.asof} · NSE/BSE` : null}
         >
-          <Chart1PriceNav D={D} k={k} LIVE={LIVE} />
+          <Chart1PriceNav D={D} k={k} LIVE={LIVE} H={priceHist.data} />
         </Card>
 
         <Card
@@ -179,7 +180,7 @@ export function DomesticReitsPage() {
           exportName={`${k}-7-pb-ratio`}
           exportAsof={lp.price ? `${lp.live ? 'Live price' : 'Price'} as of ${lp.asof} · NSE/BSE` : null}
         >
-          <Chart7Pb D={D} k={k} LIVE={LIVE} />
+          <Chart7Pb D={D} k={k} LIVE={LIVE} H={priceHist.data} />
         </Card>
 
         <Card
@@ -189,7 +190,7 @@ export function DomesticReitsPage() {
           exportName={`${k}-8-pb-peers`}
           exportAsof={LIVE?._asof ? `Live prices as of ${LIVE._asof} · NSE/BSE` : null}
         >
-          <Chart8PbPeers D={D} k={k} LIVE={LIVE} />
+          <Chart8PbPeers D={D} k={k} LIVE={LIVE} H={priceHist.data} />
         </Card>
 
         <Card

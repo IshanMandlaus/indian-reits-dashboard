@@ -5,7 +5,7 @@
  * that REIT's first reported NAV (Nexus Apr 2024, KRT Apr 2026).
  */
 import type { ChartConfiguration } from 'chart.js'
-import type { ReitData, LivePrices } from '../../types/data'
+import type { ReitData, LivePrices, PriceHistory } from '../../types/data'
 import { baseOptions, zoomOptions, CHART, type RangeConfig } from '../../lib/chartSetup'
 import { REIT_KEYS, REIT_SHORT, pbSeries, fmtM, fmtDay } from '../../lib/reit'
 import { REIT_COLOR } from '../../lib/geo'
@@ -17,26 +17,28 @@ export function PbAllChart({
   D,
   LIVE,
   years,
+  H,
 }: {
   D: ReitData
   LIVE: LivePrices | null
   years: number
+  H: PriceHistory | null
 }) {
   return (
     <TimeSeriesChart
-      deps={[D, LIVE, years]}
+      deps={[D, LIVE, years, H]}
       height={340}
       caption={ZOOM_HINT}
-      build={() => build(D, LIVE, years)}
+      build={() => build(D, LIVE, years, H)}
     />
   )
 }
 
-function build(D: ReitData, LIVE: LivePrices | null, years: number): ChartConfiguration {
+function build(D: ReitData, LIVE: LivePrices | null, years: number, H: PriceHistory | null): ChartConfiguration {
   const from = years >= 99 ? -Infinity : Date.now() - years * 365.25 * DAY
   const series = REIT_KEYS.map((k) => ({
     k,
-    pts: pbSeries(D, k, LIVE).filter((p) => p.x >= from),
+    pts: pbSeries(D, k, LIVE, H).filter((p) => p.x >= from),
   })).filter((s) => s.pts.length > 0)
 
   const xs = series.flatMap((s) => s.pts.map((p) => p.x))

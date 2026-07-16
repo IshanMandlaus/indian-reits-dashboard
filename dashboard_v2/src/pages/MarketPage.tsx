@@ -29,6 +29,7 @@ export function MarketPage() {
 
   const bench = useDataset('bench')
   const benchLive = useDataset('bench-live')
+  const priceHist = useDataset('price-history')
   const reit = useDataset('reit-data')
   const prices = useDataset('live-prices')
   const indexYields = useDataset('index-yields')
@@ -39,7 +40,8 @@ export function MarketPage() {
   const LIVE = prices.data
   const IY = indexYields.data
 
-  const ctx = useMemo(() => (B ? makeBenchCtx(B, L) : null), [B, L])
+  const H = priceHist.data
+  const ctx = useMemo(() => (B ? makeBenchCtx(B, L, H) : null), [B, L, H])
   const snapRows = useMemo(() => (ctx && D ? buildSnapRows(ctx, D, LIVE) : []), [ctx, D, LIVE])
 
   if (bench.error || reit.error) {
@@ -166,7 +168,7 @@ export function MarketPage() {
           exportName="market-pb-all-reits"
           exportAsof={LIVE?._asof ? `Live prices as of ${LIVE._asof} · NSE/BSE` : null}
         >
-          <PbAllChart D={D} LIVE={LIVE} years={years} />
+          <PbAllChart D={D} LIVE={LIVE} years={years} H={H} />
         </Card>
 
         <Card
@@ -195,7 +197,7 @@ export function MarketPage() {
           exportName="market-pb-peers"
           exportAsof={LIVE?._asof ? `Live prices as of ${LIVE._asof} · NSE/BSE` : null}
         >
-          <Chart8PbPeers D={D} LIVE={LIVE} />
+          <Chart8PbPeers D={D} LIVE={LIVE} H={H} />
         </Card>
       </div>
 

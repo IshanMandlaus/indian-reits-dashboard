@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "data": "node scripts/convert-data.mjs",
+    "data:prices": "node scripts/import-close-prices.mjs",
     "build": "node scripts/check-assets.mjs && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"

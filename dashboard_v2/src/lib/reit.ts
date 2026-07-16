@@ -2,7 +2,7 @@
  * Domestic-REIT domain helpers, ported from v1 `dashboard.html`.
  * Date/NAV maths and last-price resolution.
  */
-import type { ReitData, ReitKey, LivePrices } from '../types/data'
+import type { ReitData, ReitKey, LivePrices, PriceHistory } from '../types/data'
 
 export const REIT_KEYS: ReitKey[] = ['embassy', 'mindspace', 'brookfield', 'nexus', 'krt', 'bagmane']
 
@@ -86,10 +86,31 @@ export interface PbPoint {
   y: number
 }
 
+/** REIT key → security name used in price-history.json / bench.js. */
+export const REIT_SEC: Record<ReitKey, string> = {
+  embassy: 'Embassy REIT',
+  mindspace: 'Mindspace REIT',
+  brookfield: 'Brookfield REIT',
+  nexus: 'Nexus Select Trust',
+  krt: 'Knowledge Realty Trust',
+  bagmane: 'Bagmane REIT',
+}
+
+/**
+ * Daily close series for a REIT: the authoritative CSV seed
+ * (price-history.json, full history back to listing) when loaded,
+ * else the workbook's weekly series.
+ */
+export function closeSeries(D: ReitData, k: ReitKey, H?: PriceHistory | null): [string, number][] {
+  const hist = H?.secs[REIT_SEC[k]]
+  if (hist) return Object.keys(hist).sort().map((d) => [d, hist[d]])
+  return D.prices[k] || []
+}
+
 /** P/B series (traded price ÷ latest reported NAV/unit), plus a live point. */
-export function pbSeries(D: ReitData, k: ReitKey, LIVE: LivePrices | null): PbPoint[] {
+export function pbSeries(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H?: PriceHistory | null): PbPoint[] {
   const pts: PbPoint[] = []
-  for (const [d, close] of D.prices[k] || []) {
+  for (const [d, close] of closeSeries(D, k, H)) {
     const ts = dTs(d)
     const nav = navAtStrict(D, k, ts)
     if (nav) pts.push({ x: ts, y: close / nav })
@@ -109,10 +130,10 @@ export interface LastPrice {
 }
 
 /** Live price if available, else the last historical close. */
-export function lastPrice(D: ReitData, LIVE: LivePrices | null, k: ReitKey): LastPrice {
+export function lastPrice(D: ReitData, LIVE: LivePrices | null, k: ReitKey, H?: PriceHistory | null): LastPrice {
   const lv = LIVE?.[k]
   if (lv && lv.price) return { price: lv.price, asof: lv.asof || 'live', live: true }
-  const p = D.prices[k]
+  const p = closeSeries(D, k, H)
   if (p && p.length) return { price: p[p.length - 1][1], asof: p[p.length - 1][0], live: false }
   return { price: null, asof: '', live: false }
 }

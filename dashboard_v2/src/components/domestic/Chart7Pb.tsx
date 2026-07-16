@@ -3,9 +3,9 @@
  * dashed 1.0× parity line (above = premium to NAV, below = discount).
  * Complete pairs only: the series starts at the REIT's first reported NAV.
  */
-import type { ReitData, ReitKey, LivePrices } from '../../types/data'
+import type { ReitData, ReitKey, LivePrices, PriceHistory } from '../../types/data'
 import { CHART, baseOptions, zoomOptions, rescaleY, type ChartWithRange, type RangeConfig } from '../../lib/chartSetup'
-import { pbSeries, navAtStrict, dTs, fmtM, fmtDay } from '../../lib/reit'
+import { pbSeries, closeSeries, navAtStrict, dTs, fmtM, fmtDay } from '../../lib/reit'
 import { inr } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
 import { RangeBar } from '../charts/RangeBar'
@@ -15,14 +15,16 @@ export function Chart7Pb({
   D,
   k,
   LIVE,
+  H,
 }: {
   D: ReitData
   k: ReitKey
   LIVE: LivePrices | null
+  H: PriceHistory | null
 }) {
-  const { canvasRef, chartRef } = useChartCanvas(() => build(D, k, LIVE), [D, k, LIVE])
-  const pb = pbSeries(D, k, LIVE)
-  const firstPrice = (D.prices[k] || [])[0]
+  const { canvasRef, chartRef } = useChartCanvas(() => build(D, k, LIVE, H), [D, k, LIVE, H])
+  const pb = pbSeries(D, k, LIVE, H)
+  const firstPrice = closeSeries(D, k, H)[0]
   const startsLate = pb.length > 0 && firstPrice && pb[0].x > dTs(firstPrice[0])
   return (
     <>
@@ -54,8 +56,8 @@ function resetZoom(ch: ChartWithRange | null) {
   ch.update()
 }
 
-function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null): ChartConfiguration {
-  const pb = pbSeries(D, k, LIVE)
+function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory | null): ChartConfiguration {
+  const pb = pbSeries(D, k, LIVE, H)
   const xmin = pb.length ? pb[0].x : Date.now() - 30 * 864e5
   const xmax = Math.max(pb.length ? pb[pb.length - 1].x : 0, Date.now())
 

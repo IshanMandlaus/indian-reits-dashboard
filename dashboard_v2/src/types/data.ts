@@ -236,6 +236,13 @@ export interface Bench {
   veterans: string[]
 }
 
+// ─── scripts/import-close-prices.mjs → price-history.json ──────────────────
+/** Authoritative daily close history seeded from "Historical Close Prices/" CSVs. */
+export interface PriceHistory {
+  asof: string
+  secs: Record<string, DateMap> // { "Embassy REIT": { "2019-04-01": 314 } }
+}
+
 // ─── bench_live.js → BENCH_LIVE ─────────────────────────────────────────────
 export interface BenchLive {
   asof: string
@@ -257,6 +264,7 @@ export interface InvitTrust {
   assets: string
   ev_cr: number
   nav: number
+  nav_hist?: [string, number][] // [ISO date, NAV ₹/unit] — independent-valuation history, oldest-first
   last_dpu: string
   dpu_fy26: number
   px_ref: number
@@ -319,12 +327,39 @@ export interface GlobalLive {
 // ─── holdings.js → HOLDINGS ─────────────────────────────────────────────────
 // Unit-holding (shareholding) pattern per REIT: Sponsor & Sponsor Group vs
 // Public, one entry per quarterly filing (most-recent-first).
+export interface SponsorEntity {
+  name: string // entity name as filed ("Sponsor"/"Sponsor Group" suffix stripped)
+  pct: number // % of total outstanding units
+}
+// Detailed breakdown from the filing's XBRL (server/lib/uhpXbrl.ts). Optional:
+// quarters loaded from a pre-XBRL holdings.json render the 2-way split only.
+export interface QuarterDetail {
+  inst: number // Institutions total %
+  noninst: number // Non-institutions total %
+  cats: {
+    mf: number // Mutual funds
+    fpi: number // Foreign portfolio investors
+    ins: number // Insurance companies
+    pf: number // Provident / pension funds
+    banks: number // Financial institutions / banks
+    inst_other: number // Other institutions (incl. AIFs, VC, government)
+    retail: number // Individuals (non-institutions)
+    corp: number // Body corporates
+    nri: number // Non-resident Indians
+    trusts: number
+    noninst_other: number // Other non-institutions (incl. NBFCs, clearing members)
+  }
+  sponsors?: SponsorEntity[] // named sponsor-group entities, desc (absent when filed unnamed)
+  groups?: { label: string; pct: number }[] // sponsor-group rollup (Indian/Foreign sides), desc
+  top?: { name: string; pct: number }[] // top-5 public unitholders, as filed
+}
 export interface HoldingQuarter {
   date: string // ISO as-on date, e.g. "2026-03-31"
   label: string // display quarter, e.g. "Mar 2026"
   sponsor: number // Sponsor & Sponsor Group %
   public: number // Public %
   emp: number // Employee-trust % (0 for all current REITs)
+  detail?: QuarterDetail
 }
 export interface ReitHolding {
   symbol: string // NSE symbol, e.g. "EMBASSY"

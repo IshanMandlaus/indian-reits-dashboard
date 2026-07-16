@@ -23,6 +23,7 @@ import type {
   GlobalLive,
   Holdings,
   IndexYields,
+  PriceHistory,
 } from '../types/data'
 
 /** Basename (without extension) of each file in public/data. */
@@ -43,6 +44,7 @@ export type DatasetName =
   | 'global-live'
   | 'holdings'
   | 'index-yields'
+  | 'price-history'
 
 /** Maps each dataset name to the type its JSON deserialises to. */
 export interface DatasetTypes {
@@ -62,6 +64,7 @@ export interface DatasetTypes {
   'global-live': GlobalLive
   holdings: Holdings
   'index-yields': IndexYields
+  'price-history': PriceHistory
 }
 
 const cache = new Map<DatasetName, Promise<unknown>>()
