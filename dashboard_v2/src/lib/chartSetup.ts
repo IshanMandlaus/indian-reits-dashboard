@@ -94,7 +94,18 @@ export function baseOptions(): ChartOptions {
     maintainAspectRatio: false,
     interaction: { mode: 'nearest', intersect: false },
     plugins: {
-      legend: { position: 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 14 } },
+      legend: {
+        position: 'bottom',
+        labels: {
+          boxWidth: 12,
+          boxHeight: 12,
+          padding: 14,
+          // Dashed-line series get a solid legend swatch — a [5,4] dash stroked
+          // around a 12px filled box renders as a jagged blob.
+          generateLabels: (chart) =>
+            Chart.defaults.plugins.legend.labels.generateLabels(chart).map((it) => ({ ...it, lineDash: [] })),
+        },
+      },
     },
   }
 }
