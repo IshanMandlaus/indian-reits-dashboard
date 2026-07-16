@@ -78,6 +78,8 @@ interface LabelCfg {
   /** Price-dataset indices of each FY's highest close / lowest close. */
   peaks: number[]
   valleys: number[]
+  /** NAV-dataset indices to label (FY-end marks only, not quarterly steps). */
+  navIdx: number[]
 }
 
 /** Indian FY bucket of a timestamp: FY ends 31 Mar of the returned year. */
@@ -104,13 +106,13 @@ const priceNavLabels: Plugin = {
     const visible = (el: { x: number; y: number }) =>
       el.x >= chartArea.left - 4 && el.x <= chartArea.right + 4 && el.y >= chartArea.top - 8 && el.y <= chartArea.bottom + 8
 
-    // NAV steps (dataset 1) — value above each reported point.
+    // NAV steps (dataset 1) — value above each FY-end mark.
     const navMeta = ch.getDatasetMeta(1)
     ctx.fillStyle = exp ? ink : CHART.gold
     ctx.textBaseline = 'bottom'
-    for (const el of navMeta.data) {
-      const p = el as unknown as { x: number; y: number; raw?: unknown }
-      if (!visible(p)) continue
+    for (const i of cfg.navIdx) {
+      const p = navMeta.data[i] as unknown as { x: number; y: number } | undefined
+      if (!p || !visible(p)) continue
       const v = (p as { $context?: { parsed?: { y?: number } } }).$context?.parsed?.y
       if (v == null) continue
       ctx.fillText(inr(v, 0), p.x, p.y - 6)
@@ -142,6 +144,9 @@ function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory
   const live = LIVE?.[k]
   if (live && live.price && (!price.length || Date.now() > price[price.length - 1].x)) price.push({ x: Date.now(), y: live.price })
   const nav = navSteps(D, k).map((p) => ({ x: p.ts, y: p.nav }))
+  // Label only FY-end NAV marks; navSteps also interleaves quarterly steps.
+  const fye = new Set(f.years.map((y) => fyTs(y)))
+  const navIdx = nav.map((p, i) => (fye.has(p.x) ? i : -1)).filter((i) => i >= 0)
 
   // Per-FY price extremes for the label plugin (indices into `price`).
   const byFy = new Map<number, { hi: number; lo: number }>()
@@ -194,7 +199,7 @@ function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory
       plugins: {
         ...baseOptions().plugins,
         zoom: zoomOptions(),
-        ...({ priceNavLabels: { peaks, valleys } } as object),
+        ...({ priceNavLabels: { peaks, valleys, navIdx } } as object),
         tooltip: {
           callbacks: {
             title: (it) => fmtDay(it[0].parsed.x as number),
