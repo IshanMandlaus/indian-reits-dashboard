@@ -1273,3 +1273,94 @@ grep/text-by-page CLI (see `REIT_AUM_MSF_History.gen.mjs` header comment for the
 fresh load; afterwards `getImageData` returns all-transparent (GPU compositing). Reliable export
 check instead: hook `URL.createObjectURL`, click the card's SVG button, pull the captured blob,
 decode the embedded PNG data-URI into a fresh canvas → pixel-count / render to file and eyeball.
+
+## 17. Unitholding pattern — per-sponsor stakes + full NSE breakdown — 2026-07-15
+
+User ask: the panel only showed Sponsor-vs-Public; wanted each sponsor's stake (KRT has two
+sponsor groups) and a proper public breakdown from NSE.
+
+**Data source (new):** every row of `/api/corporate-unit-holdings-master` links the filing's
+XBRL (`xbrlFilePath` → `nsearchives.nseindia.com/corporate/xbrl/UHP_<ndsID>_…_WEB.xml`, ~90 KB,
+plain fetch with a browser UA — **no cookie session needed**, unlike the JSON APIs). It carries
+the full SEBI table: sponsor split Indian/Foreign with **named per-entity stakes**
+(`OtherIndianN`/`OtherForeignN` members, `NatureOfOther` = entity name), institutions /
+non-institutions category percentages, and top-5 public unitholders.
+
+- **Parser** `server/lib/uhpXbrl.ts` — dependency-free regex XBRL reader → `QuarterDetail`
+  (`types/data.ts`): `inst`, `noninst`, `cats{mf,fpi,ins,pf,banks,inst_other,retail,corp,nri,trusts,noninst_other}`,
+  `sponsors[]` (named entities), `groups[]` (sponsor-group rollup), `top[]`. Traps learned:
+  `OtherNonInstitutionsMember` is a **subtotal** (corp+NRI+trusts+clearing) — the leaf is
+  `OtherNonInstitutionsOtherMember`; top-5 percentages are filed as fractions of 1 (scale ×100
+  when max ≤ 1, Nexus files real % — heuristic handles both); Brookfield lists a sponsor entity
+  in the "other than sponsor" top-5 (filtered by name match); Nexus repeats an entity name on two
+  rows (merged); names carry `&amp;` and "Sponsor Group"/"Body Corporate" suffixes (cleaned).
+- **Sponsor groups**: rollup = the sponsor category's Indian/Foreign side totals (exact, no
+  name-matching): `SPONSOR_GROUPS` map in `server/fetchers/holdings.ts` (krt: Sattva/Blackstone,
+  embassy: Embassy Sponsor/Blackstone — history shows Blackstone 31.7→23.6→exit, …). Mindspace
+  files entities unnamed ("Bodies Corporate") → single "K Raheja Corp group" + panel note.
+- **Fetcher**: full-history backfill — every deduped quarter's XBRL is fetched once and cached at
+  `server/.cache/uhp/<ndsID>.xml` (gitignored; XBRLs are immutable per ndsID; 72 files, ~18/REIT).
+  Fetch/parse failure ⇒ quarter has no `detail` and the panel renders the old 2-way split.
+- **Panel** (`UnitholdingPanel.tsx`): stacked bar = one segment per sponsor group (teal, gold,
+  violet) + Institutions (info blue) + Non-institutions (warn amber), 2px gaps, ≥12% direct labels;
+  figures row per segment; detail grid = sponsor entities (top 6 + "N smaller entities") | public
+  category mini-bars + top-5 named holders. React keys on entity rows are index-suffixed
+  (filings can repeat a name — Nexus).
+- **Ownership trend** (same panel, below the detail grid): **inline-SVG stacked area** — sponsor
+  (accent) / institutions (info) / non-institutions (warn) summing to 100%, date-proportional
+  x-axis over the full filed history, y 0–100 with 25/50/75 gridlines, right-edge value labels
+  (collision-nudged — Brookfield sponsor 19.4 vs non-inst 18.8), per-quarter hover tooltips, and a
+  neutral grey band for quarters whose filing lacks the split (Embassy ≤ Jun 2021, Brookfield
+  ≤ Dec 2021) + footnote. Inline SVG on purpose: the `panel` export rasterises DOM through a
+  foreignObject, which serialises SVG but NOT canvas — a Chart.js chart here would export blank.
+  Newest x-tick keeps priority; earlier ticks within 70 viewBox-units are dropped (label collision).
+- **Split exports (Word-readable)**: the card no longer uses `Card exportable` — two custom
+  buttons, **"↓ SVG · pattern"** (`<k>-unitholding-pattern`, bar + figures + detail grid) and
+  **"↓ SVG · trend"** (`<k>-unitholding-trend`, area chart), each calling `exportPanelSvg` on its
+  own section ref with its own title/footnote. Rationale: the combined card is page-tall — pasted
+  into Word it shrank to fit and text went sub-legible; the halves are 679px / 389px at 1187 wide,
+  both within the ~700px page-image budget. Verified via the createObjectURL hook (white bg,
+  black title, frame, footnote, 3× raster).
+- **Browser-pane trap (verification)**: if in-app screenshots go black AND `window.innerWidth`
+  reads 0, the pane renderer is wedged — offsetWidths collapse and panel exports come out
+  `width="0"`. Fix: `preview_stop` + `preview_start` (resize alone doesn't recover it).
+
+## 18. InvIT NAV charts — 2026-07-15
+
+User ask: the InvITs page had no NAV charts. Added two cards to `InvitsPage.tsx`:
+
+- **"Unit price vs NAV per unit"** (span-2, `InvitNavChart` in `InvitCharts.tsx`): daily closes
+  (solid, per-trust colours) vs independent-valuation NAV/unit as dashed **stepped** lines with
+  point markers (PGInvIT has 6 points, RIIT one — a bare line would vanish).
+- **"Price to NAV (latest)"** (`InvitPNavChart`): horizontal bars of last close ÷ latest NAV with
+  the dashed 1.0× parity guide — clones the Chart 8 (`Chart8PbPeers.tsx`) label/parity plugins.
+
+**Data (new, sourced 2026-07-15):** `nav_hist: [[ISO date, ₹/unit]]` per trust in
+`data-src/invit_data.js` (→ `invit.json`, optional field on `InvitTrust`):
+- **NHIT** — 15 quarterly valuation points Nov-21 (101.0) → Dec-25 (145.8) from the Feb-2026
+  investor presentation slide 10 (nhit.co.in "NAV & Distributions"); Mar-26 = 152.44 (existing).
+- **PGInvIT** — FY-end fair-value NAV from the ARs' "Statement of Net Assets at Fair Value":
+  Mar-22 101.07 (FY22 AR p118), Mar-23 86.04 (FY23 impairment year), Mar-24 85.28 / Mar-25 94.12
+  (FY25 AR p121), **Mar-26 90.79 (FY26 AR p66)** — also corrected the snapshot `nav` from the
+  stale approx 98.5 to 90.79. Anchor May-21 = ₹100 IPO.
+- **RIIT** — ₹100 issue reference only (listed Mar-26; first valuation not yet published). Also
+  corrected `ev_cr` 6000 → 9299 (independently assessed EV ₹9,298.7 cr at IPO, vs issue size).
+
+Grid rebalance: EV card dropped from span-2 to single so the four singles pair up
+(P/NAV | rebased, yield | EV). Verified via the createObjectURL export hook (both SVGs inspected;
+P/NAV prints NHIT 1.10× · RIIT 1.17× · PGInvIT 1.07×).
+
+## 19. Structure diagrams from PPTX for all six REITs — 2026-07-16
+
+`~/Downloads/Indian REIT Structures.pptx.pptx` (6 dark Canva-style slides, one per REIT:
+slide1 embassy · 2 mindspace · 3 brookfield · 4 nexus · 5 krt · 6 bagmane) is now the source of
+truth for section 10 · REIT Structure. Rendered at 200 dpi (fresh-profile LibreOffice → pdftoppm)
+to `public/img/structure_<key>.png` (~2134px wide), overwriting the stale unwired PNGs; bagmane new.
+`Structure.tsx` simplified: every REIT renders the static image (native 3-level diagram deleted);
+Embassy's notes paragraph kept in a `NOTES` map, other REITs fall back to `structures[k].notes`.
+
+White document versions live in `Indian REIT Structures - PNGs/` (project root,
+`REIT_Structure_<Name>_white.png` + `_dark.png`). Made by recoloring slide XML: white text runs
+(`rPr` solidFill FFFFFF) → 111111 and the `<p:bg>` fill 1E1C1F → FFFFFF. Trap: slide 5 (KRT)
+colors its entity names with the *same hex as the background* (1E1C1F) — a global 1E1C1F swap
+turns names white/invisible; the bg replacement must be scoped to the `<p:bg>` element only.
