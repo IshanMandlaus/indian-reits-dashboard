@@ -594,6 +594,26 @@ function wrapText(text: string, maxWidth: number, font: string): string[] {
  * above the image, and the card's footnote word-wrapped below it.
  */
 function pngSvg(dataUrl: string, w: number, h: number, meta?: ExportMeta): string {
+  return frameSvg(
+    (headerH, W, imgH) =>
+      `<image x="0" y="${headerH}" width="${W}" height="${imgH}" preserveAspectRatio="xMidYMid meet" href="${dataUrl}"/>`,
+    w,
+    h,
+    meta,
+  )
+}
+
+/**
+ * Shared export chrome: white background, black hairline border, bold title +
+ * as-of header, word-wrapped footnote. `inner` renders the body content and is
+ * handed the resolved header offset so it can translate itself below the header.
+ */
+function frameSvg(
+  inner: (headerH: number, W: number, bodyH: number) => string,
+  w: number,
+  h: number,
+  meta?: ExportMeta,
+): string {
   const W = Math.round(w)
   const pad = 16
   // the capture is already at print width (no downscale in Word), so these are
@@ -635,7 +655,7 @@ function pngSvg(dataUrl: string, w: number, h: number, meta?: ExportMeta): strin
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
     `<rect width="100%" height="100%" fill="#ffffff"/>` +
     header +
-    `<image x="0" y="${headerH}" width="${W}" height="${imgH}" preserveAspectRatio="xMidYMid meet" href="${dataUrl}"/>` +
+    inner(headerH, W, imgH) +
     footer +
     `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" fill="none" stroke="#000000" stroke-width="1"/>` +
     `</svg>`
@@ -712,7 +732,102 @@ export function exportChartSvg(node: HTMLElement, name: string, meta?: ExportMet
   }
 }
 
+// ─── public: vector pie export ───────────────────────────────────────────────
+
+export interface PieSlice {
+  label: string
+  pct: number
+  /** Solid print colour (Tailwind 500–700 range on white). */
+  color: string
+}
+
+/**
+ * Download a pure-vector pie chart (print style: white background, black text,
+ * hairline border) — used for the unitholding-pattern export, where a pie reads
+ * better on paper than a rasterised dashboard panel. Slices are drawn from 12
+ * o'clock clockwise in the order given; % labels sit inside slices ≥ 6%, and a
+ * legend on the right carries every label + value.
+ */
+export function exportPieSvg(name: string, slices: PieSlice[], meta?: ExportMeta): void {
+  const W = EXPORT_WIDTH
+  const bodyH = 300
+  const cx = 170
+  const cy = bodyH / 2
+  const r = 125
+  const total = slices.reduce((t, s) => t + s.pct, 0) || 100
+  const pt = (angle: number, radius: number): [number, number] => [
+    cx + radius * Math.sin(angle),
+    cy - radius * Math.cos(angle),
+  ]
+  let acc = 0
+  let paths = ''
+  let labels = ''
+  for (const s of slices) {
+    const a0 = (acc / total) * 2 * Math.PI
+    acc += s.pct
+    const a1 = (acc / total) * 2 * Math.PI
+    const [x0, y0] = pt(a0, r)
+    const [x1, y1] = pt(a1, r)
+    const large = a1 - a0 > Math.PI ? 1 : 0
+    paths +=
+      `<path d="M${cx},${cy} L${x0.toFixed(2)},${y0.toFixed(2)} ` +
+      `A${r},${r} 0 ${large} 1 ${x1.toFixed(2)},${y1.toFixed(2)} Z" ` +
+      `fill="${s.color}" stroke="#ffffff" stroke-width="2"/>`
+    if ((s.pct / total) * 100 >= 6) {
+      const [lx, ly] = pt((a0 + a1) / 2, r * 0.62)
+      labels +=
+        `<text x="${lx.toFixed(1)}" y="${(ly + 4).toFixed(1)}" text-anchor="middle" ` +
+        `font-family="${FONT}" font-size="13" font-weight="600" fill="#ffffff">` +
+        `${s.pct.toFixed(1)}%</text>`
+    }
+  }
+  // legend — right of the pie, one row per slice
+  const lx = cx + r + 45
+  const rowH = 26
+  const ly0 = cy - ((slices.length - 1) * rowH) / 2
+  let legend = ''
+  slices.forEach((s, i) => {
+    const y = ly0 + i * rowH
+    legend +=
+      `<rect x="${lx}" y="${y - 9}" width="12" height="12" rx="2" fill="${s.color}"/>` +
+      `<text x="${lx + 20}" y="${y + 2}" font-family="${FONT}" font-size="12.5" fill="${LIGHT_INK}">` +
+      `<tspan font-weight="600">${s.pct.toFixed(2)}%</tspan>  ${esc(s.label)}</text>`
+  })
+  const svg = frameSvg(
+    (headerH) => `<g transform="translate(0,${headerH})">${paths}${labels}${legend}</g>`,
+    W,
+    bodyH,
+    meta,
+  )
+  download(slug(name), svg)
+}
+
 // ─── public: panel (DOM) export ──────────────────────────────────────────────
+
+/**
+ * Inter as an embeddable @font-face. The page's own @font-face points at
+ * `/fonts/InterVariable.woff2`, but a foreignObject rasterised through an
+ * `<img src="data:image/svg+xml…">` cannot make network fetches — the font
+ * silently fails and the whole panel falls back to system fonts (different
+ * metrics → clipped/overlapping table text). Embedding the woff2 as a base64
+ * data: URI keeps the export in real Inter. Fetched once, cached for the session.
+ */
+let interFontCss: string | null = null
+async function embedFontCss(): Promise<string> {
+  if (interFontCss != null) return interFontCss
+  try {
+    const buf = await (await fetch('/fonts/InterVariable.woff2')).arrayBuffer()
+    const bytes = new Uint8Array(buf)
+    let bin = ''
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+    interFontCss =
+      `@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;` +
+      `src:url(data:font/woff2;base64,${btoa(bin)}) format('woff2')}`
+  } catch {
+    interFontCss = '' // export still works, just in the fallback font
+  }
+  return interFontCss
+}
 
 /** Concatenate every same-origin stylesheet's rules (for embedding in the export). */
 function collectCss(): string {
@@ -771,19 +886,41 @@ function loadImage(src: string): Promise<HTMLImageElement> {
  * (so the real Tailwind layout is preserved — no per-node style inlining), then
  * embeds the flattened PNG in an SVG.
  */
-export async function exportPanelSvg(node: HTMLElement, name: string, meta?: ExportMeta): Promise<void> {
-  const w = node.offsetWidth
-  const h = node.offsetHeight
-  const css = collectCss()
+export async function exportPanelSvg(
+  node: HTMLElement,
+  name: string,
+  meta?: ExportMeta,
+  opts?: { width?: number },
+): Promise<void> {
+  // opts.width: reflow the clone at print width (EXPORT_WIDTH-style) instead of
+  // capturing at on-screen width — a 1350px-wide table is mostly whitespace and
+  // Word shrinks it to the 6.5in column, making 12px text unreadably small.
+  const w = opts?.width ? Math.min(opts.width, node.offsetWidth || opts.width) : node.offsetWidth
+  let h = node.offsetHeight
+  // font data URI LAST so its @font-face wins over the stylesheet's url() one
+  const css = collectCss() + (await embedFontCss())
   const clone = node.cloneNode(true) as HTMLElement
   clone.classList.add('svg-export-light')
   replaceCanvases(node, clone)
+  if (w !== node.offsetWidth) {
+    // measure the reflowed height offscreen (clone keeps page CSS while attached)
+    const meas = document.createElement('div')
+    meas.style.cssText = `position:absolute;left:-100000px;top:0;width:${w}px`
+    meas.appendChild(clone)
+    document.body.appendChild(meas)
+    h = clone.offsetHeight
+    meas.remove()
+  }
   clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
   const cloneHtml = new XMLSerializer().serializeToString(clone)
   const foreign =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">` +
     `<foreignObject x="0" y="0" width="${w}" height="${h}">` +
-    `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${w}px;background:#ffffff">` +
+    // font-family inline: the page gets Inter from a `body{}` rule, but this
+    // wrapper div has no body ancestor inside the foreignObject — without it
+    // the whole panel falls back to the SVG default (Times serif)
+    `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${w}px;background:#ffffff;` +
+    `font-family:${getComputedStyle(document.body).fontFamily.replace(/"/g, "'")}">` +
     `<style><![CDATA[${css}]]></style>${cloneHtml}</div>` +
     `</foreignObject></svg>`
 

@@ -22,6 +22,14 @@ type CardProps = {
    * download otherwise loses the date context shown in the card note.
    */
   exportAsof?: string | null
+  /**
+   * Panel exports only: reflow the body at this width (px) instead of capturing
+   * at on-screen width. Use for wide DOM tables — Word shrinks anything wider
+   * than its ~624px text column, so on-screen-width captures print unreadably.
+   */
+  exportWidth?: number
+  /** Set false to omit the card note from the exported SVG footnote. */
+  exportNote?: boolean
 }
 
 /** The v2 panel primitive — replaces v1's flat `.card`. */
@@ -35,6 +43,8 @@ export function Card({
   exportable,
   exportName,
   exportAsof,
+  exportWidth,
+  exportNote = true,
 }: CardProps) {
   const bodyRef = useRef<HTMLDivElement>(null)
   const noteRef = useRef<HTMLParagraphElement>(null)
@@ -47,9 +57,10 @@ export function Card({
       title: typeof title === 'string' ? title : undefined,
       asof: exportAsof || undefined,
       // rendered textContent so JSX notes flatten to plain text for the SVG footnote
-      note: noteRef.current?.textContent || undefined,
+      note: (exportNote && noteRef.current?.textContent) || undefined,
     }
-    if (exportable === 'panel') exportPanelSvg(node, name, meta).catch(() => {})
+    if (exportable === 'panel')
+      exportPanelSvg(node, name, meta, exportWidth ? { width: exportWidth } : undefined).catch(() => {})
     else exportChartSvg(node, name, meta)
   }
 

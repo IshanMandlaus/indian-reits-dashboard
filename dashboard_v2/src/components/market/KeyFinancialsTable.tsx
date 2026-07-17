@@ -40,7 +40,7 @@ export function KeyFinancialsTable({ KF }: { KF: KeyFin }) {
             return (
               <tr key={r.metric} className="border-b border-border-soft text-ink transition-colors hover:bg-surface-2/60">
                 <td className="py-1.5 pr-3 font-medium">{r.metric}</td>
-                <td className="py-1.5 pr-3 text-subtle">{r.unit}</td>
+                <td className="whitespace-nowrap py-1.5 pr-3 text-subtle">{r.unit}</td>
                 {r.v.map((v, i) => (
                   <td key={i} className="py-1.5 pl-3 text-right">
                     {cell(r, v, dashZero)}

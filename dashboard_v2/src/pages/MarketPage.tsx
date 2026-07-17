@@ -105,6 +105,8 @@ export function MarketPage() {
           note="From the key-financials workbook (consolidated basis, INR crore) · values page-cited in the audit citations"
           exportable="panel"
           exportName="market-keyfin-fy2026"
+          exportWidth={720}
+          exportNote={false}
           exportAsof={`${keyfin.data.fy} · ${keyfin.data.basis.toLowerCase()} · ₹ cr`}
         >
           <KeyFinancialsTable KF={keyfin.data} />

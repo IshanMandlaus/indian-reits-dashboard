@@ -1479,3 +1479,43 @@ Chart 1 (`Chart1PriceNav.tsx`): DPU is gone; the y2 toggle is now Volume (defaul
 (Bagmane) hide the toggle and show P/B only. Card retitled "1 · Price vs NAV & Trading Volume".
 Chart 4b (`Chart4bDistributions.tsx`) replaces the lost DPU view: dist_total bars + DPU line
 per FY (data already audited); export labels colour-coded via `seriesInk`.
+
+## 25. Brookfield FY26 AR gap-fill + export overhaul (keyfin table, unitholding pie, trend sponsor split) — 2026-07-17
+
+**Brookfield FY2025-26 Annual Report** (`Brookfield/Annual_Report_FY_25_26_0ce0e12877.pdf`, printed
+pp.28–31 "Properties at a Glance", PDF pp.15–16 — two printed pages per PDF page):
+- Worldmark Tower 2&3 WALE **5.4 yr** filled into the SPV table (was null; audit had it
+  "unverifiable"). Worldmark Tower 1 WALE 4.7 confirmed (was already applied).
+- Total Distribution FY26 ₹1,516.178 cr confirmed verbatim ("cumulative distribution … aggregates
+  to ₹15,161.78 million / ₹21.40 per unit") — workbook J24 + dashboard already carried it.
+- Confirmed genuinely undisclosed: in-place occupancy FY25/26 (AR reports committed 93% only) and
+  the portfolio unique-tenant count (70/75/141 FY22–24 series is dead; AR restores PER-ASSET tenant
+  counts, sum 749, but multi-asset occupiers double-count → left blank). `REIT_data_gaps.md` updated.
+
+**SVG export — fonts & sizing** (`src/lib/svgExport.ts`):
+- Panel (foreignObject) exports were rendering in Times serif: (a) webfont url() can't load inside
+  an SVG-as-image raster → Inter now embedded as a base64 data-URI @font-face (fetched once,
+  appended AFTER collected CSS so it wins); (b) the page only got Inter from a `body{}` rule that
+  never matched the clone wrapper → wrapper div now carries `font-family` inline from
+  getComputedStyle(document.body).
+- Panel exports can reflow at a print width (`exportWidth` Card prop) instead of capturing the
+  on-screen width. Keyfin table exports at 720px (Word shrinks ~13% to its 6.5in column) with
+  `whitespace-nowrap` on the unit column; `exportNote={false}` drops the card note from the
+  exported footnote (on-screen note untouched).
+- `pngSvg` chrome refactored into `frameSvg(inner, w, h, meta)` (title/as-of header, wrapped
+  footnote, white bg + black hairline border) so vector bodies can reuse it.
+
+**Unitholding panel** (`src/components/domestic/UnitholdingPanel.tsx`):
+- "↓ SVG · pattern" now downloads a TRUE-VECTOR pie (`exportPieSvg`) of mainSegments — print
+  palette map PRINT_COLORS (bg-accent→#0d9488 teal-600, bg-gold→#ca8a04, bg-violet→#7c3aed,
+  bg-info→#2563eb, bg-warn→#d97706), % labels inside slices ≥6%, legend with exact values.
+- Ownership trend splits the sponsor band per sponsor group (teal/gold/violet). ⚠️ Groups are
+  matched BY LABEL across quarters, not index — filings sort groups by size each quarter, so
+  positional matching swapped Blackstone↔Embassy the quarter Blackstone fell below the Embassy
+  group. Pre-XBRL quarters (no `detail.groups`) stack the whole sponsor share in the FIRST group's
+  band so the history runs unbroken (grey-band caveat covers the public side). Legend is now a
+  swatch row above the chart; right edge shows only colour-keyed latest %; PAD.r 172→64.
+
+Verification notes: browser pane viewport can collapse to 0×0 after navigate — take a screenshot
+to wake it before export tests; verify exports by hooking URL.createObjectURL + swallowing
+anchor.click, then decode the embedded PNG (raster) or read the SVG text (vector pie).

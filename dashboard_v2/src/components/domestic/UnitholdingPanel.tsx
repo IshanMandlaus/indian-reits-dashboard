@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { Card } from '../ui/Card'
-import { exportPanelSvg } from '../../lib/svgExport'
+import { exportPanelSvg, exportPieSvg } from '../../lib/svgExport'
 import { REIT_SHORT } from '../../lib/reit'
 import type { Holdings, HoldingQuarter, QuarterDetail, ReitKey } from '../../types/data'
 
@@ -38,11 +38,16 @@ export function UnitholdingPanel({
   // pasted into Word, the combined card shrank to fit the page and the text
   // went sub-legible. Each half exports with its own title/frame/footnote.
   const exportSnapshot = () => {
-    if (!snapRef.current) return
-    exportPanelSvg(snapRef.current, `${k}-unitholding-pattern`, {
-      title: `${REIT_SHORT[k]} — Unitholding pattern`,
-      note,
-    }).catch(() => {})
+    // print export is a true vector pie of the main segments — the DOM panel
+    // (bar + mini-bar breakdowns) shrank illegibly on paper
+    exportPieSvg(
+      `${k}-unitholding-pattern`,
+      segments.map((s) => ({ label: s.label, pct: s.pct, color: PRINT_COLORS[s.swatch] ?? '#334155' })),
+      {
+        title: `${REIT_SHORT[k]} — Unitholding pattern`,
+        note,
+      },
+    )
   }
   const exportTrend = () => {
     if (!trendRef.current) return
@@ -131,6 +136,15 @@ const GROUP_STYLES = [
 const INST_STYLE = { cls: 'bg-info/80', swatch: 'bg-info' }
 const NONINST_STYLE = { cls: 'bg-warn/75', swatch: 'bg-warn' }
 const PUBLIC_STYLE = { cls: 'bg-info/80', swatch: 'bg-info' }
+
+// Print equivalents of the on-screen swatch classes (Tailwind 500–700 on white).
+const PRINT_COLORS: Record<string, string> = {
+  'bg-accent': '#0d9488', // teal-600
+  'bg-gold': '#ca8a04', // yellow-600
+  'bg-violet': '#7c3aed', // violet-600
+  'bg-info': '#2563eb', // blue-600
+  'bg-warn': '#d97706', // amber-600
+}
 
 /** Bar/legend segments for a quarter: per-group + inst/non-inst when detailed. */
 function mainSegments(q: HoldingQuarter): Segment[] {
@@ -354,19 +368,51 @@ function Trend({ quarters }: { quarters: HoldingQuarter[] }) {
   const cols = [...quarters].reverse() // oldest → newest, left → right
   const W = 1000
   const H = 210
-  const PAD = { l: 38, r: 172, t: 10, b: 24 }
+  const PAD = { l: 38, r: 64, t: 10, b: 24 }
   const t0 = Date.parse(cols[0].date)
   const t1 = Date.parse(cols[cols.length - 1].date)
   const x = (date: string) => PAD.l + ((Date.parse(date) - t0) / (t1 - t0 || 1)) * (W - PAD.l - PAD.r)
   const y = (v: number) => PAD.t + (1 - v / 100) * (H - PAD.t - PAD.b)
 
+  // Sponsor split per group (e.g. KRT: Sattva + Blackstone) when any filing
+  // carries the XBRL group breakdown; quarters without it stack their whole
+  // sponsor share in the first group's band so the history runs unbroken.
+  // Match groups BY LABEL across quarters — filings sort groups by size, so
+  // positional matching swaps series the quarter one group shrinks below the
+  // other (Embassy: Blackstone sell-downs vs the Embassy sponsor group).
+  const groupLabels: string[] = []
+  for (const q of cols)
+    for (const g of q.detail?.groups ?? [])
+      if (!groupLabels.includes(g.label)) groupLabels.push(g.label)
+  const GROUP_FILLS = [
+    { fill: 'fill-accent/80', swatch: 'fill-accent', legendBg: 'bg-accent' },
+    { fill: 'fill-gold/70', swatch: 'fill-gold', legendBg: 'bg-gold' },
+    { fill: 'fill-violet/70', swatch: 'fill-violet', legendBg: 'bg-violet' },
+  ]
+  const sponsorBands =
+    groupLabels.length > 1
+      ? groupLabels.map((label, i) => ({
+          label: `${label} (sponsor)`,
+          ...GROUP_FILLS[Math.min(i, GROUP_FILLS.length - 1)],
+          vals: cols.map((q) =>
+            q.detail?.groups?.length
+              ? q.detail.groups.find((g) => g.label === label)?.pct ?? 0
+              : i === 0
+                ? q.sponsor
+                : 0,
+          ),
+        }))
+      : [{ label: 'Sponsor', fill: 'fill-accent/80', swatch: 'fill-accent', legendBg: 'bg-accent', vals: cols.map((q) => q.sponsor) }]
+
   // Band values per quarter, bottom → top of the stack.
   const bands = [
-    { label: 'Sponsor', fill: 'fill-accent/80', swatch: 'fill-accent', vals: cols.map((q) => q.sponsor) },
-    { label: 'Institutions', fill: 'fill-info/70', swatch: 'fill-info', vals: cols.map((q) => q.detail?.inst ?? 0) },
-    { label: 'Non-institutions', fill: 'fill-warn/60', swatch: 'fill-warn', vals: cols.map((q) => q.detail?.noninst ?? 0) },
-    { label: 'Public — split not filed', fill: 'fill-subtle/25', swatch: 'fill-subtle', vals: cols.map((q) => (q.detail ? 0 : q.public)) },
+    ...sponsorBands,
+    { label: 'Institutions', fill: 'fill-info/70', swatch: 'fill-info', legendBg: 'bg-info', vals: cols.map((q) => q.detail?.inst ?? 0) },
+    { label: 'Non-institutions', fill: 'fill-warn/60', swatch: 'fill-warn', legendBg: 'bg-warn', vals: cols.map((q) => q.detail?.noninst ?? 0) },
+    { label: 'Public — split not filed', fill: 'fill-subtle/25', swatch: 'fill-subtle', legendBg: 'bg-subtle/25', vals: cols.map((q) => (q.detail ? 0 : q.public)) },
   ].filter((b) => b.vals.some((v) => v > 0))
+  // top edge of the whole sponsor stack (for the crisp outline stroke)
+  const sponsorTopIdx = bands.filter((b) => sponsorBands.includes(b as (typeof sponsorBands)[number])).length
 
   // cumulative tops: cum[k][i] = stacked height after band k at quarter i
   const zero = cols.map(() => 0)
@@ -409,6 +455,14 @@ function Trend({ quarters }: { quarters: HoldingQuarter[] }) {
       <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-subtle">
         Ownership trend — % of units outstanding, by filing
       </div>
+      <div className="mb-2 flex flex-wrap gap-x-5 gap-y-1">
+        {bands.map((b) => (
+          <span key={b.label} className="flex items-center gap-1.5 text-[11px] text-muted">
+            <span className={`h-2.5 w-2.5 shrink-0 rounded-sm ${b.legendBg}`} />
+            {b.label}
+          </span>
+        ))}
+      </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img"
         aria-label="Stacked area of sponsor, institutions and non-institutions share over filed quarters">
         {bands.map((b, k) => (
@@ -430,7 +484,7 @@ function Trend({ quarters }: { quarters: HoldingQuarter[] }) {
         ))}
         {/* sponsor top edge, crisp over the fills */}
         <path
-          d={`M${cols.map((q, i) => `${x(q.date).toFixed(1)},${y(cum[1][i]).toFixed(1)}`).join('L')}`}
+          d={`M${cols.map((q, i) => `${x(q.date).toFixed(1)},${y(cum[sponsorTopIdx][i]).toFixed(1)}`).join('L')}`}
           fill="none" strokeWidth="2" strokeLinejoin="round" className="stroke-accent" />
         {/* invisible per-quarter hover columns with a full tooltip */}
         {cols.map((q, i) => (
@@ -438,14 +492,20 @@ function Trend({ quarters }: { quarters: HoldingQuarter[] }) {
             width={halfGap * 2} height={H - PAD.t - PAD.b} fill="transparent">
             <title>
               {q.detail
-                ? `${q.label} · Sponsor ${fmtPct(q.sponsor)} · Institutions ${fmtPct(q.detail.inst)} · Non-institutions ${fmtPct(q.detail.noninst)}`
+                ? `${q.label} · ${
+                    q.detail.groups?.length
+                      ? q.detail.groups.map((g) => `${g.label} ${fmtPct(g.pct)}`).join(' · ')
+                      : `Sponsor ${fmtPct(q.sponsor)}`
+                  } · Institutions ${fmtPct(q.detail.inst)} · Non-institutions ${fmtPct(q.detail.noninst)}`
                 : `${q.label} · Sponsor ${fmtPct(q.sponsor)} · Public ${fmtPct(q.public)} (split not filed)`}
             </title>
           </rect>
         ))}
+        {/* right-edge: latest % per band (colour keys to the legend above) */}
         {ends.map(({ b, v, ly }) => (
-          <text key={b.label} x={W - PAD.r + 10} y={ly + 3.5} fontSize="11" className="fill-muted">
-            <tspan className={`${b.swatch} font-semibold tnum`}>{fmtPct(v)}</tspan> {b.label}
+          <text key={b.label} x={W - PAD.r + 8} y={ly + 3.5} fontSize="11"
+            className={`${b.swatch} font-semibold tnum`}>
+            {fmtPct(v)}
           </text>
         ))}
       </svg>

@@ -50,6 +50,18 @@
       ],
       "port": 5286,
       "cwd": "dashboard_v2"
+    },
+    {
+      "name": "v2-dashboard-node23-b",
+      "runtimeExecutable": "/opt/homebrew/bin/node",
+      "runtimeArgs": [
+        "node_modules/vite/bin/vite.js",
+        "--port",
+        "5293",
+        "--strictPort"
+      ],
+      "port": 5293,
+      "cwd": "dashboard_v2"
     }
   ]
 }
