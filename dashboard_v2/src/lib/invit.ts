@@ -55,6 +55,11 @@ export function invitPricePts(ctx: BenchCtx, key: string): Pt[] {
     .map((d) => ({ x: dTs(d), y: s[d] }))
 }
 
+/** Independent-valuation NAV/unit history as `{x,y}` points (empty if not curated). */
+export function invitNavPts(t: InvitTrust): Pt[] {
+  return (t.nav_hist ?? []).map(([d, v]) => ({ x: dTs(d), y: v }))
+}
+
 /** Earliest listing date across the given trusts — the rebased-chart window start. */
 export function invitFrom(ctx: BenchCtx, keys: string[]): string {
   let min: string | null = null

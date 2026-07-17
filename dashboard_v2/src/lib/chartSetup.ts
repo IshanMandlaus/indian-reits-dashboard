@@ -45,6 +45,27 @@ export function labelFont(): string {
   return `600 ${Math.round(10 * EXPORT_STATE.fontScale)}px sans-serif`
 }
 
+/**
+ * Draw a value label with a background-coloured halo so the number stays legible
+ * where it crosses a line, bar edge, or marker. Halo = plot background: pure
+ * black on the dark screen theme, white under the export re-theme. Respects the
+ * caller's font / textAlign / textBaseline; sets the fill to `color`.
+ */
+export function haloText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  color: string,
+): void {
+  ctx.lineWidth = 3
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = EXPORT_STATE.active ? '#ffffff' : '#000000'
+  ctx.strokeText(text, x, y)
+  ctx.fillStyle = color
+  ctx.fillText(text, x, y)
+}
+
 /** Register Chart.js pieces + zoom plugin and set dark defaults (idempotent). */
 export function setupCharts(): void {
   if (registered) return

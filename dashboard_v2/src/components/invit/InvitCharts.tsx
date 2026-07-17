@@ -24,6 +24,7 @@ import {
 } from '../../lib/bench'
 import {
   invitPricePts,
+  invitNavPts,
   invitFrom,
   invitCal,
   invitOwnLine,
@@ -32,6 +33,9 @@ import {
 } from '../../lib/invit'
 import { TimeSeriesChart, ZOOM_HINT } from '../charts/TimeSeriesChart'
 import { useChartCanvas } from '../charts/useChartCanvas'
+import { Chart, type Plugin } from 'chart.js'
+import { labelFont, haloText } from '../../lib/chartSetup'
+import { inr } from '../../lib/format'
 
 interface DS {
   label: string
@@ -105,6 +109,132 @@ export function InvitPriceChart({ ctx, trusts }: { ctx: BenchCtx; trusts: InvitT
       }
     />
   )
+}
+
+// ─── price vs NAV ───────────────────────────────────────────────────────────
+
+/**
+ * Unit price (solid, daily closes) vs independent-valuation NAV/unit (dashed
+ * stepped line, quarterly/FY points from `nav_hist`) — one colour per trust.
+ * NAV points get visible markers: PGInvIT/RIIT have few (or one) points and a
+ * bare line would vanish.
+ */
+export function InvitNavChart({ ctx, trusts }: { ctx: BenchCtx; trusts: InvitTrust[] }) {
+  return (
+    <TimeSeriesChart
+      deps={[ctx, trusts]}
+      height={360}
+      rangeBar
+      caption={ZOOM_HINT}
+      build={() => {
+        const cfg = timeLineConfig(
+          trusts.flatMap((t) => {
+            const nav = invitNavPts(t)
+            const px = invitPricePts(ctx, t.key)
+            const series: DS[] = []
+            if (px.length) series.push({ label: t.nse + ' price', data: px, borderColor: t.color, borderWidth: 1.7 })
+            if (nav.length)
+              series.push({ label: t.nse + ' NAV', data: nav, borderColor: t.color, borderWidth: 1.4, borderDash: [5, 4] })
+            return series
+          }),
+          '₹ / unit',
+        )
+        // NAV series: stepped between valuation dates + visible point markers.
+        for (const ds of cfg.data!.datasets as unknown as Record<string, unknown>[]) {
+          if (String(ds.label).endsWith('NAV')) {
+            ds.stepped = 'before'
+            ds.pointRadius = 2.5
+            ds.pointBackgroundColor = ds.borderColor
+          }
+        }
+        return cfg as ChartConfiguration
+      }}
+    />
+  )
+}
+
+// ─── P/NAV across trusts (bars) ─────────────────────────────────────────────
+
+/** Latest price ÷ latest disclosed NAV per trust, dashed guide at 1.0× parity. */
+export function InvitPNavChart({ ctx, trusts }: { ctx: BenchCtx; trusts: InvitTrust[] }) {
+  const { canvasRef } = useChartCanvas(() => buildPNav(ctx, trusts), [ctx, trusts])
+  return (
+    <div className="relative h-[240px]">
+      <canvas ref={canvasRef} />
+    </div>
+  )
+}
+
+function buildPNav(ctx: BenchCtx, trusts: InvitTrust[]): ChartConfiguration {
+  const rows = trusts
+    .filter((t) => t.nav > 0)
+    .map((t) => ({ t, price: lastInvitPx(ctx, t), pnav: lastInvitPx(ctx, t) / t.nav }))
+
+  const labelPlugin: Plugin = {
+    id: 'invitPNavLabels',
+    afterDatasetsDraw(ch) {
+      const c = ch.ctx
+      const mt = ch.getDatasetMeta(0)
+      c.save()
+      c.font = labelFont() // scales up during the SVG export capture
+      c.textAlign = 'left'
+      c.textBaseline = 'middle'
+      mt.data.forEach((el, i) => {
+        // flips to black ink in the export re-theme; haloed for legibility over gridlines
+        haloText(c, rows[i].pnav.toFixed(2) + '×', el.x + 6, el.y, Chart.defaults.color as string)
+      })
+      c.restore()
+    },
+  }
+  const parityPlugin: Plugin = {
+    id: 'invitPNavParity',
+    beforeDatasetsDraw(ch) {
+      const xs = ch.scales.x
+      if (!xs) return
+      const px = xs.getPixelForValue(1)
+      if (px < xs.left || px > xs.right) return
+      const c = ch.ctx
+      c.save()
+      c.strokeStyle = CHART.bookGrid
+      c.setLineDash([5, 4])
+      c.lineWidth = 1
+      c.beginPath()
+      c.moveTo(px, ch.chartArea.top)
+      c.lineTo(px, ch.chartArea.bottom)
+      c.stroke()
+      c.restore()
+    },
+  }
+
+  return {
+    type: 'bar',
+    data: {
+      labels: rows.map((r) => r.t.nse),
+      datasets: [{ data: rows.map((r) => r.pnav), backgroundColor: rows.map((r) => r.t.color) }],
+    },
+    options: {
+      ...baseOptions(),
+      indexAxis: 'y',
+      scales: {
+        x: { beginAtZero: true, grace: '12%', ticks: { callback: (v) => (+v).toFixed(1) + '×' }, grid: { display: false } },
+        y: { grid: { display: false } },
+      },
+      plugins: {
+        ...baseOptions().plugins,
+        legend: { display: false },
+        barValueLabels: { display: false }, // draws its own labels (labelPlugin)
+        tooltip: {
+          callbacks: {
+            label: (it) => {
+              const r = rows[it.dataIndex]
+              return ['P/NAV: ' + r.pnav.toFixed(2) + '×', 'price ' + inr(r.price, 2) + ' ÷ NAV ' + inr(r.t.nav, 2)]
+            },
+          },
+        },
+      },
+    },
+    plugins: [labelPlugin, parityPlugin],
+  }
 }
 
 // ─── rebased (basket ↔ own-life) ────────────────────────────────────────────

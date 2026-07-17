@@ -5,7 +5,7 @@
  * (Market page).
  */
 import type { ReitData, ReitKey, LivePrices, PriceHistory } from '../../types/data'
-import { CHART, baseOptions, labelFont } from '../../lib/chartSetup'
+import { CHART, baseOptions, labelFont, haloText } from '../../lib/chartSetup'
 import { REIT_KEYS, REIT_SHORT, lastPrice, navAtStrict } from '../../lib/reit'
 import { inr } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
@@ -56,8 +56,7 @@ function build(D: ReitData, k: ReitKey | null, LIVE: LivePrices | null, H: Price
       mt.data.forEach((el, i) => {
         // defaults.color === CHART.mut normally, but flips to black ink while the
         // SVG export's light re-theme is active — hardcoding CHART.mut exported grey
-        ctx.fillStyle = k && rows[i].key === k ? CHART.acc : (Chart.defaults.color as string)
-        ctx.fillText(rows[i].pb.toFixed(2) + '×', el.x + 6, el.y)
+        haloText(ctx, rows[i].pb.toFixed(2) + '×', el.x + 6, el.y, k && rows[i].key === k ? CHART.acc : (Chart.defaults.color as string))
       })
       ctx.restore()
     },

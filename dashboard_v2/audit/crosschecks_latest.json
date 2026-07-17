@@ -1,0 +1,704 @@
+[
+ {
+  "reit": "embassy",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2019",
+  "expected": "net 6.8% / gross 22.5%",
+  "actual": 6.84,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "embassy",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2019",
+  "expected": 381.6,
+  "actual": 362,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "embassy",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2020",
+  "expected": 1882.103,
+  "actual": 1882.09,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "embassy",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2020",
+  "expected": "net 16.0% / gross 17.0%",
+  "actual": 16.05,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "embassy",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2020",
+  "expected": 358.7,
+  "actual": 374.64,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "embassy",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2021",
+  "expected": 2036.068,
+  "actual": 1836.41,
+  "ok": false,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "embassy",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2021",
+  "expected": "net 20.8% / gross 22.8%",
+  "actual": 20.82,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "embassy",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2021",
+  "expected": 389.3,
+  "actual": 387.54,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "embassy",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2022",
+  "expected": 2062.609,
+  "actual": 2062.62,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "embassy",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2022",
+  "expected": "net 23.3% / gross 24.5%",
+  "actual": 23.32,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "embassy",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2022",
+  "expected": 399.4,
+  "actual": 393.9,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "embassy",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2023",
+  "expected": 2057.869,
+  "actual": 2057.88,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "embassy",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2023",
+  "expected": "net 27.2% / gross 28.8%",
+  "actual": 27.21,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "embassy",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2023",
+  "expected": 394.8,
+  "actual": 394.88,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "embassy",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2024",
+  "expected": 2021.849,
+  "actual": 2021.86,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "embassy",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2024",
+  "expected": "net 28.7% / gross 30.6%",
+  "actual": 28.74,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "embassy",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2024",
+  "expected": 412.8,
+  "actual": 401.59,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "embassy",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2025",
+  "expected": 2181.095,
+  "actual": 2181.1,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "embassy",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2025",
+  "expected": "net 31.6% / gross 32.7%",
+  "actual": 31.59,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "embassy",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2025",
+  "expected": 437.1,
+  "actual": 423.22,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "embassy",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2026",
+  "expected": 2396.266,
+  "actual": 2396.28,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "embassy",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2026",
+  "expected": "net 30.6% / gross 32.0%",
+  "actual": 30.599999999999998,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "embassy",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2026",
+  "expected": 512.1,
+  "actual": 491.62,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "mindspace",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2021",
+  "expected": 568.706,
+  "actual": 568.7,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "mindspace",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2021",
+  "expected": "net 13.2% / gross 14.6%",
+  "actual": 13.209999999999999,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "mindspace",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2021",
+  "expected": 360.3,
+  "actual": 345.2,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "mindspace",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2022",
+  "expected": 1094.122,
+  "actual": 1094.1,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "mindspace",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2022",
+  "expected": "net 15.5% / gross 16.8%",
+  "actual": 15.53,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "mindspace",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2022",
+  "expected": 376.0,
+  "actual": 364.9,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "mindspace",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2023",
+  "expected": 1132.668,
+  "actual": 1132.7,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "mindspace",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2023",
+  "expected": "net 18.0% / gross 19.5%",
+  "actual": 18.01,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "mindspace",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2023",
+  "expected": 387.5,
+  "actual": 371.9,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "mindspace",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2024",
+  "expected": 1136.226,
+  "actual": 1136.2,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "mindspace",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2024",
+  "expected": "net 22.2% / gross 23.3%",
+  "actual": 22.23,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "mindspace",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2024",
+  "expected": 392.1,
+  "actual": 380.5,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "mindspace",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2025",
+  "expected": 1337.15,
+  "actual": 1312.1,
+  "ok": false,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "mindspace",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2025",
+  "expected": "net 25.9% / gross 27.6%",
+  "actual": 25.88,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "mindspace",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2025",
+  "expected": 445.3,
+  "actual": 431.7,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "mindspace",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2026",
+  "expected": 1561.851,
+  "actual": 1516.36,
+  "ok": false,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "mindspace",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2026",
+  "expected": "net 24.7% / gross 27.2%",
+  "actual": 24.69,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "mindspace",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2026",
+  "expected": 553.4,
+  "actual": 527.01,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "brookfield",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2021",
+  "expected": "net 18.3% / gross 18.3%",
+  "actual": 18.27,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "brookfield",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2021",
+  "expected": 310.4,
+  "actual": 316.59,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "brookfield",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2022",
+  "expected": 740.549,
+  "actual": 685.66,
+  "ok": false,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "brookfield",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2022",
+  "expected": "net 32.3% / gross 32.3%",
+  "actual": 32.28,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "brookfield",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2022",
+  "expected": 323.3,
+  "actual": 333.81,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "brookfield",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2023",
+  "expected": 676.882,
+  "actual": 676.88,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "brookfield",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2023",
+  "expected": "net 33.2% / gross 33.2%",
+  "actual": 33.239999999999995,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "brookfield",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2023",
+  "expected": 326.7,
+  "actual": 332.08,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "brookfield",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2024",
+  "expected": 779.385,
+  "actual": 774.49,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "brookfield",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2024",
+  "expected": "net 40.2% / gross 41.4%",
+  "actual": 38.2,
+  "ok": false,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "brookfield",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2024",
+  "expected": 398.3,
+  "actual": 332.6,
+  "ok": false,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "brookfield",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2025",
+  "expected": 1169.919,
+  "actual": 1053.68,
+  "ok": false,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "brookfield",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2025",
+  "expected": "net 26.7% / gross 28.2%",
+  "actual": 28.110000000000003,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "brookfield",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2025",
+  "expected": 458.1,
+  "actual": 336.35,
+  "ok": false,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "brookfield",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2026",
+  "expected": 1603.695,
+  "actual": 1516.18,
+  "ok": false,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "brookfield",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2026",
+  "expected": "net 30.9% / gross 32.1%",
+  "actual": 34.02,
+  "ok": false,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "brookfield",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2026",
+  "expected": 521.4,
+  "actual": 386.66,
+  "ok": false,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "nexus",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2024",
+  "expected": 1071.862,
+  "actual": 1071.86,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "nexus",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2024",
+  "expected": "net 15.6% / gross 15.7%",
+  "actual": 15.6,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "nexus",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2024",
+  "expected": 150.9,
+  "actual": 98.58,
+  "ok": false,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "nexus",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2025",
+  "expected": 1265.025,
+  "actual": 1265.03,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "nexus",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2025",
+  "expected": "net 18.1% / gross 18.1%",
+  "actual": 18.05,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "nexus",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2025",
+  "expected": 159.1,
+  "actual": 93.32,
+  "ok": false,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "nexus",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2026",
+  "expected": 1375.62,
+  "actual": 1375.77,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "nexus",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2026",
+  "expected": "net 19.1% / gross 19.2%",
+  "actual": 19.11,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "nexus",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2026",
+  "expected": 172.1,
+  "actual": 87.2,
+  "ok": false,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "krt",
+  "check": "dpu*units\u2248dist_total",
+  "fy": "FY2026",
+  "expected": 2101.906,
+  "actual": 2101.92,
+  "ok": true,
+  "note": "dist \u20b9cr = dpu \u20b9 \u00d7 units mn \u00f7 10; small gaps = intra-year unit count changes"
+ },
+ {
+  "reit": "krt",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2026",
+  "expected": "net 17.4% / gross 18.3%",
+  "actual": 17.4,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "krt",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2026",
+  "expected": 125.6,
+  "actual": 123.61,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "bagmane",
+  "check": "ltv_vs_debt/gav",
+  "fy": "FY2026",
+  "expected": "net 6.8% / gross 7.5%",
+  "actual": 6.819999999999999,
+  "ok": true,
+  "note": "ltv should be near net- or gross-debt/GAV"
+ },
+ {
+  "reit": "bagmane",
+  "check": "nav_sanity(gav-debt+cash)/units",
+  "fy": "FY2026",
+  "expected": 110.3,
+  "actual": 108.49,
+  "ok": true,
+  "note": "loose: ignores other assets/liabilities"
+ },
+ {
+  "reit": "embassy",
+  "check": "\u03a3spv.value_cr\u2248latest gav",
+  "fy": "FY2026",
+  "expected": 69943.74,
+  "actual": 70540.0,
+  "ok": true,
+  "note": "SpvTable warns >5%; spv as-of may differ from FY-end"
+ },
+ {
+  "reit": "mindspace",
+  "check": "\u03a3spv.value_cr\u2248latest gav",
+  "fy": "FY2024",
+  "expected": 47634.97,
+  "actual": 47635.0,
+  "ok": true,
+  "note": "SpvTable warns >5%; spv as-of may differ from FY-end"
+ },
+ {
+  "reit": "brookfield",
+  "check": "\u03a3spv.value_cr\u2248latest gav",
+  "fy": "FY2024",
+  "expected": 56528.1,
+  "actual": 56528.1,
+  "ok": true,
+  "note": "SpvTable warns >5%; spv as-of may differ from FY-end"
+ },
+ {
+  "reit": "nexus",
+  "check": "\u03a3spv.value_cr\u2248latest gav",
+  "fy": "FY2021",
+  "expected": 32240.6,
+  "actual": 30558.3,
+  "ok": false,
+  "note": "SpvTable warns >5%; spv as-of may differ from FY-end"
+ },
+ {
+  "reit": "krt",
+  "check": "\u03a3spv.value_cr\u2248latest gav",
+  "fy": "FY2019",
+  "expected": 67411.1,
+  "actual": 67411.0,
+  "ok": true,
+  "note": "SpvTable warns >5%; spv as-of may differ from FY-end"
+ },
+ {
+  "reit": "bagmane",
+  "check": "\u03a3spv.value_cr\u2248latest gav",
+  "fy": "FY2019",
+  "expected": 40263.49,
+  "actual": 40263.5,
+  "ok": true,
+  "note": "SpvTable warns >5%; spv as-of may differ from FY-end"
+ }
+]

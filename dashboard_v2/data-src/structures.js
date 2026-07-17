@@ -62,7 +62,7 @@ window.REIT_STRUCTURES = {
   sponsors: [{name:'Blackstone (Sponsor Group)', stake:'22%'}], public_stake:'~78%',
   trustee: 'Axis Trustee Services Ltd',
   manager: 'Nexus Select Mall Management Pvt Ltd',
-  notes: 'Trust holds most SPVs ~100% (99.45% in select cases). ITIPL (Treasure Island) is 50% — balance with JV partner. NSRPL entitled to 64.9% economic interest in ITIPL per SAA.',
+  notes: 'Trust holds most SPVs ~100% (99.45% in select cases). ITIPL (Treasure Island) is 50:50 with a JV partner. NSRPL entitled to 64.9% of the economic interest from Nexus Shantiniketan per SAA.',
   spvs: [
    {name:'SIPL', stake:100, assets:['Nexus Select Citywalk (Delhi)','Nexus Seawoods (Navi Mumbai)','Nexus MBD (Ludhiana)']},
    {name:'CSJIPL', stake:100, assets:['Nexus Elante Complex (Chandigarh)']},

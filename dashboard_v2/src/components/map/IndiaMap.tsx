@@ -220,7 +220,7 @@ export function IndiaMap({ assets, view, sizeMetric, colorMode, stateMetric, hov
         text: [colorMode === 'occ' ? 'high occ' : 'high rent', colorMode === 'occ' ? 'low' : 'low'],
         textStyle: { color: P.muted, fontSize: 10 },
         inRange: { color: ['#f87171', '#fbbf24', '#34d399'] },
-        formatter: (v: number) => (colorMode === 'occ' ? Math.round(v * 100) + '%' : '₹' + Math.round(v)),
+        formatter: (v: number) => (colorMode === 'occ' ? Math.round(v * 100) + '%' : '₹' + (v % 1 ? v.toFixed(1) : v)),
       })
     }
 

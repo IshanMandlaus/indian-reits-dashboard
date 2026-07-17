@@ -61,6 +61,11 @@ const SERIES_LIGHT: Record<string, string> = {
   '176,176,176': '#6b7280', // pie grey → gray-500
 }
 
+/** Print-legible variant of a screen series colour, for draw-time label plugins. */
+export function seriesInk(color: string): string {
+  return remapColor(color) as string
+}
+
 /** Remap one colour value (hex6/hex8/rgb/rgba string, or array of them) via SERIES_LIGHT. */
 function remapColor(v: unknown): unknown {
   if (Array.isArray(v)) {

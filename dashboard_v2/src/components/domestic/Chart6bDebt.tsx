@@ -6,7 +6,7 @@
  * (fin.ltv / fin.cost_debt). Companion to Chart 6 (the debt-vs-equity split).
  */
 import type { ReitData, ReitKey } from '../../types/data'
-import { CHART, baseOptions, EXPORT_STATE, labelFont } from '../../lib/chartSetup'
+import { CHART, baseOptions, EXPORT_STATE, labelFont, haloText } from '../../lib/chartSetup'
 import { fmtCrLabel } from '../../lib/barValueLabels'
 import { inr } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
@@ -69,8 +69,7 @@ const leverageLabels: Plugin = {
       const cx = Math.min(Math.max(bar.x, 26), ch.width - 26)
       // stack upward from the bar top: last row sits closest to the bar
       rows.forEach(([text, color], r) => {
-        ctx.fillStyle = color
-        ctx.fillText(text, cx, bar.y - 5 - (rows.length - 1 - r) * lineH)
+        haloText(ctx, text, cx, bar.y - 5 - (rows.length - 1 - r) * lineH, color)
       })
     })
     ctx.restore()

@@ -5,7 +5,7 @@
  * Indian_REITs_Key_Financials_FILLED (fin.msf_total / fin.msf_op).
  */
 import type { ReitData, ReitKey } from '../../types/data'
-import { CHART, baseOptions, EXPORT_STATE, labelFont } from '../../lib/chartSetup'
+import { CHART, baseOptions, EXPORT_STATE, labelFont, haloText } from '../../lib/chartSetup'
 import { fmtCrLabel, LabelPlacer } from '../../lib/barValueLabels'
 import { inr } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
@@ -44,7 +44,7 @@ const exportValueLabels: Plugin = {
       const tw = ctx.measureText(text).width
       const cx = Math.min(Math.max(x, tw / 2 + 1), ch.width - tw / 2 - 1)
       const top = placer.place(cx - tw / 2, prefTop, tw, fontPx, dir)
-      ctx.fillText(text, cx, top)
+      haloText(ctx, text, cx, top, Chart.defaults.color as string)
     }
     // line labels first — they hug their points; the bar label then steps
     // around them if the line passes near the bar top

@@ -49,7 +49,7 @@ window.REIT_LINKS = {
  ],
  bagmane: [
   {label:'Final Offer Document / RHP (May 2026)', url:'https://www.bagmanereit.com/media/investor_reports/Final_Offer_Document.pdf', latest:true, type:'Offer document'},
-  {label:'Detailed Valuation Report (IPO, Dec 2025 values)', url:'https://www.bagmanereit.com/media/investor_reports/Summary_Valuation_Report.pdf', latest:true, type:'Valuation report'},
+  {label:'Valuation Report (IPO, Dec 2025 values)', url:'https://www.bagmanereit.com/media/investor_reports/Summary_Valuation_Report.pdf', latest:true, type:'Valuation report'},
   {label:'Industry Report — CBRE (Apr 2026)', url:'https://www.bagmanereit.com/media/investor_reports/industry_report.pdf', latest:false, type:'Other'},
   // Listed 26 May 2026 — first earnings presentation / annual report not yet published.
  ],

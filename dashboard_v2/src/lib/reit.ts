@@ -29,7 +29,7 @@ const DAY = 864e5
 
 // ─── date helpers ───────────────────────────────────────────────────────────
 /** Indian FY label → 31 Mar of that FY (e.g. "FY2022" → 31 Mar 2022). */
-export const fyTs = (fy: string): number => new Date(+fy.slice(2, 6), 2, 31).getTime()
+export const fyTs = (fy: string): number => Date.UTC(+fy.slice(2, 6), 2, 31)
 export const dTs = (d: string): number => new Date(d).getTime()
 /** Quarterly period "2022-09" → ~quarter end (28th of the month). */
 export const perTs = (per: string): number =>

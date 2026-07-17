@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="745" viewBox="0 0 1120 745" font-family="system-ui,-apple-system,'Segoe UI',sans-serif">
+<rect width="1120" height="745" fill="#ffffff"/>
+<rect x="6" y="6" width="1108" height="733" fill="none" stroke="#000000" stroke-width="1.5"/>
+<text x="48" y="46" font-size="26" font-weight="700" fill="#000000">Mindspace REIT — tenant mix by sector (FY26)</text>
+<text x="48" y="76" font-size="17" fill="#000000">% of Gross Contracted Rentals as of March 31, 2026</text>
+<line x1="48" y1="100" x2="1072" y2="100" stroke="#000000" stroke-width="1"/>
+<text x="48" y="136" font-size="26" font-weight="700" fill="#000000">72%</text>
+<text x="48" y="158" font-size="13.5" fill="#000000">of rentals from foreign</text>
+<text x="48" y="175" font-size="13.5" fill="#000000">MNCs</text>
+<text x="252.8" y="136" font-size="26" font-weight="700" fill="#000000">51.7%</text>
+<text x="252.8" y="158" font-size="13.5" fill="#000000">of rentals from GCCs</text>
+<text x="457.6" y="136" font-size="26" font-weight="700" fill="#000000">40%</text>
+<text x="457.6" y="158" font-size="13.5" fill="#000000">from Fortune 500</text>
+<text x="457.6" y="175" font-size="13.5" fill="#000000">companies</text>
+<text x="662.4000000000001" y="136" font-size="26" font-weight="700" fill="#000000">13 yrs</text>
+<text x="662.4000000000001" y="158" font-size="13.5" fill="#000000">avg. tenure of top 10</text>
+<text x="662.4000000000001" y="175" font-size="13.5" fill="#000000">tenants</text>
+<text x="867.2" y="136" font-size="26" font-weight="700" fill="#000000">34</text>
+<text x="867.2" y="158" font-size="13.5" fill="#000000">occupiers in multiple</text>
+<text x="867.2" y="175" font-size="13.5" fill="#000000">parks</text>
+<line x1="48" y1="189" x2="1072" y2="189" stroke="#000000" stroke-width="1"/>
+<line x1="400" y1="213" x2="400" y2="617" stroke="#000000" stroke-width="1.2"/>
+<text x="388" y="242.0" font-size="16" fill="#000000" text-anchor="end">Technology (Health Tech, Dev. &amp; Processes)</text>
+<rect x="400" y="225.0" width="620.0" height="24" fill="#0d9488"/>
+<text x="1030.0" y="242.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">37.4%</text>
+<text x="388" y="282.0" font-size="16" fill="#000000" text-anchor="end">Financial Services</text>
+<rect x="400" y="265.0" width="278.5" height="24" fill="#0d9488"/>
+<text x="688.5" y="282.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">16.8%</text>
+<text x="388" y="322.0" font-size="16" fill="#000000" text-anchor="end">Engineering &amp; Manufacturing</text>
+<rect x="400" y="305.0" width="167.4" height="24" fill="#0d9488"/>
+<text x="577.4" y="322.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">10.1%</text>
+<text x="388" y="362.0" font-size="16" fill="#000000" text-anchor="end">Telecom &amp; Media</text>
+<rect x="400" y="345.0" width="160.8" height="24" fill="#0d9488"/>
+<text x="570.8" y="362.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">9.7%</text>
+<text x="388" y="402.0" font-size="16" fill="#000000" text-anchor="end">Flexible workspace</text>
+<rect x="400" y="385.0" width="142.6" height="24" fill="#0d9488"/>
+<text x="552.6" y="402.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">8.6%</text>
+<text x="388" y="442.0" font-size="16" fill="#000000" text-anchor="end">Manufacturing &amp; Processes</text>
+<rect x="400" y="425.0" width="114.4" height="24" fill="#0d9488"/>
+<text x="524.4" y="442.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">6.9%</text>
+<text x="388" y="482.0" font-size="16" fill="#000000" text-anchor="end">Professional services</text>
+<rect x="400" y="465.0" width="87.9" height="24" fill="#0d9488"/>
+<text x="497.9" y="482.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">5.3%</text>
+<text x="388" y="522.0" font-size="16" fill="#000000" text-anchor="end">Healthcare &amp; Pharma</text>
+<rect x="400" y="505.0" width="36.5" height="24" fill="#0d9488"/>
+<text x="446.5" y="522.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">2.2%</text>
+<text x="388" y="562.0" font-size="16" fill="#000000" text-anchor="end">E-commerce</text>
+<rect x="400" y="545.0" width="16.6" height="24" fill="#0d9488"/>
+<text x="426.6" y="562.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">1%</text>
+<text x="388" y="602.0" font-size="16" fill="#000000" text-anchor="end">Others</text>
+<rect x="400" y="585.0" width="33.2" height="24" fill="#0d9488"/>
+<text x="443.2" y="602.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">2%</text>
+<text x="48" y="653" font-size="13.5" fill="#000000">Mindspace does not name individual tenants or their rental shares in the annual-report tenant-portfolio page.</text>
+<text x="48" y="672" font-size="13.5" fill="#000000">Fortune 500 share per the Fortune Global 500 list of 2025. Foreign-MNC share is % of gross contracted rentals as of March 31, 2026.</text>
+<text x="48" y="691" font-size="13.5" fill="#000000">Source: Mindspace REIT Annual Report FY2025-26, “Who Anchor Our Growth” tenant portfolio page (Diversified Tenant Mix, % of GCR;</text>
+<text x="48" y="710" font-size="13.5" fill="#000000">Tenant Profile Snapshot).</text>
+</svg>

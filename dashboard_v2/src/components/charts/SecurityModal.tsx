@@ -66,7 +66,11 @@ export function SecurityModal({ data, onClose }: { data: SecModalData | null; on
   const dates = Object.keys(data.series).sort()
   const lastHist = dates.length ? data.series[dates[dates.length - 1]] : null
   const lastP = data.livePrice ?? lastHist
-  const prevP = dates.length > 1 ? data.series[dates[dates.length - (data.livePrice ? 1 : 2)]] : null
+  // day-change baseline = last close STRICTLY BEFORE the live quote's day — when
+  // the history already contains today's close, series[last] is today, not "prev"
+  const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+  const prevIdx = data.livePrice != null && dates[dates.length - 1] !== todayIST ? 1 : 2
+  const prevP = dates.length > 1 ? data.series[dates[dates.length - prevIdx]] : null
   const chg = prevP && lastP ? (lastP / prevP - 1) * 100 : null
   const hasHistory = dates.length >= 2
 

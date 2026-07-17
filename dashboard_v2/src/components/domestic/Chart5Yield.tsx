@@ -5,7 +5,7 @@
  */
 import { useState } from 'react'
 import type { ReitData, ReitKey } from '../../types/data'
-import { CHART, baseOptions, labelFont } from '../../lib/chartSetup'
+import { CHART, baseOptions, labelFont, haloText } from '../../lib/chartSetup'
 import { inr } from '../../lib/format'
 import { perTs, fyTs } from '../../lib/reit'
 import { useChartCanvas } from '../charts/useChartCanvas'
@@ -99,8 +99,7 @@ function build(D: ReitData, k: ReitKey, mode: 'q' | 'fy'): ChartConfiguration {
       ctx.save()
       ctx.font = labelFont() // scales up during the SVG export capture
       ctx.textAlign = 'center'
-      ctx.fillStyle = CHART.gold
-      mt.data.forEach((el, i) => ctx.fillText(yl[i] + '%', el.x, el.y - 10))
+      mt.data.forEach((el, i) => haloText(ctx, yl[i] + '%', el.x, el.y - 10, CHART.gold))
       ctx.restore()
     },
   }

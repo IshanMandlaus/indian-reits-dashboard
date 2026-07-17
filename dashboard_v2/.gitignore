@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# XBRL filing cache (server/fetchers/holdings.ts)
+server/.cache/

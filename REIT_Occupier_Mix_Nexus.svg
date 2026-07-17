@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="823" viewBox="0 0 1120 823" font-family="system-ui,-apple-system,'Segoe UI',sans-serif">
+<rect width="1120" height="823" fill="#ffffff"/>
+<rect x="6" y="6" width="1108" height="811" fill="none" stroke="#000000" stroke-width="1.5"/>
+<text x="48" y="46" font-size="26" font-weight="700" fill="#000000">Nexus Select Trust — rental mix by trade category (FY26)</text>
+<text x="48" y="76" font-size="17" fill="#000000">Trade category share of gross rentals (%)</text>
+<line x1="48" y1="100" x2="1072" y2="100" stroke="#000000" stroke-width="1"/>
+<text x="48" y="136" font-size="26" font-weight="700" fill="#000000">45%</text>
+<text x="48" y="158" font-size="13.5" fill="#000000">of gross rentals expire</text>
+<text x="48" y="175" font-size="13.5" fill="#000000">FY27-30</text>
+<text x="389.3333333333333" y="136" font-size="26" font-weight="700" fill="#000000">~1.2 mn sf</text>
+<text x="389.3333333333333" y="158" font-size="13.5" fill="#000000">avg. annual lease expiry</text>
+<text x="389.3333333333333" y="175" font-size="13.5" fill="#000000">FY27-30</text>
+<text x="730.6666666666666" y="136" font-size="26" font-weight="700" fill="#000000">~20%</text>
+<text x="730.6666666666666" y="158" font-size="13.5" fill="#000000">avg. mark-to-market</text>
+<text x="730.6666666666666" y="175" font-size="13.5" fill="#000000">potential</text>
+<line x1="48" y1="189" x2="1072" y2="189" stroke="#000000" stroke-width="1"/>
+<line x1="400" y1="213" x2="400" y2="657" stroke="#000000" stroke-width="1.2"/>
+<text x="388" y="242.0" font-size="16" fill="#000000" text-anchor="end">Apparel &amp; Accessories</text>
+<rect x="400" y="225.0" width="620.0" height="24" fill="#9333ea"/>
+<text x="1030.0" y="242.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">42%</text>
+<text x="388" y="282.0" font-size="16" fill="#000000" text-anchor="end">Food &amp; Beverages (F&amp;B)</text>
+<rect x="400" y="265.0" width="177.1" height="24" fill="#9333ea"/>
+<text x="587.1" y="282.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">12%</text>
+<text x="388" y="322.0" font-size="16" fill="#000000" text-anchor="end">Footwear &amp; Fitness</text>
+<rect x="400" y="305.0" width="132.9" height="24" fill="#9333ea"/>
+<text x="542.9" y="322.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">9%</text>
+<text x="388" y="362.0" font-size="16" fill="#000000" text-anchor="end">FEC and Multiplex</text>
+<rect x="400" y="345.0" width="132.9" height="24" fill="#9333ea"/>
+<text x="542.9" y="362.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">9%</text>
+<text x="388" y="402.0" font-size="16" fill="#000000" text-anchor="end">Departmental Store</text>
+<rect x="400" y="385.0" width="103.3" height="24" fill="#9333ea"/>
+<text x="513.3" y="402.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">7%</text>
+<text x="388" y="442.0" font-size="16" fill="#000000" text-anchor="end">Beauty &amp; Personal Care</text>
+<rect x="400" y="425.0" width="103.3" height="24" fill="#9333ea"/>
+<text x="513.3" y="442.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">7%</text>
+<text x="388" y="482.0" font-size="16" fill="#000000" text-anchor="end">Electronics</text>
+<rect x="400" y="465.0" width="59.0" height="24" fill="#9333ea"/>
+<text x="469.0" y="482.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">4%</text>
+<text x="388" y="522.0" font-size="16" fill="#000000" text-anchor="end">Hypermarket</text>
+<rect x="400" y="505.0" width="44.3" height="24" fill="#9333ea"/>
+<text x="454.3" y="522.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">3%</text>
+<text x="388" y="562.0" font-size="16" fill="#000000" text-anchor="end">Jewellery</text>
+<rect x="400" y="545.0" width="29.5" height="24" fill="#9333ea"/>
+<text x="439.5" y="562.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">2%</text>
+<text x="388" y="602.0" font-size="16" fill="#000000" text-anchor="end">Homeware</text>
+<rect x="400" y="585.0" width="29.5" height="24" fill="#9333ea"/>
+<text x="439.5" y="602.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">2%</text>
+<text x="388" y="642.0" font-size="16" fill="#000000" text-anchor="end">Others</text>
+<rect x="400" y="625.0" width="44.3" height="24" fill="#9333ea"/>
+<text x="454.3" y="642.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">3%</text>
+<text x="48" y="693" font-size="13.5" fill="#000000">Nexus is a retail portfolio, so its mix is by trade category (not office occupier sectors) and it does not name tenants or their</text>
+<text x="48" y="712" font-size="13.5" fill="#000000">rental shares on this page.</text>
+<text x="48" y="731" font-size="13.5" fill="#000000">Lease expiry (% of gross rentals): FY27 11%, FY28 14%, FY29 11%, FY30 9% — with ≈ 20% embedded mark-to-market upside on expiring</text>
+<text x="48" y="750" font-size="13.5" fill="#000000">space.</text>
+<text x="48" y="769" font-size="13.5" fill="#000000">Source: Nexus Select Trust Annual Report 2025-26, p.218 (Rental Contribution by Trade Category; Lease Expiry Profile). “Others”</text>
+<text x="48" y="788" font-size="13.5" fill="#000000">includes kids, luggage, homeware and temporary kiosks.</text>
+</svg>

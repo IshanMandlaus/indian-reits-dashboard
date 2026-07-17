@@ -1,0 +1,92 @@
+[
+ {
+  "reit": "mindspace",
+  "metric": "revenue",
+  "fy": "FY2023",
+  "dash": 2282.1,
+  "workbook": null,
+  "status": "wb_missing",
+  "source": null
+ },
+ {
+  "reit": "mindspace",
+  "metric": "ndcf",
+  "fy": "FY2023",
+  "dash": 1135.5,
+  "workbook": null,
+  "status": "wb_missing",
+  "source": null
+ },
+ {
+  "reit": "mindspace",
+  "metric": "dist_total",
+  "fy": "FY2023",
+  "dash": 1132.7,
+  "workbook": null,
+  "status": "wb_missing",
+  "source": null
+ },
+ {
+  "reit": "mindspace",
+  "metric": "dpu",
+  "fy": "FY2023",
+  "dash": 19.1,
+  "workbook": null,
+  "status": "wb_missing",
+  "source": null
+ },
+ {
+  "reit": "mindspace",
+  "metric": "networth",
+  "fy": "FY2023",
+  "dash": 14782.7,
+  "workbook": null,
+  "status": "wb_missing",
+  "source": null
+ },
+ {
+  "reit": "mindspace",
+  "metric": "nav",
+  "fy": "FY2023",
+  "dash": 371.9,
+  "workbook": null,
+  "status": "wb_missing",
+  "source": null
+ },
+ {
+  "reit": "mindspace",
+  "metric": "units_mn",
+  "fy": "FY2023",
+  "dash": 593.02,
+  "workbook": null,
+  "status": "wb_missing",
+  "source": null
+ },
+ {
+  "reit": "brookfield",
+  "metric": "units_mn",
+  "fy": "FY2021",
+  "dash": 302.8,
+  "workbook": 302801601,
+  "status": "DIFF",
+  "source": "Standalone_Financials_Q4_FY_2023_9aedac0735.pdf p9 (Changes in Unit Capital); orig:'Balance as on 01 April 2021 302,801,601'"
+ },
+ {
+  "reit": "brookfield",
+  "metric": "units_mn",
+  "fy": "FY2022",
+  "dash": 335.09,
+  "workbook": 335087073,
+  "status": "DIFF",
+  "source": "Standalone_Financials_Q4_FY_2023_9aedac0735.pdf p9; orig:'Balance ... 31 March 2022 335,087,073'"
+ },
+ {
+  "reit": "brookfield",
+  "metric": "units_mn",
+  "fy": "FY2023",
+  "dash": 335.09,
+  "workbook": 335087073,
+  "status": "DIFF",
+  "source": "Standalone_Financials_Q4_FY_2023_9aedac0735.pdf p9; orig:'Balance ... 31 March 2023 335,087,073'"
+ }
+]

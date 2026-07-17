@@ -5,7 +5,7 @@
  * overlay on a 2nd axis. Ported from v1 chart2().
  */
 import type { ReitData, ReitKey, ReitValHy, BlocksLive } from '../../types/data'
-import { CHART, EXPORT_STATE, baseOptions, zoomOptions, rescaleY, labelFont, type ChartWithRange, type RangeConfig } from '../../lib/chartSetup'
+import { CHART, EXPORT_STATE, baseOptions, zoomOptions, rescaleY, labelFont, haloText, type ChartWithRange, type RangeConfig } from '../../lib/chartSetup'
 import { LabelPlacer } from '../../lib/barValueLabels'
 import { navSteps, navAt, fyTs, fmtM, fmtDay } from '../../lib/reit'
 import { inr, pct } from '../../lib/format'
@@ -76,13 +76,22 @@ function build(
 
   const f2 = D.fin[k]
   const bvd = D.bv[k] || {}
+  // Units outstanding AS OF ts: last FY-end count on/before the date, plus any
+  // issuances between that FY-end and the date (mid-year valuations must not
+  // use the later FY-end count — audit rounds 2–3, chart_2 slice).
+  const issUnitsBetween = (a: number, b: number): number =>
+    (D.issuances[k] || []).reduce((s, e) => {
+      const t = new Date(e.date + '-15').getTime()
+      return t > a && t <= b ? s + (e.units_mn || 0) : s
+    }, 0)
   const unitsAtDate = (ts: number): number | null => {
-    const dt = new Date(ts)
-    const yy = dt.getMonth() >= 3 ? dt.getFullYear() + 1 : dt.getFullYear()
-    let i = f2.years.indexOf('FY' + yy)
-    if (i < 0) i = f2.years.length - 1
-    for (let j = i; j >= 0; j--) if (f2.units_mn[j] != null) return f2.units_mn[j]
-    for (let j = i + 1; j < f2.years.length; j++) if (f2.units_mn[j] != null) return f2.units_mn[j]
+    for (let j = f2.years.length - 1; j >= 0; j--)
+      if (f2.units_mn[j] != null && fyTs(f2.years[j]) <= ts)
+        return f2.units_mn[j]! + issUnitsBetween(fyTs(f2.years[j]), ts)
+    // date precedes the first reported FY-end: walk back from the next FY-end
+    for (let j = 0; j < f2.years.length; j++)
+      if (f2.units_mn[j] != null && fyTs(f2.years[j]) > ts)
+        return f2.units_mn[j]! - issUnitsBetween(ts, fyTs(f2.years[j]))
     return null
   }
   const HY = valHy?.[k] || null
@@ -113,7 +122,7 @@ function build(
   // Embassy only: TechVillage single-asset accretion (FV ₹cr vs Dec-2020 cost)
   const etvHY = (HY || []).filter((v) => v.tv != null)
   const etvCost = 9782
-  const etvAcqTs = new Date('2020-12-15').getTime()
+  const etvAcqTs = new Date('2020-12-24').getTime()
   const etvFV = etvHY.length
     ? [{ x: etvAcqTs, y: etvCost }].concat(etvHY.map((v) => ({ x: new Date(v.d).getTime(), y: v.tv! })))
     : []
@@ -140,22 +149,20 @@ function build(
         ch.getDatasetMeta(1).data.forEach((el, i) => {
           const p = iss[i]
           if (p && p.pd != null) {
-            ctx.fillStyle = p.pd >= 0 ? CHART.grn : CHART.red
             const text = pct(p.pd)
             const tw = ctx.measureText(text).width
             const top = placer.place(el.x - tw / 2, el.y - 12 - fontPx, tw, fontPx, -1)
-            ctx.fillText(text, el.x, top + fontPx)
+            haloText(ctx, text, el.x, top + fontPx, p.pd >= 0 ? CHART.grn : CHART.red)
           }
         })
       if (ch.isDatasetVisible(2))
         ch.getDatasetMeta(2).data.forEach((el, i) => {
           const p = blk[i]
           if (p && p.pd != null) {
-            ctx.fillStyle = CHART.info // draw-time read so the SVG export's light palette applies
             const text = pct(p.pd)
             const tw = ctx.measureText(text).width
             const top = placer.place(el.x - tw / 2, el.y + 8, tw, fontPx, 1)
-            ctx.fillText(text, el.x, top + fontPx)
+            haloText(ctx, text, el.x, top + fontPx, CHART.info) // draw-time read so the SVG export's light palette applies
           }
         })
       ctx.restore()

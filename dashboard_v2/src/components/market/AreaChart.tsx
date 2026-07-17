@@ -32,7 +32,7 @@ function build(ctx: BenchCtx): ChartConfiguration {
       maintainAspectRatio: false,
       plugins: {
         legend: { position: 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 14 } },
-        barValueLabels: { format: (v) => Math.round(v) + ' msf' }, // export-only stack totals
+        barValueLabels: { format: (v) => v.toFixed(1) + ' msf' }, // export-only stack totals
       },
       scales: {
         x: { stacked: true, grid: { display: false } },

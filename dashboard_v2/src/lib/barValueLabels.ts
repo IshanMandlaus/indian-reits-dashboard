@@ -11,7 +11,7 @@
  * ink and print font scale apply (same pattern as Chart 8's P/B labels).
  */
 import { Chart, CategoryScale, type Plugin, type ChartType } from 'chart.js'
-import { EXPORT_STATE, labelFont } from './chartSetup'
+import { EXPORT_STATE, labelFont, haloText } from './chartSetup'
 
 declare module 'chart.js' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -144,7 +144,7 @@ export const barValueLabels: Plugin = {
         ctx.textAlign = fitsOutside ? 'left' : 'right'
         const left = fitsOutside ? el.x + pad : el.x - pad - tw
         const top = placer.place(left, el.y - fontPx / 2, tw, fontPx, -1)
-        ctx.fillText(text, fitsOutside ? el.x + pad : el.x - pad, top + fontPx / 2)
+        haloText(ctx, text, fitsOutside ? el.x + pad : el.x - pad, top + fontPx / 2, Chart.defaults.color as string)
       } else {
         ctx.textAlign = 'center'
         ctx.textBaseline = 'bottom'
@@ -154,7 +154,7 @@ export const barValueLabels: Plugin = {
         // above the bar top, stepping up past earlier labels; the export applies
         // scale grace so there's headroom — clamp to the plot top as a last resort
         const top = placer.place(cx - tw / 2, el.y - pad - fontPx, tw, fontPx, -1)
-        ctx.fillText(text, cx, Math.max(top, area.top - fontPx) + fontPx)
+        haloText(ctx, text, cx, Math.max(top, area.top - fontPx) + fontPx, Chart.defaults.color as string)
       }
     }
     ctx.restore()

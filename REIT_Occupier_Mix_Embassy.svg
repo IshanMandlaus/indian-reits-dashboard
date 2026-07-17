@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="814" viewBox="0 0 1120 814" font-family="system-ui,-apple-system,'Segoe UI',sans-serif">
+<rect width="1120" height="814" fill="#ffffff"/>
+<rect x="6" y="6" width="1108" height="802" fill="none" stroke="#000000" stroke-width="1.5"/>
+<text x="48" y="46" font-size="26" font-weight="700" fill="#000000">Embassy REIT — occupier mix by industry (FY26)</text>
+<text x="48" y="76" font-size="17" fill="#000000">% of Gross Rental Obligations as of March 31, 2026</text>
+<line x1="48" y1="100" x2="1072" y2="100" stroke="#000000" stroke-width="1"/>
+<text x="48" y="136" font-size="26" font-weight="700" fill="#000000">275+</text>
+<text x="48" y="158" font-size="13.5" fill="#000000">marquee occupiers</text>
+<text x="252.8" y="136" font-size="26" font-weight="700" fill="#000000">>70%</text>
+<text x="252.8" y="158" font-size="13.5" fill="#000000">GCC &amp; tech share of</text>
+<text x="252.8" y="175" font-size="13.5" fill="#000000">occupier base</text>
+<text x="457.6" y="136" font-size="26" font-weight="700" fill="#000000">25.1%</text>
+<text x="457.6" y="158" font-size="13.5" fill="#000000">of rentals from top 5</text>
+<text x="457.6" y="175" font-size="13.5" fill="#000000">occupiers</text>
+<text x="662.4000000000001" y="136" font-size="26" font-weight="700" fill="#000000">8%</text>
+<text x="662.4000000000001" y="158" font-size="13.5" fill="#000000">IT services share (25%</text>
+<text x="662.4000000000001" y="175" font-size="13.5" fill="#000000">at listing)</text>
+<text x="867.2" y="136" font-size="26" font-weight="700" fill="#000000">6 of 20</text>
+<text x="867.2" y="158" font-size="13.5" fill="#000000">largest global cos. are</text>
+<text x="867.2" y="175" font-size="13.5" fill="#000000">occupiers</text>
+<line x1="48" y1="189" x2="1072" y2="189" stroke="#000000" stroke-width="1"/>
+<line x1="400" y1="213" x2="400" y2="537" stroke="#000000" stroke-width="1.2"/>
+<text x="388" y="242.0" font-size="16" fill="#000000" text-anchor="end">Technology</text>
+<rect x="400" y="225.0" width="620.0" height="24" fill="#2563eb"/>
+<text x="1030.0" y="242.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">29%</text>
+<text x="388" y="282.0" font-size="16" fill="#000000" text-anchor="end">Financial Services</text>
+<rect x="400" y="265.0" width="555.9" height="24" fill="#2563eb"/>
+<text x="965.9" y="282.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">26%</text>
+<text x="388" y="322.0" font-size="16" fill="#000000" text-anchor="end">Research, Consulting &amp; Analytics</text>
+<rect x="400" y="305.0" width="213.8" height="24" fill="#2563eb"/>
+<text x="623.8" y="322.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">10%</text>
+<text x="388" y="362.0" font-size="16" fill="#000000" text-anchor="end">Retail</text>
+<rect x="400" y="345.0" width="149.7" height="24" fill="#2563eb"/>
+<text x="559.7" y="362.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">7%</text>
+<text x="388" y="402.0" font-size="16" fill="#000000" text-anchor="end">Co-working</text>
+<rect x="400" y="385.0" width="149.7" height="24" fill="#2563eb"/>
+<text x="559.7" y="402.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">7%</text>
+<text x="388" y="442.0" font-size="16" fill="#000000" text-anchor="end">Healthcare</text>
+<rect x="400" y="425.0" width="128.3" height="24" fill="#2563eb"/>
+<text x="538.3" y="442.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">6%</text>
+<text x="388" y="482.0" font-size="16" fill="#000000" text-anchor="end">Telecom</text>
+<rect x="400" y="465.0" width="64.1" height="24" fill="#2563eb"/>
+<text x="474.1" y="482.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">3%</text>
+<text x="388" y="522.0" font-size="16" fill="#000000" text-anchor="end">Others</text>
+<rect x="400" y="505.0" width="256.6" height="24" fill="#2563eb"/>
+<text x="666.6" y="522.0" font-size="15.5" font-weight="700" fill="#000000" font-variant-numeric="tabular-nums">12%</text>
+<text x="48" y="573" font-size="18" font-weight="700" fill="#000000">Top 5 occupiers (% of gross rentals)</text>
+<line x1="48" y1="621" x2="540" y2="621" stroke="#000000" stroke-width="0.4"/>
+<text x="48" y="613" font-size="15" fill="#000000" font-weight="600">JP Morgan</text>
+<text x="470" y="613" font-size="13.5" fill="#000000" text-anchor="end">Financial Services</text>
+<text x="540" y="613" font-size="15" font-weight="700" fill="#000000" text-anchor="end" font-variant-numeric="tabular-nums">6.2%</text>
+<line x1="48" y1="649" x2="540" y2="649" stroke="#000000" stroke-width="0.4"/>
+<text x="48" y="641" font-size="15" fill="#000000" font-weight="600">IBM India</text>
+<text x="470" y="641" font-size="13.5" fill="#000000" text-anchor="end">Technology</text>
+<text x="540" y="641" font-size="15" font-weight="700" fill="#000000" text-anchor="end" font-variant-numeric="tabular-nums">5.9%</text>
+<line x1="48" y1="677" x2="540" y2="677" stroke="#000000" stroke-width="0.4"/>
+<text x="48" y="669" font-size="15" fill="#000000" font-weight="600">ANSR</text>
+<text x="470" y="669" font-size="13.5" fill="#000000" text-anchor="end">Consulting</text>
+<text x="540" y="669" font-size="15" font-weight="700" fill="#000000" text-anchor="end" font-variant-numeric="tabular-nums">4.9%</text>
+<line x1="580" y1="621" x2="1072" y2="621" stroke="#000000" stroke-width="0.4"/>
+<text x="580" y="613" font-size="15" fill="#000000" font-weight="600">Major Australian Bank</text>
+<text x="1002" y="613" font-size="13.5" fill="#000000" text-anchor="end">Financial Services</text>
+<text x="1072" y="613" font-size="15" font-weight="700" fill="#000000" text-anchor="end" font-variant-numeric="tabular-nums">4.5%</text>
+<line x1="580" y1="649" x2="1072" y2="649" stroke="#000000" stroke-width="0.4"/>
+<text x="580" y="641" font-size="15" fill="#000000" font-weight="600">Fortune 500 Retail Major</text>
+<text x="1002" y="641" font-size="13.5" fill="#000000" text-anchor="end">Retail</text>
+<text x="1072" y="641" font-size="15" font-weight="700" fill="#000000" text-anchor="end" font-variant-numeric="tabular-nums">3.6%</text>
+<text x="48" y="703" font-size="13.5" fill="#000000">Occupiers #6-10 (annual report, % not disclosed on the page): WeWork India, a large US bank, NTT Data, a global healthcare co.,</text>
+<text x="48" y="722" font-size="13.5" fill="#000000">Cognizant.</text>
+<text x="48" y="741" font-size="13.5" fill="#000000">“Largest global cos.” = top 20 by market capitalisation as of Mar 31, 2026. Actual legal entity names of occupiers may differ.</text>
+<text x="48" y="760" font-size="13.5" fill="#000000">Sources: Embassy REIT Annual Report FY2025-26 occupier page (industry mix, basis: gross rental obligations) and Q4 FY2026 Earnings</text>
+<text x="48" y="779" font-size="13.5" fill="#000000">Materials p.50 (top-5 occupiers, key stats).</text>
+</svg>
