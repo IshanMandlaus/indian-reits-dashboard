@@ -39,6 +39,8 @@ const SOURCES = [
   ['bench.js', 'BENCH', 'bench'],
   ['invit_data.js', 'INVIT', 'invit'],
   ['global_data.js', 'GLOBAL', 'global'],
+  ['keyfin.js', 'KEYFIN', 'keyfin'],
+  ['lease.js', 'LEASE', 'lease'],
 ]
 
 function convertOne(file, globalName) {

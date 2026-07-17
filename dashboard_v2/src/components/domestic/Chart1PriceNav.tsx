@@ -1,57 +1,69 @@
 /**
  * Chart 1 — traded price vs stepped NAV/unit, with a switchable 2nd axis:
- * DPU bars (default) or the P/B ratio line. A label plugin annotates every
+ * daily traded volume bars (default; NSE + BSE combined, from
+ * volume-history.json) or the P/B ratio line. A label plugin annotates every
  * NAV step and each FY's price peak/valley.
  */
 import { useState } from 'react'
-import { Chart } from 'chart.js'
-import type { ReitData, ReitKey, LivePrices, PriceHistory } from '../../types/data'
+import type { ReitData, ReitKey, LivePrices, PriceHistory, VolumeHistory } from '../../types/data'
 import {
   CHART,
   EXPORT_STATE,
   labelFont,
+  haloText,
   baseOptions,
   zoomOptions,
   rescaleY,
   type ChartWithRange,
   type RangeConfig,
 } from '../../lib/chartSetup'
-import { navSteps, navAt, closeSeries, pbSeries, dTs, perTs, fyTs, fmtM, fmtDay } from '../../lib/reit'
+import { LabelPlacer } from '../../lib/barValueLabels'
+import { seriesInk } from '../../lib/svgExport'
+import { REIT_SEC, navSteps, navAt, closeSeries, pbSeries, dTs, fyTs, fmtM, fmtDay } from '../../lib/reit'
 import { inr, pct } from '../../lib/format'
 import { useChartCanvas } from '../charts/useChartCanvas'
 import { RangeBar } from '../charts/RangeBar'
 import type { ChartConfiguration, Plugin } from 'chart.js'
 
-type AltAxis = 'dpu' | 'pb'
+type AltAxis = 'vol' | 'pb'
 
 export function Chart1PriceNav({
   D,
   k,
   LIVE,
   H,
+  V,
 }: {
   D: ReitData
   k: ReitKey
   LIVE: LivePrices | null
   H: PriceHistory | null
+  V: VolumeHistory | null
 }) {
-  const [alt, setAlt] = useState<AltAxis>('dpu')
-  // Reset to DPU whenever the REIT changes.
+  const [alt, setAlt] = useState<AltAxis>('vol')
+  // Reset to volume whenever the REIT changes.
   const [lastK, setLastK] = useState(k)
   if (lastK !== k) {
     setLastK(k)
-    setAlt('dpu')
+    setAlt('vol')
   }
-  const { canvasRef, chartRef } = useChartCanvas(() => build(D, k, LIVE, H, alt), [D, k, LIVE, H, alt])
+  // No exchange CSVs for this security (e.g. Bagmane) → P/B only, no toggle.
+  const hasVol = !!V?.secs[REIT_SEC[k]] && Object.keys(V.secs[REIT_SEC[k]]).length > 0
+  const eff: AltAxis = hasVol ? alt : 'pb'
+  const { canvasRef, chartRef } = useChartCanvas(() => build(D, k, LIVE, H, V, eff), [D, k, LIVE, H, V, eff])
   return (
     <>
       <div className="mb-2 flex items-center justify-between">
-        <button
-          onClick={() => setAlt(alt === 'dpu' ? 'pb' : 'dpu')}
-          className="rounded-md border border-border bg-surface-2 px-2 py-1 text-[11px] font-medium text-muted transition hover:text-ink"
-        >
-          {alt === 'dpu' ? 'switch to P/B ×' : 'switch to DPU'}
-        </button>
+        {hasVol ? (
+          <button
+            onClick={() => setAlt(eff === 'vol' ? 'pb' : 'vol')}
+            className="rounded-md border border-border bg-surface-2 px-2 py-1 text-[11px] font-medium text-muted transition hover:text-ink"
+          >
+            {eff === 'vol' ? 'switch to P/B ×' : 'switch to volume'}
+          </button>
+        ) : (
+          <span />
+        )}
         <RangeBar key={k} chartRef={chartRef} />
       </div>
       <div className="relative h-[340px]" onDoubleClick={() => resetZoom(chartRef.current)}>
@@ -96,49 +108,65 @@ const priceNavLabels: Plugin = {
     if (!cfg) return
     const { ctx, chartArea } = ch
     const exp = EXPORT_STATE.active
-    const ink = Chart.defaults.color as string // black while the export re-theme is active
     ctx.save()
     ctx.beginPath()
     ctx.rect(chartArea.left - 30, chartArea.top - 14, chartArea.width + 60, chartArea.height + 28)
     ctx.clip()
     ctx.font = labelFont()
     ctx.textAlign = 'center'
+    ctx.textBaseline = 'top'
     const visible = (el: { x: number; y: number }) =>
       el.x >= chartArea.left - 4 && el.x <= chartArea.right + 4 && el.y >= chartArea.top - 8 && el.y <= chartArea.bottom + 8
 
-    // NAV steps (dataset 1) — value above each FY-end mark.
-    const navMeta = ch.getDatasetMeta(1)
-    ctx.fillStyle = exp ? ink : CHART.gold
-    ctx.textBaseline = 'bottom'
-    for (const i of cfg.navIdx) {
-      const p = navMeta.data[i] as unknown as { x: number; y: number } | undefined
-      if (!p || !visible(p)) continue
-      const v = (p as { $context?: { parsed?: { y?: number } } }).$context?.parsed?.y
-      if (v == null) continue
-      ctx.fillText(inr(v, 0), p.x, p.y - 6)
+    // Shared placer: NAV labels claim their spots first, then price peaks,
+    // then valleys — later labels are nudged away instead of overprinting.
+    const placer = new LabelPlacer()
+    const h = 11
+    const draw = (x: number, y: number, v: number, above: boolean, color: string) => {
+      const text = inr(v, 0)
+      const w = ctx.measureText(text).width
+      const top = above ? y - 7 - h : y + 6
+      const t = placer.place(x - w / 2, top, w, h, above ? -1 : 1)
+      // haloed so the number reads over any line; export keeps it colour-coded
+      // to its series (print-legible shade)
+      haloText(ctx, text, x, t, exp ? seriesInk(color) : color)
     }
 
-    // Price (dataset 0) — each FY's peak above, valley below.
-    const priceMeta = ch.getDatasetMeta(0)
-    ctx.fillStyle = exp ? ink : CHART.acc
-    for (const [idxs, above] of [
-      [cfg.peaks, true],
-      [cfg.valleys, false],
-    ] as [number[], boolean][]) {
-      ctx.textBaseline = above ? 'bottom' : 'top'
-      for (const i of idxs) {
-        const el = priceMeta.data[i] as unknown as { x: number; y: number } | undefined
-        if (!el || !visible(el)) continue
-        const v = (el as { $context?: { parsed?: { y?: number } } }).$context?.parsed?.y
+    // NAV steps (dataset 1) — value above each FY-end mark. Skip when the NAV
+    // series is toggled off in the legend.
+    if (ch.isDatasetVisible(1)) {
+      const navMeta = ch.getDatasetMeta(1)
+      for (const i of cfg.navIdx) {
+        const p = navMeta.data[i] as unknown as { x: number; y: number } | undefined
+        if (!p || !visible(p)) continue
+        const v = (p as { $context?: { parsed?: { y?: number } } }).$context?.parsed?.y
         if (v == null) continue
-        ctx.fillText(inr(v, 0), el.x, above ? el.y - 5 : el.y + 5)
+        draw(p.x, p.y, v, true, CHART.gold)
+      }
+    }
+
+    // Price (dataset 0) — each FY's peak above, valley below. Skip when the
+    // price series is toggled off.
+    if (ch.isDatasetVisible(0)) {
+      const priceMeta = ch.getDatasetMeta(0)
+      for (const [idxs, above] of [
+        [cfg.peaks, true],
+        [cfg.valleys, false],
+      ] as [number[], boolean][]) {
+        for (const i of idxs) {
+          const el = priceMeta.data[i] as unknown as { x: number; y: number } | undefined
+          if (!el || !visible(el)) continue
+          const v = (el as { $context?: { parsed?: { y?: number } } }).$context?.parsed?.y
+          if (v == null) continue
+          draw(el.x, el.y, v, above, CHART.acc)
+        }
       }
     }
     ctx.restore()
   },
 }
 
-function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory | null, alt: AltAxis): ChartConfiguration {
+function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory | null, V: VolumeHistory | null, alt: AltAxis): ChartConfiguration {
   const f = D.fin[k]
   const price = closeSeries(D, k, H).map((p) => ({ x: dTs(p[0]), y: p[1] }))
   const live = LIVE?.[k]
@@ -161,32 +189,33 @@ function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory
   const peaks = [...byFy.values()].map((g) => g.hi)
   const valleys = [...byFy.values()].map((g) => g.lo).filter((i) => !peaks.includes(i))
 
-  const hasQ = (f.q || []).some((x) => x.dpu != null)
-  const dpu = hasQ
-    ? f.q.filter((x) => x.dpu != null).map((x) => ({ x: perTs(x.per), y: x.dpu as number }))
-    : f.years
-        .map((y, i) => ({ x: fyTs(y), y: f.dpu[i] as number }))
-        .filter((p) => p.y != null)
+  // Daily traded volume in lakh units (NSE RR + BSE combined).
+  const vol =
+    alt === 'vol'
+      ? Object.entries(V?.secs[REIT_SEC[k]] ?? {})
+          .sort(([a], [b]) => (a < b ? -1 : 1))
+          .map(([d, r]) => ({ x: dTs(d), y: r.v / 1e5 }))
+      : []
   const pb = alt === 'pb' ? pbSeries(D, k, LIVE, H) : []
   const xmin = Math.min(...price.map((p) => p.x), ...nav.map((p) => p.x))
   const xmax = Math.max(...price.map((p) => p.x), ...nav.map((p) => p.x), Date.now())
 
   const altDataset =
-    alt === 'dpu'
-      ? ({ type: 'bar', label: hasQ ? 'DPU (quarter)' : 'DPU (FY)', data: dpu, backgroundColor: 'rgba(96,165,250,.5)', barThickness: hasQ ? 5 : 14, yAxisID: 'y2' } as const)
-      : ({ type: 'line', label: 'P/B (price ÷ NAV)', data: pb, borderColor: CHART.violet, borderWidth: 1.4, borderDash: [5, 3], pointRadius: 0, yAxisID: 'y2' } as const)
+    alt === 'vol'
+      ? { type: 'bar' as const, label: 'Volume (NSE+BSE)', data: vol, backgroundColor: 'rgba(96,165,250,.45)', barThickness: 1, yAxisID: 'y2' }
+      : { type: 'line' as const, label: 'P/B (price ÷ NAV)', data: pb, borderColor: CHART.violet, borderWidth: 1.4, borderDash: [5, 3], pointRadius: 0, yAxisID: 'y2' }
   const y2 =
-    alt === 'dpu'
-      ? { position: 'right' as const, title: { display: true, text: 'DPU ₹' }, grid: { display: false }, beginAtZero: true, suggestedMax: Math.max(...dpu.map((p) => p.y || 0)) * 3 || 10 }
+    alt === 'vol'
+      ? { position: 'right' as const, title: { display: true, text: 'Volume (lakh units)' }, grid: { display: false }, beginAtZero: true, suggestedMax: vol.length ? Math.max(...vol.map((p) => p.y || 0)) * 3 : 10 }
       : { position: 'right' as const, title: { display: true, text: 'P/B ×' }, grid: { display: false }, grace: '10%' as const }
 
   const cfg: RangeConfig = {
     type: 'line',
     data: {
       datasets: [
-        { type: 'line', label: 'Price', data: price, borderColor: CHART.acc, borderWidth: 1.8, pointRadius: 0, yAxisID: 'y' },
-        { type: 'line', label: 'NAV / unit', data: nav, borderColor: CHART.gold, borderWidth: 2, stepped: 'before', pointRadius: 3, pointBackgroundColor: CHART.gold, yAxisID: 'y' },
-        altDataset,
+        { type: 'line', label: 'Price', data: price, borderColor: CHART.acc, borderWidth: 1.8, pointRadius: 0, yAxisID: 'y', order: 2 },
+        { type: 'line', label: 'NAV / unit', data: nav, borderColor: CHART.gold, borderWidth: 2, stepped: 'before', pointRadius: 3, pointBackgroundColor: CHART.gold, yAxisID: 'y', order: 1 },
+        { ...altDataset, order: 3 },
       ],
     },
     options: {
@@ -211,6 +240,7 @@ function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory
                 return ['Price: ' + inr(py, 2), n ? 'vs NAV ' + inr(n, 2) + ' → ' + pct(py / n - 1) : '']
               }
               if (it.dataset.label?.startsWith('P/B')) return 'P/B: ' + py.toFixed(2) + '×'
+              if (it.dataset.label?.startsWith('Volume')) return 'Volume: ' + py.toFixed(2) + ' lakh units'
               return it.dataset.label + ': ' + inr(py, 2)
             },
           },

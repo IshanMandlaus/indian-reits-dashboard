@@ -12,7 +12,8 @@
     "data:prices": "node scripts/import-close-prices.mjs",
     "build": "node scripts/check-assets.mjs && tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "data:volume": "node scripts/import-trade-history.mjs"
   },
   "dependencies": {
     "chart.js": "^4.5.1",

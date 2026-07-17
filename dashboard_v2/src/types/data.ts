@@ -243,6 +243,66 @@ export interface PriceHistory {
   secs: Record<string, DateMap> // { "Embassy REIT": { "2019-04-01": 314 } }
 }
 
+// ─── scripts/import-trade-history.mjs → volume-history.json ────────────────
+/**
+ * Daily traded volume seeded from "Trade History/" exchange CSVs.
+ * v = NSE regular-market (RR) quantity + BSE shares; c = NSE close price
+ * (the canonical price whenever one is needed). Block-deal (BL) rows excluded.
+ */
+export interface VolumeHistory {
+  asof: string
+  secs: Record<string, Record<string, { v: number; c?: number }>> // { "Embassy REIT": { "2019-04-01": { v, c } } }
+}
+
+// ─── keyfin.js → KEYFIN ─────────────────────────────────────────────────────
+/** FY2026 cross-REIT comparison snapshot (workbook "Comparison" sheet). */
+export interface KeyFinRow {
+  metric: string
+  unit: string
+  fmt: 'cr' | 'pct' | 'inr2' | 'num1'
+  v: (number | null)[] // parallel to KeyFin.cols
+}
+export interface KeyFin {
+  fy: string
+  basis: string
+  cols: string[]
+  rows: KeyFinRow[]
+  dash_zero: string[] // metrics whose 0 renders as "—" (no distributions yet)
+  footnotes: string[]
+}
+
+// ─── lease.js → LEASE ───────────────────────────────────────────────────────
+/** One FY of historical leasing activity (msf; null = not disclosed). */
+export interface LeaseActivity {
+  fy: string
+  expired_msf: number | null
+  renewed_msf: number | null
+  new_msf: number | null
+  src: string | null
+}
+/** Latest-disclosed forward lease-expiry schedule. */
+export interface LeaseLadder {
+  asof: string
+  unit: 'pct_leased_area' | 'pct_gla' | 'msf' | 'pct_rent'
+  buckets: { fy: string; v: number }[]
+  src: string
+}
+export interface LeaseReit {
+  /** Occupancy basis caveat shown under the 3c chart (issuer metric quirks). */
+  occ_note?: string
+  wale: (number | null)[] // parallel to Lease.years
+  occ_committed: (number | null)[] // fractions
+  occ_inplace: (number | null)[]
+  activity: LeaseActivity[]
+  ladder: LeaseLadder | null
+  gaps: string[]
+}
+export interface Lease {
+  built: string
+  years: string[]
+  reits: ByReit<LeaseReit>
+}
+
 // ─── bench_live.js → BENCH_LIVE ─────────────────────────────────────────────
 export interface BenchLive {
   asof: string

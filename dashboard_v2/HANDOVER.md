@@ -1384,3 +1384,98 @@ overlapping dates; live refresh still extends the tail past its asof).
 To refresh history: drop updated CSVs in the folder, re-run `npm run data:prices`.
 Note: `CAL` still keys off NIFTY 50 (starts 2021-06-28), so basket/rebased market
 charts are unchanged; per-security charts show full history.
+
+## 21. Full numbers audit vs source filings (rounds 1–3) — 2026-07-16/17
+
+**What happened:** every hand-entered number feeding the charts was audited page-by-page
+against the primary documents on disk (ARs, condensed FS, valuation reports, decks, RHPs),
+via multi-agent workflows (extraction agents per REIT × metric family, then independent
+adversarial verifiers). Full evidence: `AUDIT_REPORT.md` (repo root). Reusable extraction
+cache + scripts: **`dashboard_v2/audit/`** (see its README — check `verified_values.json`
+BEFORE re-extracting anything from a PDF).
+
+**Round 1 (complete, fixes applied 16-Jul):** 2,141 values audited → 1,811 exact matches,
+112 rounding, 62 confirmed misstatements + 16 series-consistency corrections **fixed** in
+`data-src/data.js` / `bench.js` / `val_hy.js`, `src/lib/bench.ts` (G-Sec Jul-25 step 6.55→6.30),
+`Chart2Issuances.tsx` (ETV date → 2020-12-24), regenerated via `npm run data`. Headliners:
+Brookfield NAV FY24–26 switched back to fair-value (233.57/230.85/233.87 → 332.60/336.35/386.66 —
+un-breaks Charts 1/2/7/8), Nexus Q3FY26 PAT 39.4→139.40, Nexus rev_maint had the Marketing-Income
+line (94/110 → 351.78/420.07), Mindspace FY26 GAV to attributable 47,634.97 (SPV sum now
+reconciles exactly), Brookfield FY26 LTV 30.9%→34.0% & CoD 8.05%→7.3%, Mindspace FY26 quarterly
+DPUs to declared 5.79/5.83/5.83/6.64, Embassy FY22 GAV → 49,367.4. Basis conventions locked —
+listed in `audit/README.md`; do NOT re-sync corrected values from old sources.
+
+**Workbook:** the same 25 corrections were applied to `Indian_REITs_Key_Financials_FILLED.xlsx`
+(each cell has an "AUDIT FIX 16-Jul-2026" comment with doc+page+original figure), then formulas
+re-baked via fresh-profile soffice convert (§ LibreOffice-recalc workaround). Dashboard ↔ workbook
+diff is clean (only the Brookfield raw-units-vs-mn display artifact remains).
+
+**Label precision:** `AreaChart.tsx` export stack totals no longer round msf to integers
+(`v.toFixed(1) + ' msf'`); `IndiaMap.tsx` rent labels keep one decimal. Verified on the exported
+SVG (52.6/46.4/39.3/37.1/19.6/10.7 msf).
+
+**Rounds 2–3 (STOPPED 17-Jul by user before verification finished — findings are candidates,
+not confirmed):** extraction completed for (a) re-checks of all 56 round-1 unverifiables — the
+new `Embassy/embassy_reit_ar_2025-26_final_1.pdf` resolved several; (b) an area-figure re-check
+of all six REITs; (c) meta/structure-notes/veterans/CAGR; (d) annexure page-map + links spot-checks;
+(e) an 11-cluster chart-MATH audit (transformations from JSON → plotted values). Most Opus/Fable
+verify agents died on session limits and the runs were then stopped. **Pending items are tabled in
+`audit/README.md` (Open items)** — the biggest: Embassy overview UC/future split should be 6.2/2.8
+per the new AR; Chart2 `unitsAtDate` FV/unit-marker unit mapping; Chart1 DPU-axis −Infinity fallback
+for Bagmane; Chart5 quarterly-yield denominator mixing. Embassy's new AR otherwise CONFIRMED every
+FY2026 value already in the data. InvITs remain entirely unverified (no local filings; user will add).
+
+**Rounds 2–3 CLOSED OUT 17-Jul-2026** in a lean single-context pass (page-targeted pdftotext
+against the cached citations — no agent fan-out). All pending data candidates verified & fixed
+(Embassy overview msf split 43.5/6.2/2.8, Embassy FY2020 cost_debt 9.61% incl. workbook D40
+re-bake, two WALEs, Nexus overview 11.9, Nexus NSRPL structure-note wording, Bagmane link label)
+and four chart-math bugs fixed (`fyTs` → Date.UTC, Chart1 −Infinity DPU axis, Chart2 `unitsAtDate`
+as-of units incl. mid-year issuances, SecurityModal previous-close). Basis/design items documented
+as-is. Full close-out table: `audit/README.md`. Post-fix `phase0.py`: identical 15 documented
+basis-effect FAILs as baseline — no regressions. Only InvITs remain unverified.
+
+## 22. FY2026 key-financials table on Market page — 2026-07-17
+
+`data-src/keyfin.js` → `public/data/keyfin.json` is a verbatim snapshot of the workbook's
+"Comparison" (first) sheet: 15 metrics × 6 REITs, FY2026 cached values, consolidated basis,
+percentages as fractions. Rendered by `src/components/market/KeyFinancialsTable.tsx` inside a
+`exportable="panel"` Card on `MarketPage` (DOM table → panel SVG path). Zeros for Bagmane
+NDCF / Total Distribution / DPU render as "—" (`dash_zero` list). Every cell is page-cited in
+`audit/workbook_citations.json` (metric × REIT × FY2026); a scripted openpyxl diff (see
+AUDIT_REPORT addendum) keeps keyfin.js bound to the workbook — edit the workbook, re-copy,
+never the other way.
+
+## 23. Lease dataset: occupancy/WALE history + expiries/renewals — 2026-07-17
+
+`data-src/lease.js` → `lease.json`, typed `Lease` in `src/types/data.ts`.
+- `wale` / `occ_committed` / `occ_inplace`: parallel to `years` (FY2019–FY2026), copied verbatim
+  from workbook per-REIT sheets rows 45–47 (already page-cited); scripted diff keeps them equal.
+- `activity[]`: per-FY leasing history (expired / renewed / new, msf) extracted from issuer Q4
+  decks & ARs with per-row `src` citations (doc p.page), extraction + adversarial verification
+  by subagents (Sonnet extract, Opus verify; one numeric fix: Nexus FY25 new 1.1→0.1 msf
+  double-count). Basis quirks live in each REIT's `gaps[]` (shown under the chart).
+- `ladder`: latest forward lease-expiry schedule; `unit` varies per issuer (msf / pct_rent) —
+  never cross-compare units. Brookfield's ladder was disclosed cumulative (10/21/27/35% of
+  rentals till FY27–30) and is stored as per-FY increments (10/11/6/8).
+- Embassy has NO ladder: its expiry-profile slides are image-only charts (pdftotext-invisible);
+  headline "~22% of leases expiring till FY2029" noted in gaps. Re-extract when a new deck lands.
+Charts: `Chart3cOccWale.tsx` (card 3c, occupancy % + WALE yrs dual axis) and `Chart3dLeasing.tsx`
+(card 3d, history bars ↔ expiry-ladder toggle; toggle hidden when only one view has data).
+Both opt out of the global `barValueLabels` export plugin and draw their own single-placer labels
+(same pattern & reason as Chart3cAumMsf, §16).
+
+## 24. Trading volume: Trade History CSVs → Chart 1 — 2026-07-17
+
+`npm run data:volume` (`scripts/import-trade-history.mjs`) parses repo-root `Trade History/`
+(`<Name>_NSE.csv` + `<Name>_BSE.csv`, 5 REITs — no Bagmane) into
+`public/data/volume-history.json`: `{ asof, secs: { "<Security>": { "YYYY-MM-DD": { v, c } } } }`
+where `v` = NSE regular-market quantity + BSE shares and `c` = NSE Close (the canonical price if
+one is ever needed — user rule). Parser traps: NSE numbers are quoted with Indian grouping
+("29,03,200") — split outside quotes; NSE dates `01-Apr-2019` ascending vs BSE `16-July-2026`
+full-month-name descending; NSE `Series` column filtered to `RR` only (BL block-deal crossings
+are order-of-magnitude spikes, already charted as Chart 2 markers; 1–4 rows per file skipped).
+Chart 1 (`Chart1PriceNav.tsx`): DPU is gone; the y2 toggle is now Volume (default, lakh units,
+1px bars kept in the bottom third via suggestedMax = 3×max) ↔ P/B. Securities without CSVs
+(Bagmane) hide the toggle and show P/B only. Card retitled "1 · Price vs NAV & Trading Volume".
+Chart 4b (`Chart4bDistributions.tsx`) replaces the lost DPU view: dist_total bars + DPU line
+per FY (data already audited); export labels colour-coded via `seriesInk`.

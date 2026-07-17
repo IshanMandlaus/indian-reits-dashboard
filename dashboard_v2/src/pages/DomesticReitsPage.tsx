@@ -14,6 +14,9 @@ import { Chart4Ndcf } from '../components/domestic/Chart4Ndcf'
 import { Chart5Yield } from '../components/domestic/Chart5Yield'
 import { Chart6Capital } from '../components/domestic/Chart6Capital'
 import { Chart3cAumMsf } from '../components/domestic/Chart3cAumMsf'
+import { Chart3cOccWale } from '../components/domestic/Chart3cOccWale'
+import { Chart3dLeasing } from '../components/domestic/Chart3dLeasing'
+import { Chart4bDistributions } from '../components/domestic/Chart4bDistributions'
 import { Chart6bDebt } from '../components/domestic/Chart6bDebt'
 import { Chart7Pb } from '../components/domestic/Chart7Pb'
 import { Chart8PbPeers } from '../components/domestic/Chart8PbPeers'
@@ -32,6 +35,8 @@ export function DomesticReitsPage() {
   const reit = useDataset('reit-data')
   const prices = useDataset('live-prices')
   const priceHist = useDataset('price-history')
+  const volHist = useDataset('volume-history')
+  const lease = useDataset('lease')
   const valHy = useDataset('val-hy')
   const blocksLive = useDataset('blocks-live')
   const structures = useDataset('structures')
@@ -120,13 +125,13 @@ export function DomesticReitsPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card
           className="lg:col-span-2"
-          title="1 · Price vs NAV & Distributions"
-          note="Traded price (NSE/BSE) against reported NAV per unit; bars = distribution per unit."
+          title="1 · Price vs NAV & Trading Volume"
+          note="Traded price against reported NAV per unit; bars = combined NSE + BSE daily traded volume (regular market)."
           exportable="chart"
           exportName={`${k}-1-price-vs-nav`}
           exportAsof={lp.price ? `${lp.live ? 'Live price' : 'Price'} as of ${lp.asof} · NSE/BSE` : null}
         >
-          <Chart1PriceNav D={D} k={k} LIVE={LIVE} H={priceHist.data} />
+          <Chart1PriceNav D={D} k={k} LIVE={LIVE} H={priceHist.data} V={volHist.data} />
         </Card>
 
         <Card
@@ -152,8 +157,39 @@ export function DomesticReitsPage() {
           <Chart3cAumMsf D={D} k={k} />
         </Card>
 
+        {lease.data && (
+          <Card
+            title="3c · Occupancy & WALE"
+            note="Committed and in-place occupancy (%, left) with weighted-average lease expiry (yrs, right) per fiscal year."
+            exportable="chart"
+            exportName={`${k}-3c-occupancy-wale`}
+          >
+            <Chart3cOccWale L={lease.data} k={k} />
+          </Card>
+        )}
+
+        {lease.data && (
+          <Card
+            title="3d · Lease Expiries & Renewals"
+            note="Per-FY leased area expired vs renewed/re-leased (msf), with the latest forward lease-expiry schedule behind the toggle."
+            exportable="chart"
+            exportName={`${k}-3d-lease-expiries`}
+          >
+            <Chart3dLeasing L={lease.data} k={k} />
+          </Card>
+        )}
+
         <Card title="4 · NDCF vs Revenue" exportable="chart" exportName={`${k}-4-ndcf`}>
           <Chart4Ndcf D={D} k={k} />
+        </Card>
+
+        <Card
+          title="4b · Distributions & DPU by FY"
+          note="Total distribution paid (bars, ₹ cr) with distribution per unit (line, ₹/unit, right axis) per fiscal year."
+          exportable="chart"
+          exportName={`${k}-4b-distributions`}
+        >
+          <Chart4bDistributions D={D} k={k} />
         </Card>
 
         <Card title="5 · Distribution Yield on AUM (NDCF / GAV)" exportable="chart" exportName={`${k}-5-cash-yield`}>

@@ -5,6 +5,7 @@ import { useDataset } from '../lib/useDataset'
 import { setupCharts } from '../lib/chartSetup'
 import { makeBenchCtx, buildSnapRows, buildReitSecModal } from '../lib/bench'
 import { SnapshotCard } from '../components/market/SnapshotCard'
+import { KeyFinancialsTable } from '../components/market/KeyFinancialsTable'
 import { BenchLevels, BenchRebased, BenchVets } from '../components/market/BenchmarkCharts'
 import { AreaChart } from '../components/market/AreaChart'
 import { VolumeCharts } from '../components/market/VolumeCharts'
@@ -33,6 +34,7 @@ export function MarketPage() {
   const reit = useDataset('reit-data')
   const prices = useDataset('live-prices')
   const indexYields = useDataset('index-yields')
+  const keyfin = useDataset('keyfin')
 
   const B = bench.data
   const L = benchLive.data
@@ -94,6 +96,20 @@ export function MarketPage() {
           ))}
         </div>
       </Card>
+
+      {/* Exhibit 1b — FY2026 key-financials comparison table */}
+      {keyfin.data && (
+        <Card
+          className="mb-4"
+          title={`REIT key financials — ${keyfin.data.fy} comparison`}
+          note="From the key-financials workbook (consolidated basis, INR crore) · values page-cited in the audit citations"
+          exportable="panel"
+          exportName="market-keyfin-fy2026"
+          exportAsof={`${keyfin.data.fy} · ${keyfin.data.basis.toLowerCase()} · ₹ cr`}
+        >
+          <KeyFinancialsTable KF={keyfin.data} />
+        </Card>
+      )}
 
       {/* Shared benchmark window */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
