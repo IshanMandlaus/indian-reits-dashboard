@@ -1,0 +1,26 @@
+{
+  "reit": "KRT",
+  "ipo": {
+    "listing": "Aug 2025",
+    "issue_price_inr": 100,
+    "total_units_mn": 4434.4,
+    "market_cap_inr_cr": 44344,
+    "fresh_cr": 4800,
+    "ofs_cr": 0,
+    "total_offer_cr": 4800,
+    "pct_sold": 10.83,
+    "sponsor_pct": 78.51,
+    "gav_inr_cr": 62000
+  },
+  "sources": {
+    "total_units": "offer doc p614 ('Units issued and outstanding immediately after the Issue 4,434,399,541'; pre-issue 3,954,399,541). Also p648 unitholding table.",
+    "offer": "cover + p617 (Use of Proceeds): '480,000,000 Units ... at ₹100 per Unit aggregating to ₹48,000 million by the Trust (the Issue)'. All-fresh; no OFS (120,000,000-unit Strategic Investor tranche incl. LIC/SBI Life is part of the fresh 480mn).",
+    "sponsor_pct": "offer doc p649 (Blackstone Sponsor+Group 2,062,657,483 units + Sattva Sponsor+Group 1,418,860,716 = 3,481,518,199) ÷ 4,434,399,541 post-issue = 78.51% (Blackstone group 46.51%, Sattva group 32.00%). The doc's own 52.16% + 35.88% = 88.04% is stated on the PRE-issue base of 3,954,399,541.",
+    "gav": "REIT_AUM_MSF_sources/krt.json ipo (offer doc p21; GAV Mar 2025 = ₹620.0 bn = ₹62,000 cr)"
+  },
+  "notes": [
+    "Sponsor % = Sponsor + Sponsor Group, post-issue = 78.51% (computed on the 4,434.4mn post-issue base for consistency with the other REITs; the RHP prints 88.04% on its pre-issue base).",
+    "Market cap at IPO = ₹100 × 4,434,399,541 = ₹44,344 cr. % sold = ₹4,800cr ÷ ₹44,344cr = 10.8%.",
+    "Sponsors: Sattva group entities + Blackstone-affiliated entities. Allotment ~13 Aug 2025; listed 18 Aug 2025."
+  ]
+}

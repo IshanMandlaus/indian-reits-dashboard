@@ -1,0 +1,7 @@
+{"reit":"KRT","points":[
+ {"label":"IPO","asof":"Mar 2025","completed":37.1,"uc":1.2,"future":8.0},
+ {"label":"Q2FY26","asof":"Sep 2025","completed":37.2,"uc":1.1,"future":8.0},
+ {"label":"Q3FY26","asof":"Dec 2025","completed":37.2,"uc":null,"future":null,"note":"deck shows combined UC&FD 9.2 only; carry UC ~1.1"},
+ {"label":"Q4FY26","asof":"Mar 2026","completed":37.2,"uc":1.2,"future":8.0}],
+ "notes":["Q4: valuer split used (37.2/1.2/8.0); earnings update reclassifies 1.4 msf Sattva Global City to UC (2.6 UC + 6.6 FD) — sums reconcile.",
+ "Office leasable only; solar excluded."]}

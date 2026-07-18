@@ -1,0 +1,309 @@
+/**
+ * Interactive 3D globe of the world's big listed-REIT players, drawn with globe.gl
+ * (three.js) on a raw <div> ref — the same imperative idiom the Portfolio Map uses for
+ * ECharts (`IndiaMap.tsx`), which is why we use the framework-agnostic `globe.gl` and
+ * not `react-globe.gl` (avoids React-19 peer-dep friction).
+ *
+ * On-brand look: a dark globe whose landmasses are a teal HEX-GRID (globe.gl
+ * `hexPolygons`, no photographic texture), a teal atmosphere glow, and a fully
+ * TRANSPARENT canvas so the page and its glow show through — the globe sits bare
+ * and boundless in the landing hero, no card chrome, no bounding rectangle.
+ * Each player is a market-cap-sized point with a pulsing ring; hovering shows a
+ * live-quote label and clicking opens the same <SecurityModal> the country-panel
+ * rows use.
+ *
+ * globe.gl is lazy-loaded by GlobeHero (React.lazy), so three.js lands in its own
+ * async chunk and never touches the other routes' bundles.
+ */
+import { useEffect, useRef } from 'react'
+import Globe, { type GlobeInstance } from 'globe.gl'
+import { Color, MeshPhongMaterial } from 'three'
+import type { GlobePoint } from '../../lib/globe'
+import { pointPriceLabel } from '../../lib/globe'
+
+interface Props {
+  points: GlobePoint[]
+  onPick: (ckey: string, ri: number) => void
+  /** Height/sizing classes for the wrapper; defaults to the card-sized h-[560px]. */
+  className?: string
+  /**
+   * Height classes for the canvas itself. When set (taller than the wrapper),
+   * the canvas is absolutely positioned and CENTERED on the wrapper band, giving
+   * the globe transparent headroom: at rest it's framed to fit the band; zooming
+   * grows it past the band, under whatever surrounds it — surrounding content
+   * must be positioned (e.g. `relative z-10`) to paint above the overflow.
+   */
+  canvasClassName?: string
+}
+
+const ACCENT = '#2dd4bf'
+
+// Zoom-in cap: the globe + its atmosphere aura must NEVER reach the canvas's
+// left/right edges — a clipped aura reads as a bounding box. A sphere of radius
+// r at camera distance d projects with half-angle asin(r/d) (tangent lines, NOT
+// the small-angle r/d — near the camera the outline is much fatter), i.e. its
+// on-screen tangent is r/√(d²−r²). Horizontal fit needs that ≤ tan(hfov/2)
+// = tan(vfov/2)·w/h, which solves to d ≥ r·√(1 + 1/T²):
+// After the user has been zooming, wheel events at a zoom limit stay consumed
+// for this long past the LAST wheel tick — they must pause before the wheel
+// hands off to page scroll. Stops zoom-out momentum from ramming into the cards.
+const ZOOM_SCROLL_GRACE_MS = 600
+
+const AURA = 1.35 // atmosphere shell ≈ 1.26·R (altitude 0.26) + fade padding
+const SAFETY = 1.04 // stop a touch before the geometric limit
+const FOV_TAN = Math.tan((25 * Math.PI) / 180) // globe.gl camera: vertical fov 50°
+const GLOBE_R = 100 // globe.gl's fixed globe radius (world units)
+function zoomInLimit(w: number, h: number): number {
+  const t = (FOV_TAN * w) / h // tan of horizontal half-fov
+  const r = AURA * GLOBE_R
+  return r * Math.sqrt(1 + 1 / (t * t)) * SAFETY
+}
+
+// Each continent gets its own on-brand palette family (dark → bright); a country picks a
+// shade within its continent's family by name-hash, so the honeycomb reads with per-country
+// texture AND groups the world by region. Teal stays the hero (Asia — the dashboard's home).
+const CONTINENT_PALETTES: Record<string, string[]> = {
+  Asia: ['#0f4a44', '#177f74', '#1ba396', '#2dd4bf', '#5fe6d3'], // teal (hero)
+  'North America': ['#173a5e', '#1e5aa0', '#3b82f6', '#60a5fa', '#93c5fd'], // blue
+  Europe: ['#3b2f66', '#6d4fb0', '#8b5cf6', '#a78bfa', '#c4b5fd'], // violet
+  'South America': ['#14532d', '#15803d', '#22c55e', '#34d399', '#6ee7b7'], // green
+  Africa: ['#5c4611', '#a87d1e', '#e0a92e', '#fbbf24', '#fcd34d'], // amber/gold
+  Oceania: ['#5b1f2a', '#a8324a', '#e5566f', '#f87171', '#fca5a5'], // rose/coral
+}
+const DEFAULT_PALETTE = ['#2a3543', '#3a4a5c', '#4d6070', '#61707f'] // Antarctica / open ocean / unknown
+
+/** Load the world-countries GeoJSON once (fetched, not bundled) for the hex landmasses. */
+let worldPromise: Promise<{ features: object[] }> | null = null
+function ensureWorld(): Promise<{ features: object[] }> {
+  if (!worldPromise) {
+    worldPromise = fetch(import.meta.env.BASE_URL + 'geo/world-countries.geojson').then((r) => r.json())
+  }
+  return worldPromise
+}
+
+/** Per-country hex colour: pick the country's continent palette, then a shade by name-hash. */
+function hexColor(feat: object): string {
+  const props = (feat as { properties?: { CONTINENT?: string; ADMIN?: string; NAME?: string } }).properties
+  const pal = CONTINENT_PALETTES[props?.CONTINENT ?? ''] ?? DEFAULT_PALETTE
+  const name = String(props?.ADMIN ?? props?.NAME ?? '')
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return pal[h % pal.length]
+}
+
+export function ReitGlobe({ points, onPick, className, canvasClassName }: Props) {
+  const elRef = useRef<HTMLDivElement>(null)
+  const globeRef = useRef<GlobeInstance | null>(null)
+  // Live refs so imperative globe callbacks never read stale props.
+  const pointsRef = useRef<GlobePoint[]>(points)
+  const onPickRef = useRef(onPick)
+  pointsRef.current = points
+  onPickRef.current = onPick
+
+  // Init once.
+  useEffect(() => {
+    let disposed = false
+    let wheelGuard: ((e: WheelEvent) => void) | null = null
+    const el = elRef.current
+    if (!el) return
+
+    const initWhenSized = () => {
+      const node = elRef.current
+      if (disposed || !node) return
+      if (!node.clientWidth || !node.clientHeight) {
+        requestAnimationFrame(initWhenSized) // wait for layout (lazy mount → 0-width)
+        return
+      }
+      const g = new Globe(node, {
+        animateIn: true,
+        rendererConfig: { preserveDrawingBuffer: true, antialias: true, alpha: true },
+      })
+      globeRef.current = g
+
+      g.backgroundColor('rgba(0,0,0,0)') // transparent — the page (and its glow) shows through, no bounding rectangle
+        .showAtmosphere(true)
+        .atmosphereColor(ACCENT)
+        .atmosphereAltitude(0.26)
+        .width(node.clientWidth)
+        .height(node.clientHeight)
+
+      // Replace globe.gl's default (transparent, no-texture) shader sphere with a solid,
+      // lit dark-teal ocean so the brighter teal hex landmasses read as glowing on top.
+      g.globeMaterial(
+        new MeshPhongMaterial({
+          color: new Color('#0b1a28'),
+          emissive: new Color('#0a2c2a'),
+          emissiveIntensity: 0.45,
+          shininess: 8,
+        }),
+      )
+
+      // Landmasses as a teal hex grid (no photographic texture → on-brand dark look).
+      ensureWorld().then((geo) => {
+        if (disposed || !globeRef.current) return
+        globeRef.current
+          .hexPolygonsData(geo.features)
+          .hexPolygonResolution(3)
+          .hexPolygonMargin(0.28)
+          .hexPolygonAltitude(0.008)
+          .hexPolygonUseDots(false)
+          .hexPolygonColor((d: object) => hexColor(d))
+      })
+
+      // Points: market-cap-sized glowing dots that lift off the surface.
+      g.pointsData([])
+        .pointLat((d) => (d as GlobePoint).lat)
+        .pointLng((d) => (d as GlobePoint).lng)
+        .pointColor((d) => (d as GlobePoint).color)
+        .pointAltitude((d) => 0.04 + 0.24 * (d as GlobePoint).size)
+        .pointRadius((d) => 0.24 + 0.6 * (d as GlobePoint).size)
+        .pointsMerge(false)
+        .pointResolution(8)
+        .pointLabel((d) => labelHtml(d as GlobePoint))
+        .onPointHover((pt) => {
+          const c = g.controls()
+          c.autoRotate = !pt // pause spin while inspecting a marker
+          if (elRef.current) elRef.current.style.cursor = pt ? 'pointer' : 'grab'
+        })
+        .onPointClick((pt) => {
+          const p = pt as GlobePoint
+          onPickRef.current(p.ckey, p.ri)
+        })
+
+      // Pulsing rings under each marker — the "sexy" ripple, colour-matched per country.
+      g.ringsData([])
+        .ringLat((d) => (d as GlobePoint).lat)
+        .ringLng((d) => (d as GlobePoint).lng)
+        .ringColor((d: object) => {
+          const col = (d as GlobePoint).color
+          return (t: number) => col + alphaHex(1 - t)
+        })
+        .ringMaxRadius((d) => 2 + 5 * (d as GlobePoint).size)
+        .ringPropagationSpeed(1.6)
+        .ringRepeatPeriod((d) => 1400 - 500 * (d as GlobePoint).size)
+
+      // Auto-rotate, framed on a lively 3/4 view. The camera is framed to the
+      // WRAPPER band (the visible slot), not the canvas: with an oversized canvas
+      // the same on-screen globe size needs a proportionally higher altitude
+      // (altitude 2.4 is the tuned fit when canvas == band). Rest = max zoom-out,
+      // so on a fresh load the globe sits exactly in the band and can only grow.
+      const band = node.parentElement?.clientHeight || node.clientHeight
+      const ratio = node.clientHeight / band
+      const restAlt = 3.4 * ratio - 1
+      const controls = g.controls()
+      controls.autoRotate = true
+      controls.autoRotateSpeed = 0.55
+      controls.enableZoom = true
+      controls.maxDistance = GLOBE_R * (1 + restAlt)
+      controls.minDistance = Math.min(zoomInLimit(node.clientWidth, node.clientHeight), controls.maxDistance)
+      g.pointOfView({ lat: 20, lng: 60, altitude: restAlt }, 0)
+
+      // Don't trap page scroll: OrbitControls consumes every wheel event over the
+      // canvas (which can fill the viewport). If the wheel's direction can't zoom
+      // any further (already at min/max distance) AND the user has paused since
+      // their last zoom tick (grace window), stop the event in the CAPTURE phase
+      // so OrbitControls never sees it and the browser scrolls the page instead.
+      // During the grace window the event still goes to OrbitControls, which
+      // preventDefaults it (a clamped no-op) — so momentum never leaks into the page.
+      let lastWheelTs = 0
+      wheelGuard = (e: WheelEvent) => {
+        const now = performance.now()
+        const c = g.controls()
+        const dist = g.camera().position.distanceTo(c.target)
+        const atLimit = e.deltaY > 0 ? dist >= c.maxDistance - 1 : dist <= c.minDistance + 1
+        if (!atLimit || now - lastWheelTs < ZOOM_SCROLL_GRACE_MS) {
+          lastWheelTs = now
+          return
+        }
+        e.stopPropagation()
+      }
+      node.addEventListener('wheel', wheelGuard, { capture: true, passive: true })
+
+      if (elRef.current) elRef.current.style.cursor = 'grab'
+      applyData() // push whatever points arrived before init finished
+    }
+
+    initWhenSized()
+
+    const resize = () => {
+      const g = globeRef.current
+      const node = elRef.current
+      if (!g || !node) return
+      g.width(node.clientWidth).height(node.clientHeight)
+      // Aspect changed → recompute the no-horizontal-clip zoom cap.
+      const c = g.controls()
+      c.minDistance = Math.min(zoomInLimit(node.clientWidth, node.clientHeight), c.maxDistance)
+    }
+    window.addEventListener('resize', resize)
+    const ro = new ResizeObserver(resize)
+    if (el) ro.observe(el)
+
+    return () => {
+      disposed = true
+      window.removeEventListener('resize', resize)
+      if (wheelGuard) el.removeEventListener('wheel', wheelGuard, { capture: true })
+      ro.disconnect()
+      globeRef.current?._destructor()
+      globeRef.current = null
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Push new point data whenever it changes (e.g. after a live refresh reload).
+  useEffect(() => {
+    applyData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [points])
+
+  function applyData() {
+    const g = globeRef.current
+    if (!g) return
+    g.pointsData(pointsRef.current)
+    g.ringsData(pointsRef.current)
+  }
+
+  return (
+    <div className={['relative w-full', className ?? 'h-[560px]'].join(' ')}>
+      <div
+        ref={elRef}
+        className={
+          canvasClassName
+            ? `absolute inset-x-0 top-1/2 -translate-y-1/2 ${canvasClassName}`
+            : 'h-full w-full'
+        }
+      />
+    </div>
+  )
+}
+
+/** 0..1 → 2-digit hex alpha suffix, for the fading ring gradient. */
+function alphaHex(v: number): string {
+  const a = Math.max(0, Math.min(255, Math.round(v * 255)))
+  return a.toString(16).padStart(2, '0')
+}
+
+/** Rich hover label (globe.gl renders the returned HTML string in a tooltip). */
+function labelHtml(p: GlobePoint): string {
+  const price = pointPriceLabel(p)
+  const mcap = p.mcapBn != null ? '$' + p.mcapBn.toFixed(1) + ' bn mkt cap' : ''
+  return `
+    <div style="background:#0c1117;border:1px solid #1c2431;border-radius:10px;padding:8px 11px;
+      box-shadow:0 8px 30px rgba(0,0,0,.55);font-family:Inter,system-ui,sans-serif;min-width:160px">
+      <div style="font-weight:700;color:#e8eef4;font-size:13px">${escapeHtml(p.name)}</div>
+      <div style="color:${p.color};font-size:11px;margin-bottom:5px">
+        ${p.flag} ${escapeHtml(p.country)} · ${escapeHtml(p.sector)}
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:14px;font-size:12px">
+        <span style="color:#93a1b3">${escapeHtml(p.ticker)}</span>
+        <span style="color:#e8eef4;font-weight:600">${escapeHtml(price)}${
+          p.live ? ' <span style="color:#34d399;font-size:9px">●</span>' : ''
+        }</span>
+      </div>
+      ${mcap ? `<div style="color:#93a1b3;font-size:11px;margin-top:2px">${mcap}</div>` : ''}
+      <div style="color:#61707f;font-size:10px;margin-top:5px">click for full chart + metrics</div>
+    </div>`
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
+}

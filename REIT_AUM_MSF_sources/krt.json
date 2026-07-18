@@ -1,0 +1,12 @@
+{"reit":"KRT",
+ "ipo":{"listing_date":"2025-08","asof":"Mar 31, 2025","gav_inr_bn":620.0,"msf":46.3,"assets":29,"source":"Final Offer Documents/KRT Final Offer Document.pdf p21"},
+ "quarters":[
+  {"label":"Q2FY26","asof":"Sep 2025","gav_inr_bn":645.5,"msf":46.3,"assets":29,"source":"KRT/Valuation_Report.pdf p19-20"},
+  {"label":"Q3FY26","asof":"Dec 2025","gav_inr_bn":645.5,"msf":46.0,"assets":29,"source":"KRT/Q3_Earnings_Presentation.pdf p33 (GAV footnoted as of Sep 30, 2025)"},
+  {"label":"Q4FY26","asof":"Mar 2026","gav_inr_bn":674.1,"msf":46.5,"assets":29,"source":"KRT/Q4_March_2026_Detailed_Valuation_Report.pdf p56 + Q4_FY26_Earnings_Update.pdf p4"}],
+ "notes":[
+  "IPO baseline: GAV ₹619,989 mn as of Mar 31 2025; 29 Grade A office assets, 46.3 msf (37.1 completed + 1.2 UC + 8.0 future dev).",
+  "Q2 FY26 earnings update PDF has no text layer; Q2 from Sep 30 2025 summary valuation report.",
+  "KRT revalues half-yearly: Q3 GAV carried at Sep-2025 value (flat is a data artifact).",
+  "msf 46.3→46.5 from remeasurements (One BKC 0.7→0.8, OWC 1.7→1.8, Sattva Global City 4.1→4.2), not acquisitions; 29 assets steady.",
+  "KRT/Detailed-Valuation-Report-Q4-FY26.pdf is misfiled — actually a Nexus valuation report."]}

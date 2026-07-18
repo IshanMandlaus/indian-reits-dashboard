@@ -10,12 +10,19 @@
 /Nexus/
 /KRT/
 /Bagmane/
+/Global reits/
+
+# Working docs kept local-only by choice
+/REIT_Issuances_Concept_Paper_Sections.docx
 
 # Old/heavyweight copies & archives
 dashboard.zip
-/dashboard_v2/
+dashboard_v2.zip
 
-# Raw slide/source assets (the derived PNGs under dashboard/img ARE tracked)
+# LibreOffice lock files
+.~lock.*#
+
+# Raw slide/source assets (the derived PNGs under dashboard_v2/public/img ARE tracked)
 *.key
 *.pptx
 
@@ -30,9 +37,11 @@ __pycache__/
 .ipynb_checkpoints/
 
 # ─────────────────────────────────────────────────────────────
-# Scratch / diagnostic files created while iterating (not part of the app)
+# Scratch / diagnostic image exports in the app's image folder
+# (underscore-prefixed working files, not part of the app)
 # ─────────────────────────────────────────────────────────────
-dashboard/_regen.py
-dashboard/img/_*.png
-dashboard/img/_*.jpg
-dashboard/img/annex/**/_*.png
+dashboard_v2/public/img/**/_*
+
+# Chart reference images (C&W report photos) kept local-only
+/new grpahs materieal/
+/Final Offer Documents/

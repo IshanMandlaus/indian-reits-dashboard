@@ -1,0 +1,26 @@
+{
+  "reit": "Nexus",
+  "ipo": {
+    "listing": "May 2023",
+    "issue_price_inr": 100,
+    "total_units_mn": 1515.0,
+    "market_cap_inr_cr": 15150,
+    "fresh_cr": 1400,
+    "ofs_cr": 1800,
+    "total_offer_cr": 3200,
+    "pct_sold": 21.12,
+    "sponsor_pct": 43.12,
+    "gav_inr_cr": 23499
+  },
+  "sources": {
+    "total_units": "offer doc p512 + cover (THE OFFER: 'Units issued and outstanding immediately after the Offer 1,515,000,000*'; prior to Offer 1,375,000,000).",
+    "offer": "offer doc p512 + cover (Offer 320,000,000 units = ₹32,000 mn; Fresh Issue 140,000,000 = ₹14,000 mn; Offer for Sale 180,000,000 = ₹18,000 mn; Offer Price ₹100). = ₹3,200cr (₹1,400cr fresh + ₹1,800cr OFS).",
+    "sponsor_pct": "offer doc p71 (Risk Factor 78: 'Upon completion of the Offer, 6.04% of the total number of Units will be held by the Sponsor and 37.08% by the Sponsor Group (excluding the Sponsor)') = 43.12%. Sponsor is Wynford Investments Ltd (Blackstone affiliate).",
+    "gav": "REIT_AUM_MSF_sources/nexus.json ipo (offer doc p27; GAV Dec 2022 = ₹234.99 bn = ₹23,499 cr)"
+  },
+  "notes": [
+    "Sponsor % = Sponsor + Sponsor Group, post-issue (6.04% + 37.08%).",
+    "Market cap at IPO = ₹100 × 1,515,000,000 = ₹15,150 cr. % sold = ₹3,200cr ÷ ₹15,150cr = 21.12% (matches RHP's stated 21.12% of post-Offer units).",
+    "Only REIT to price at a premium to NAV. Bid 9-11 May 2023; allotment ~17 May 2023."
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "reit": "Mindspace",
+  "ipo": {
+    "listing": "Aug 2020",
+    "issue_price_inr": 275,
+    "total_units_mn": 593.02,
+    "market_cap_inr_cr": 16308,
+    "fresh_cr": 1000,
+    "ofs_cr": 3500,
+    "total_offer_cr": 4500,
+    "pct_sold": 27.59,
+    "sponsor_pct": 63.2,
+    "gav_inr_cr": 23680
+  },
+  "sources": {
+    "total_units": "offer doc p314 (THE OFFER: 'Units issued and outstanding immediately after the Offer 593,018,182'); also p341 Unitholding of Mindspace REIT table.",
+    "offer": "offer doc p314 + cover (Offer 163,636,200 units = ₹45,000 mn; Fresh Issue 36,363,600 units = ₹10,000 mn; Offer for Sale 127,272,600 units = ₹35,000 mn; Offer Price ₹275). = ₹4,500cr total (₹1,000cr fresh + ₹3,500cr OFS).",
+    "sponsor_pct": "offer doc p341-342 (Unitholding of Sponsor Group): post-Offer Sponsors + Sponsor Group = 148,254,546 (25%, 3-yr lock) + 226,642,535 (>25%, 1-yr lock) = 374,897,081 units = 63.2% of 593,018,182. Sponsors alone (Anbee + Cape, K Raheja) = 70,809,780 = 11.9%. Doc's printed 85.31% (474,897,081) is PRE-Offer.",
+    "gav": "REIT_AUM_MSF_sources/mindspace.json ipo (GAV Mar 2020 = ₹236.8 bn = ₹23,680 cr)"
+  },
+  "notes": [
+    "Sponsor % = Sponsor + Sponsor Group, post-issue (derived by summing the two lock-in buckets; the RHP prints only a PRE-Offer 85.31% combined figure).",
+    "Market cap at IPO = ₹275 × 593,018,182 = ₹16,308 cr. % sold = ₹4,500cr ÷ ₹16,308cr = 27.6%.",
+    "Bid dates 27-29 Jul 2020; allotment ~7 Aug 2020. Sponsors are Anbee Constructions LLP (ATL) & Cape Trading LLP (CTL); Blackstone/BREP entities are in the Sponsor Group."
+  ]
+}

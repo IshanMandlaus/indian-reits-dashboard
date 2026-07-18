@@ -1,0 +1,1003 @@
+{
+  "summary": "Adversarially verify displayed workbook-derived cells (WALE/occupancy history, NOI/EBITDA/MktCap FY26) against filings; fill disclosed blanks",
+  "agentCount": 6,
+  "logs": [
+    "Verifying 74 cells across 6 REITs",
+    "Done: 6/6 REITs; corrections: none"
+  ],
+  "result": [
+    {
+      "reit": "embassy",
+      "verdicts": [
+        {
+          "metric": "WALE",
+          "period": "FY2019",
+          "value": 7,
+          "verdict": "confirmed",
+          "src": "4q-fy2019-earnings-presentation.pdf p.? (cover/portfolio)",
+          "quote": "94% occupied, 7 years WALE",
+          "corrected_value": null,
+          "note": "'7 years WALE' on cover; portfolio table 'WALE 7' as at 31 Mar 2019"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2020",
+          "value": 7,
+          "verdict": "confirmed",
+          "src": "4q-fy2020-earnings-materials.pdf",
+          "quote": "c.92.8% occupied, 7.0 years WALE",
+          "corrected_value": null,
+          "note": "Office WALE 7.0 as at 31 Mar 2020"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2021",
+          "value": 7,
+          "verdict": "confirmed",
+          "src": "embassy_reit_ar_2021_web.pdf",
+          "quote": "7.0 years",
+          "corrected_value": null,
+          "note": "Sub-total portfolio WALE 7.0 (31 Mar 2021)"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2022",
+          "value": 7,
+          "verdict": "confirmed",
+          "src": "final_annual_report.pdf",
+          "quote": "7.0 years",
+          "corrected_value": null,
+          "note": "Sub-total WALE 7.0 (31 Mar 2022)"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2023",
+          "value": 6.6,
+          "verdict": "confirmed",
+          "src": "embassy_reit_-_annual_report_-_fy_2022-23.pdf",
+          "quote": "Subtotal (Office) ... 6.6",
+          "corrected_value": null,
+          "note": "31 Mar 2023"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2024",
+          "value": 6.8,
+          "verdict": "confirmed",
+          "src": "embassy_reit_ar_2024_final.pdf p.14",
+          "quote": "Sub-total (Commercial offices) ... 6.8",
+          "corrected_value": null,
+          "note": "31 Mar 2024"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2025",
+          "value": 8.4,
+          "verdict": "confirmed",
+          "src": "annual_report_2025.pdf p.21",
+          "quote": "Sub-Total (Commercial Offices) ... 8.4",
+          "corrected_value": null,
+          "note": "31 Mar 2025"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2026",
+          "value": 8.5,
+          "verdict": "confirmed",
+          "src": "embassy_reit_ar_2025-26_final_1.pdf; embassy_half_yearly_report_2025_-_final_file.pdf",
+          "quote": "Sub-Total (Commercial Offices) ... 8.5",
+          "corrected_value": null,
+          "note": "8.5 both at 30 Sep 2025 (HY) and 31 Mar 2026 (AR2526 Sub-Total 8.5)"
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2026",
+          "value": 0.94,
+          "verdict": "confirmed",
+          "src": "embassy_reit_ar_2025-26_final_1.pdf",
+          "quote": "occupancy increased by 300 basis points to 94%",
+          "corrected_value": null,
+          "note": "94% by VALUE; source Q4FY26 deck not in folder but AR2526 confirms same figure. In-place by area = 90%."
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2019",
+          "value": 0.943,
+          "verdict": "confirmed",
+          "src": "4q-fy2019-earnings-presentation.pdf",
+          "quote": "94.3% occupancy on 24.8 msf completed commercial office",
+          "corrected_value": null,
+          "note": "31 Mar 2019"
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2020",
+          "value": 0.928,
+          "verdict": "confirmed",
+          "src": "4q-fy2020-earnings-materials.pdf",
+          "quote": "c.92.8% occupancy as at Mar'20 on c.26.2 msf completed office portfolio",
+          "corrected_value": null,
+          "note": null
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2021",
+          "value": 0.889,
+          "verdict": "confirmed",
+          "src": "embassy_reit_ar_2021_web.pdf",
+          "quote": "our occupancy as of March 31, 2021 was at 88.9%",
+          "corrected_value": null,
+          "note": null
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2022",
+          "value": 0.871,
+          "verdict": "confirmed",
+          "src": "final_annual_report.pdf",
+          "quote": "as of March 31, 2022 was 87.1%",
+          "corrected_value": null,
+          "note": null
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2023",
+          "value": 0.86,
+          "verdict": "confirmed",
+          "src": "embassy_reit_-_annual_report_-_fy_2022-23.pdf",
+          "quote": "Subtotal (Office) ... 86%",
+          "corrected_value": null,
+          "note": "31 Mar 2023"
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2024",
+          "value": 0.85,
+          "verdict": "confirmed",
+          "src": "embassy_reit_ar_2024_final.pdf p.14",
+          "quote": "Sub-total (Commercial offices) ... 85%",
+          "corrected_value": null,
+          "note": "completed-area basis, 31 Mar 2024"
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2025",
+          "value": 0.87,
+          "verdict": "confirmed",
+          "src": "annual_report_2025.pdf p.21",
+          "quote": "Sub-Total (Commercial Offices) ... 87%",
+          "corrected_value": null,
+          "note": "completed-area basis, 31 Mar 2025"
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2026",
+          "value": 0.9,
+          "verdict": "confirmed",
+          "src": "eop_reit_valuation_report_march_2026.pdf p.34; embassy_reit_ar_2025-26_final_1.pdf",
+          "quote": "Occupancy (%) 90%",
+          "corrected_value": null,
+          "note": "portfolio-level (52.5 msf leasable / 43.4 completed) at 31 Mar 2026; AR confirms 'as of March 31, 2026 was 90%'"
+        },
+        {
+          "metric": "Net Operating Income (NOI)",
+          "period": "FY2026",
+          "value": 3760,
+          "verdict": "confirmed",
+          "src": "embassy_reit_ar_2025-26_final_1.pdf (segment results); orig deck earnings_presentation_q4_fy26 not in folder",
+          "quote": "Net Operating Income (segment results for the year) 37,601.54",
+          "corrected_value": null,
+          "note": "₹37,601.54 mn = ₹3,760.15 cr, FY ended 31 Mar 2026"
+        },
+        {
+          "metric": "EBITDA",
+          "period": "FY2026",
+          "value": 3602.234,
+          "verdict": "confirmed",
+          "src": "reit_consol_fs_and_ar_mar_2026.pdf p.10",
+          "quote": "Earnings before ... 36,022.34",
+          "corrected_value": null,
+          "note": "₹36,022.34 mn = ₹3,602.234 cr; year ended 31 Mar 2026"
+        },
+        {
+          "metric": "Market Capitalisation",
+          "period": "FY2026",
+          "value": 39839.8167,
+          "verdict": "confirmed",
+          "src": "embassy_reit_ar_2025-26_final_1.pdf",
+          "quote": "Units Outstanding (mn) 947.89 ... Closing Price: March 31, 2026 420.29",
+          "corrected_value": null,
+          "note": "947.89 mn units x NSE close H420.29 = H398,398 mn = H39,839.8 cr. Matches. Basis = NSE 31-Mar-2026 close."
+        }
+      ],
+      "filled_gaps": [],
+      "notes": [
+        "Committed Occupancy FY2020-FY2025 gap hunt: Embassy Q4 earnings decks and ARs for these years headline only in-place/physical occupancy (on completed-area basis); no distinct portfolio 'committed occupancy' figure is cleanly disclosed for FY2020-FY2025. The committed vs in-place distinction (94% by value vs 90% by area) is only explicitly reported starting FY2026. Left blank rather than mixing in-place figures.",
+        "Q4 FY2026 investor presentation (earnings_presentation_q4_fy26_v1.pdf) cited in hints for Committed Occupancy and NOI is NOT present in the Embassy folder; both values independently confirmed from the FY2025-26 Annual Report (embassy_reit_ar_2025-26_final_1.pdf).",
+        "FY2026 WALE 8.5 holds at both 30 Sep 2025 (half-yearly) and 31 Mar 2026 (AR Sub-Total Commercial Offices)."
+      ]
+    },
+    {
+      "reit": "mindspace",
+      "verdicts": [
+        {
+          "metric": "WALE",
+          "period": "FY2021",
+          "value": 6,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Investor-Presentation_Q4-FY21-FY21-1-2.pdf p.13 (Portfolio Total)",
+          "quote": "Portfolio Total 30.2 23.9 6.4 81.8% 84.2% 6.0 55.9",
+          "note": "WALE 6.0 years; also headline '6.0 years WALE'"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2022",
+          "value": 6.9,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Investor-Presentation_Q4-FY2022-final-1305.pdf portfolio table",
+          "quote": "Portfolio Total 31.8 24.2 7.6 82.2% 84.3% 6.9 61.7",
+          "note": null
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2024",
+          "value": 6.8,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Mindspace-Business-Parks-REIT-Annual-Report-2023-24.pdf p.9",
+          "quote": "Portfolio Total 33.2 26.3 7.0 83.8% 88.6% 6.8 69.0 298,732",
+          "note": null
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2025",
+          "value": 7.4,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Mindspace-Business-Parks-REIT-Annual-Report-2024-25.pdf; Investor-Presentation_Q4FY2025.pdf",
+          "quote": "7.4 YEARS WALE",
+          "note": "presentation Portfolio Total row also shows WALE 7.4"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2026",
+          "value": 7.1,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Investor-Presentation_Q4-FY26.pdf p.58 Portfolio Summary",
+          "quote": "Portfolio Total 39.3 32.0 7.3 90.9% 94.0% 7.1 80.4",
+          "note": "7.1 yrs total portfolio (as-at 31-Mar-26); 7.2 yrs quoted on 32.0 msf completed area"
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2021",
+          "value": 0.84,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Investor-Presentation_Q4-FY21-FY21-1-2.pdf p.13",
+          "quote": "84.2% Committed Occupancy",
+          "note": "same-store committed 86.8%; portfolio total 84.2%"
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2022",
+          "value": 0.84,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Investor-Presentation_Q4-FY2022-final-1305.pdf p.13",
+          "quote": "84.3% Committed Occupancy on 24.2 msf",
+          "note": "same-store 84.2%; whole-% rounds to 84"
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2024",
+          "value": 0.906,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Mindspace-Business-Parks-REIT-Annual-Report-2023-24.pdf p.9",
+          "quote": "90.6(1)% Committed Occupancy",
+          "note": "90.6% excludes Pocharam; incl Pocharam 88.6% (portfolio-total table). Value = ex-Pocharam headline"
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2025",
+          "value": 0.93,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Mindspace-Business-Parks-REIT-Annual-Report-2024-25.pdf",
+          "quote": "93.0% Committed Occupancy",
+          "note": "headline ex-Pocharam; presentation Portfolio Total shows 91.2% incl Pocharam"
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2026",
+          "value": 0.94,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Investor-Presentation_Q4-FY26.pdf p.58",
+          "quote": "Portfolio Total ... 94.0%",
+          "note": "94.0% incl Pocharam; headline 95.7% ex-Pocharam"
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2024",
+          "value": 0.838,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Mindspace-Business-Parks-REIT-Annual-Report-2023-24.pdf p.9",
+          "quote": "Portfolio Total 33.2 26.3 7.0 83.8% 88.6% 6.8",
+          "note": "Occupancy-on-area column 83.8% vs Committed 88.6%"
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2025",
+          "value": 0.84,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Investor-Presentation_Q4FY2025.pdf portfolio summary",
+          "quote": "Portfolio Total 37.1 30.0 7.1 84.1% 91.2% 7.4 71.0",
+          "note": "in-place 84.1% vs committed 91.2%; whole-% = 84"
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2026",
+          "value": 0.91,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Investor-Presentation_Q4-FY26.pdf p.58",
+          "quote": "Portfolio Total 39.3 32.0 7.3 90.9% 94.0% 7.1 80.4",
+          "note": "physical/in-place 90.9% vs committed 94.0%"
+        },
+        {
+          "metric": "Net Operating Income (NOI)",
+          "period": "FY2026",
+          "value": 2663.6,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Investor-Presentation_Q4-FY26.pdf p.6/p.55",
+          "quote": "FY26 NOI ... 26,636 ... 29.2%",
+          "note": "26,636 mn full-year FY26 = INR 2,663.6 cr; consolidated"
+        },
+        {
+          "metric": "EBITDA",
+          "period": "FY2026",
+          "value": 2514.56,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "MREIT-Console-Result-Q4.pdf p.5",
+          "quote": "Earnings before finance costs, depreciation and amortisation ... 25,145.60",
+          "note": "FY26 consolidated column (25,145.60 mn = 2,514.56 cr); FY25 was 19,681.61"
+        },
+        {
+          "metric": "Market Capitalisation",
+          "period": "FY2026",
+          "value": 29110.466,
+          "verdict": "basis_note",
+          "corrected_value": null,
+          "src": "Investor-Presentation_Q4-FY26.pdf (Unitholding page, 31-Mar-2026)",
+          "quote": "648 Mn units (Market Cap : INR 291 Bn)",
+          "note": "Workbook 29,110.466 cr = INR 291.1 Bn matches the stated 'Market Cap : INR 291 Bn' basis (648 Mn units x ~Rs449 close on 31-Mar-26). Presentation's headline unitholding Market Cap(1) is stated separately as INR 30,266 Cr (implying ~Rs467), ~4% higher — likely a different price/date basis. Value ties to the 291 Bn figure, not the 30,266 Cr figure."
+        }
+      ],
+      "filled_gaps": [
+        {
+          "metric": "Committed Occupancy FY2023",
+          "period": "FY2023",
+          "value": 0.89,
+          "src": "Investor-Presentation_Q4-FY2023-1.pdf p.12-13",
+          "quote": "89.0% Committed Occupancy (Same Store Committed 89.1%); Portfolio Total ... 83.4% 89.0% 7.0"
+        },
+        {
+          "metric": "In-place Occupancy FY2021",
+          "period": "FY2021",
+          "value": 0.818,
+          "src": "Investor-Presentation_Q4-FY21-FY21-1-2.pdf p.13 portfolio table",
+          "quote": "Portfolio Total 30.2 23.9 6.4 81.8% 84.2% 6.0 55.9"
+        },
+        {
+          "metric": "In-place Occupancy FY2022",
+          "period": "FY2022",
+          "value": 0.822,
+          "src": "Investor-Presentation_Q4-FY2022-final-1305.pdf portfolio table",
+          "quote": "Portfolio Total 31.8 24.2 7.6 82.2% 84.3% 6.9 61.7"
+        },
+        {
+          "metric": "In-place Occupancy FY2023",
+          "period": "FY2023",
+          "value": 0.834,
+          "src": "Investor-Presentation_Q4-FY2023-1.pdf portfolio table",
+          "quote": "Portfolio Total 32.0 25.8 6.2 83.4% 89.0% 7.0 65.2"
+        },
+        {
+          "metric": "WALE FY2023",
+          "period": "FY2023",
+          "value": 7,
+          "src": "Investor-Presentation_Q4-FY2023-1.pdf p.12-13",
+          "quote": "7.0 years WALE; Portfolio Total ... 83.4% 89.0% 7.0"
+        }
+      ],
+      "notes": [
+        "All WALE/occupancy cells confirmed against issuer investor presentations and annual reports; in-place vs committed occupancy columns kept distinct throughout.",
+        "Committed-occupancy convention: FY24 (90.6%) and FY25 (93.0%) values use the AR ex-Pocharam headline; portfolio-total (incl Pocharam) equivalents are 88.6% and 91.2%. FY26 value 94.0% is incl Pocharam (headline 95.7% ex-Pocharam).",
+        "NOI and EBITDA are consolidated full-year FY26; ₹ millions divided by 10 to reach ₹ crore.",
+        "Market Cap: presentation gives two figures — INR 30,266 Cr headline and 'Market Cap : INR 291 Bn' on 648 Mn units. Workbook 29,110.466 cr matches the 291 Bn basis, not the 30,266 Cr headline (a ~4% gap that reflects a different price/date basis)."
+      ]
+    },
+    {
+      "reit": "brookfield",
+      "verdicts": [
+        {
+          "metric": "WALE",
+          "period": "FY2022",
+          "value": 7.1,
+          "verdict": "confirmed",
+          "src": "Earning_Presentation_Q4_FY_2022_ae3f3543f8.pdf p3",
+          "quote": "7.1 Yrs. WALE",
+          "corrected_value": null,
+          "note": "Leased-area WALE as on 31 Mar 2022"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2023",
+          "value": 7.9,
+          "verdict": "confirmed",
+          "src": "Earnings_Presentation_Q4_FY_2023_15c9463f7e.pdf p3",
+          "quote": "7.9 Yrs. WALE",
+          "corrected_value": null,
+          "note": null
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2024",
+          "value": 7.6,
+          "verdict": "confirmed",
+          "src": "Earning_Presentation_Q42024_63c5a9d394.pdf p3",
+          "quote": "7.6 Yrs. WALE",
+          "corrected_value": null,
+          "note": "As on 31 Mar 2024"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2025",
+          "value": 7,
+          "verdict": "confirmed",
+          "src": "Earning_Presentation_Q4_FY_2025_363e49a9d9.pdf p14",
+          "quote": "Total ... 7.0",
+          "corrected_value": null,
+          "note": "Portfolio total WALE 7.0 Yrs; header also states 7.0"
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2026",
+          "value": 6.7,
+          "verdict": "confirmed",
+          "src": "BIRET_Q4_FY_2026_Investor_Presentation_d39ed0af9f.pdf p14",
+          "quote": "WALE of 6.7 Yrs",
+          "corrected_value": null,
+          "note": "Sub-Total WALE 6.7 Yrs; header states 6.7"
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2022",
+          "value": 0.83,
+          "verdict": "confirmed",
+          "src": "Earning_Presentation_Q4_FY_2022_ae3f3543f8.pdf p3 footnote",
+          "quote": "The Committed Occupancy of the portfolio is 83%",
+          "corrected_value": null,
+          "note": null
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2023",
+          "value": 0.84,
+          "verdict": "confirmed",
+          "src": "Earnings_Presentation_Q4_FY_2023_15c9463f7e.pdf p3 footnote",
+          "quote": "The Committed Occupancy of the portfolio is 84%",
+          "corrected_value": null,
+          "note": null
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2024",
+          "value": 0.82,
+          "verdict": "confirmed",
+          "src": "Earning_Presentation_Q42024_63c5a9d394.pdf p3 footnote",
+          "quote": "Committed Occupancy for the portfolio is 82%",
+          "corrected_value": null,
+          "note": null
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2025",
+          "value": 0.88,
+          "verdict": "confirmed",
+          "src": "Earning_Presentation_Q4_FY_2025_363e49a9d9.pdf p14",
+          "quote": "Committed Occupancy of 88%",
+          "corrected_value": null,
+          "note": "Total row Committed Occ. 88%"
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2026",
+          "value": 0.9292,
+          "verdict": "confirmed",
+          "src": "BIRET_Q4_FY_2026_Investor_Presentation_d39ed0af9f.pdf p14",
+          "quote": "Committed Occupancy of 93%",
+          "corrected_value": null,
+          "note": "Report states portfolio total 93% directly (Sub-Total 93%); stored 0.9292 (area-weighted) rounds to 93%, within tolerance. Header p2 also states 93%."
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2022",
+          "value": 0.87,
+          "verdict": "basis_note",
+          "src": "Earning_Presentation_Q4_FY_2022_ae3f3543f8.pdf p3",
+          "quote": "87% EFFECTIVE ECONOMIC OCCUPANCY",
+          "corrected_value": null,
+          "note": "BIRET reports Effective Economic Occupancy (leased areas, incl income support), not a distinct physical/in-place occupancy"
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2023",
+          "value": 0.89,
+          "verdict": "basis_note",
+          "src": "Earnings_Presentation_Q4_FY_2023_15c9463f7e.pdf p3",
+          "quote": "89% EFFECTIVE ECONOMIC OCCUPANCY",
+          "corrected_value": null,
+          "note": "Effective Economic Occupancy used as proxy"
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2024",
+          "value": 0.87,
+          "verdict": "basis_note",
+          "src": "Earning_Presentation_Q42024_63c5a9d394.pdf p3",
+          "quote": "87% EFFECTIVE ECONOMIC OCCUPANCY",
+          "corrected_value": null,
+          "note": "Effective Economic Occupancy (incl income support); not a separate physical occupancy"
+        },
+        {
+          "metric": "Net Operating Income (NOI)",
+          "period": "FY2026",
+          "value": 2291.299,
+          "verdict": "confirmed",
+          "src": "Consolidated_Financial_Statement_Q4_2026_7f35ccab9e.pdf p99",
+          "quote": "Net operating income (refer note m) 22,912.99",
+          "corrected_value": null,
+          "note": "22,912.99 Rs millions = Rs 2,291.299 cr, year ended 31 Mar 2026. NOTE: cited results doc Consolidated_Financial_Results_Q4_2026_065e5df741.pdf p43 is image-only (no extractable text); value located in the consolidated financial statement instead."
+        },
+        {
+          "metric": "EBITDA",
+          "period": "FY2026",
+          "value": 2241.8,
+          "verdict": "confirmed",
+          "src": "BIRET_Q4_FY_2026_Investor_Presentation_d39ed0af9f.pdf p22",
+          "quote": "EBITDA Rs 4,822 Rs 5,016 Rs 5,274 Rs 7,306 Rs 22,418",
+          "corrected_value": null,
+          "note": "Full-year FY2026 sum = 22,418 Rs millions = Rs 2,241.8 cr"
+        },
+        {
+          "metric": "Market Capitalisation",
+          "period": "FY2026",
+          "value": 24003.71109,
+          "verdict": "basis_note",
+          "src": "Consolidated_Financial_Statement_Q4_2026_7f35ccab9e.pdf p87 (units) + market close",
+          "quote": "Closing balance as at 31 March 2026 749,385,513",
+          "corrected_value": null,
+          "note": "Derived: 749,385,513 units outstanding (filing) x Rs 320.31 (30-Mar-2026 close, last trading day before FY-end; NSE holiday 31 Mar) = Rs 24,003.6 cr, matching stored 24,003.71 cr within 0.001%. Not a filing-stated figure."
+        }
+      ],
+      "filled_gaps": [
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2021",
+          "value": 0.87,
+          "src": "First_Annual_Report_FY_21_c99b648f1a.pdf portfolio summary",
+          "quote": "Committed Occupancy (%) 86% 92% 71% 91% 87%"
+        }
+      ],
+      "notes": [
+        "Committed Occupancy FY2021 = 87% portfolio total as at 31 Mar 2021 (BIRET listed Feb 2021); the AR portfolio table also shows Same Store Committed Occupancy total 91%.",
+        "In-place / same-store occupancy FY2025 and FY2026: NOT DISCLOSED as a distinct metric. FY25 (Earning_Presentation_Q4_FY_2025) and FY26 (BIRET_Q4_FY_2026) presentations headline only Committed Occupancy (88% / 93%); Effective Economic Occupancy is only defined in footnotes, not given a headline number. FY26 discloses same-store NOI (+10% vs FY2025), not same-store occupancy. Unverifiable from local docs.",
+        "Market cap unit count 749,385,513 confirmed from statement (Closing balance as at 31 March 2026); 31-Mar-2026 absent from price CSV, 30-Mar-2026 close = 320.31 used as FY-end basis."
+      ]
+    },
+    {
+      "reit": "nexus",
+      "verdicts": [
+        {
+          "metric": "WALE",
+          "period": "FY2024",
+          "value": 5.1,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Earnings-Update-Q4-FY24-2.pdf retail update slide",
+          "quote": "5.1 Years ... WALE",
+          "note": "Retail portfolio WALE as-at 31 Mar 2024."
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2025",
+          "value": 4.9,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Earning-Call-Transcript_Q4-FY25_vf.pdf portfolio slide",
+          "quote": "4.9 Years ... Retail Portfolio ... WALE",
+          "note": "FY25 retail portfolio WALE."
+        },
+        {
+          "metric": "WALE",
+          "period": "FY2026",
+          "value": 4.7,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Half-Yearly-Report-FY-2026.pdf portfolio summary",
+          "quote": "4.7 Years WALE",
+          "note": "H1 FY26 (Sep 2025) retail portfolio WALE."
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2024",
+          "value": 0.98,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Earnings-Update-Q4-FY24-2.pdf retail update slide",
+          "quote": "97.6% Leased Occupancy",
+          "note": "97.6% leased/committed occupancy rounds to 0.98; as-at 31 Mar 2024."
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2025",
+          "value": 0.97,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Earning-Call-Transcript_Q4-FY25_vf.pdf portfolio slide",
+          "quote": "97.2% Leased Occupancy",
+          "note": "As-at 31 Mar 2025."
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2026",
+          "value": 0.97,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Half-Yearly-Report-FY-2026.pdf portfolio summary",
+          "quote": "97% Leased Occupancy",
+          "note": "Retail sub-total 97%; H1 FY26 / Sep 2025."
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2024",
+          "value": 0.96,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Earnings-Update-Q4-FY24-2.pdf leasing slide",
+          "quote": "95.6% Trading Occupancy",
+          "note": "95.6% trading occupancy rounds to 0.96; as-at 31 Mar 2024."
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2025",
+          "value": 0.97,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Earning-Call-Transcript_Q4-FY25_vf.pdf portfolio slide",
+          "quote": "96.6% Trading Occupancy",
+          "note": "96.6% rounds to 0.97; as-at 31 Mar 2025."
+        },
+        {
+          "metric": "In-place / Physical Occupancy",
+          "period": "FY2026",
+          "value": 0.95,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Half-Yearly-Report-FY-2026.pdf portfolio summary",
+          "quote": "trading occupancy at 95%",
+          "note": "H1 FY26 / Sep 2025 retail trading occupancy."
+        },
+        {
+          "metric": "Net Operating Income (NOI)",
+          "period": "FY2026",
+          "value": 1929.64,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "NXST-Consolidated-Financial-Results-Q4-FY26.pdf ratios (s)",
+          "quote": "(s) net operating income (Rs. in crore) ... 1,929.64",
+          "note": "FY26 (year ended 31 Mar 2026) consolidated column."
+        },
+        {
+          "metric": "EBITDA",
+          "period": "FY2026",
+          "value": 1820.73,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "NXST-Consolidated-Financial-Results-Q4-FY26.pdf P&L",
+          "quote": "Earnings before finance costs, depreciation, amortisation and tax ... 1,820.73",
+          "note": "FY26 consolidated (OCR rendered '1,A2O.73'); ₹ crore."
+        },
+        {
+          "metric": "Market Capitalisation",
+          "period": "FY2026",
+          "value": 22876.5,
+          "verdict": "basis_note",
+          "corrected_value": null,
+          "src": "NXST-Consolidated-Financial-Results-Q4-FY26.pdf (units) + 31-Mar-26 NSE close",
+          "quote": "Weighted average number of units ... 1,515,000,000",
+          "note": "Derived: 1,515.0M units x 31-Mar-2026 close ~Rs.151 = Rs.22,876.5 cr. Not a filing-disclosed figure; matches units x FY-end price basis exactly."
+        }
+      ],
+      "filled_gaps": [],
+      "notes": [
+        "earnings_presentation_q4_fy26_v1.pdf in the Nexus folder is a misfiled EMBASSY Q4 FY26 deck (references Embassy Manyata/GolfLinks/One, NSE close Rs.420.3, IPO Rs.300) - not used for Nexus verification.",
+        "All occupancy metrics: committed = Leased Occupancy; in-place/physical = Trading Occupancy; kept distinct per instruction.",
+        "Units outstanding 1,515,000,000 confirmed in Q4 FY26 consolidated results EPU note."
+      ]
+    },
+    {
+      "reit": "krt",
+      "verdicts": [
+        {
+          "metric": "WALE",
+          "period": "FY2026",
+          "value": 8,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "quote": "8.0-year Weighted Average Lease Expiry (WALE) anchors revenue visibility; Sub-total (Office) ... 8.0",
+          "src": "KRT-AnnualReport-FY2025-26.pdf (ar.txt L554/931/220 portfolio table, WALE 8.0 yrs)",
+          "note": "Also matches portfolio table Sub-total (Office) WALE 8.0 yrs as at 31 Mar 2026."
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2026",
+          "value": 0.92,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "quote": "92% committed occupancy as of March 31, 2026; Sub-total (Office) ... 92%",
+          "src": "KRT-AnnualReport-FY2025-26.pdf (ar.txt L931/220 portfolio table)",
+          "note": "Committed occupancy (Occupied+Committed)/Completed. Portfolio subtotal 92%."
+        },
+        {
+          "metric": "Net Operating Income (NOI)",
+          "period": "FY2026",
+          "value": 2694.076,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "quote": "net operating income (Rs. in million) ... 26,940.76",
+          "src": "Q4_FY26_Consolidated_Financial_Results.pdf (q4_cons.txt L3545, ratios, year ended 31 Mar 2026)",
+          "note": "Statutory audited consolidated 26,940.76 Rs mn = 2694.076 cr. AR highlights quote proforma full-year NOI Rs 40,484 mn (+18%), which covers full year vs statutory post-acquisition period."
+        },
+        {
+          "metric": "EBITDA",
+          "period": "FY2026",
+          "value": 2532.579,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "quote": "Earnings before finance costs, depreciation, amortisation and tax (EBITDA) ... 25,325.79",
+          "src": "Q4_FY26_Consolidated_Financial_Results.pdf (q4_cons.txt L741, year ended 31 Mar 2026)",
+          "note": "Statutory consolidated 25,325.79 Rs mn = 2532.579 cr. AR proforma full-year EBITDA Rs 38,784 mn (+18%)."
+        },
+        {
+          "metric": "Market Capitalisation",
+          "period": "FY2026",
+          "value": 50348.1776,
+          "verdict": "basis_note",
+          "corrected_value": null,
+          "quote": "Units Outstanding 4,434,399,541 ... Closing Price: March 31, 2026 113.60 / 113.46",
+          "src": "KRT-AnnualReport-FY2025-26.pdf (ar.txt L1150/1156)",
+          "note": "Value equals units outstanding (4,434,399,541) x 31-Mar-2026 close (~Rs 113.54; BSE 113.60 / NSE 113.46) = ~Rs 50,349 cr (~Rs 503.5 bn). AR headline market cap Rs 515 bn is footnoted as of a different (later) date; Q4 earnings quote Rs 520 bn as of 12 May 2026. Confirmed on 31-Mar close basis, differs from headline market-cap label."
+        }
+      ],
+      "filled_gaps": [],
+      "notes": [
+        "In-place occupancy FY2026 gap hunt: UNVERIFIABLE. KRT filings disclose only Committed Occupancy (Occupied+Committed)/Completed = 92% portfolio-wide. The 'In-place' columns in the asset tables refer to In-place Rent (Rs psf pm), not occupancy. The 'near 90% / 89%' figure is Central Mumbai committed occupancy specifically, not a portfolio in-place/physical occupancy. No distinct portfolio in-place/physical occupancy percentage is text-extractable from local docs.",
+        "Market cap: 4,434,399,541 units x 113.60 = Rs 50,374.8 cr; x 113.46 = Rs 50,312.7 cr; the stored 50,348.18 sits between (implied ~113.54), all within +/-1%."
+      ]
+    },
+    {
+      "reit": "bagmane",
+      "verdicts": [
+        {
+          "metric": "WALE",
+          "period": "FY2026",
+          "value": 7.4,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Final_Offer_Document (RHP).pdf p.332",
+          "quote": "Sub-Total Office ... WALE (years) 7.4 ... Committed Occupancy 98.8% (as of December 31, 2025)",
+          "note": "Portfolio Overview p.207 also states 'WALE (years) 7.4'. Proforma/combined, Dec 31 2025 cut-off."
+        },
+        {
+          "metric": "Committed Occupancy",
+          "period": "FY2026",
+          "value": 0.99,
+          "verdict": "confirmed",
+          "corrected_value": null,
+          "src": "Final_Offer_Document (RHP).pdf p.332",
+          "quote": "Committed Occupancy 98.8%",
+          "note": "Exact 98.8% (rounded to 99%). Committed, not in-place. Dec 31 2025 cut-off, proforma/combined."
+        },
+        {
+          "metric": "Net Operating Income (NOI)",
+          "period": "FY2026",
+          "value": 1758.976,
+          "verdict": "basis_note",
+          "corrected_value": null,
+          "src": "Final_Offer_Document (RHP).pdf p.362",
+          "quote": "Net operating income (Segment results) (A) 17,589.76",
+          "note": "₹17,589.76 million = ₹1,758.976 crore. This is the NINE MONTHS ended Dec 31 2025 figure (not full FY2026); NOI Margin 90.53%. Proforma/combined."
+        },
+        {
+          "metric": "EBITDA",
+          "period": "FY2026",
+          "value": 1630.093,
+          "verdict": "basis_note",
+          "corrected_value": null,
+          "src": "Final_Offer_Document (RHP).pdf p.362",
+          "quote": "and tax (EBITDA) (A) 16,300.93",
+          "note": "₹16,300.93 million = ₹1,630.093 crore. Nine months ended Dec 31 2025 (not full FY2026). Proforma/combined."
+        },
+        {
+          "metric": "Market Capitalisation",
+          "period": "FY2026",
+          "value": 34000,
+          "verdict": "basis_note",
+          "corrected_value": null,
+          "src": "Final_Offer_Document (RHP).pdf p.1 & post-Offer capital structure",
+          "quote": "post-Offer ... Capital (A) 340,000.00 (₹ in million)",
+          "note": "Offer price ₹100/unit; post-Offer unit capital ₹340,000 million = ₹34,000 crore (3.4bn units at ₹100 par/offer price). This is the IPO offer-price implied market cap, not a 31-Mar-2026 close (REIT IPO priced at ₹100, Price Band ₹95-100)."
+        }
+      ],
+      "filled_gaps": [
+        {
+          "metric": "In-place occupancy FY2026 (RHP Dec-2025 cut-off)",
+          "period": "FY2026",
+          "value": 0.957,
+          "src": "Final_Offer_Document (RHP).pdf p.207",
+          "quote": "Occupancy (%) / Committed Occupancy (%) 95.7% / 98.8%"
+        }
+      ],
+      "notes": [
+        "RHP defines Occupancy (%) = Occupied Area / Completed Area (in-place); Committed Occupancy = (Occupied + Committed Area) / Completed Area. Portfolio in-place occupancy is 95.7% vs 98.8% committed.",
+        "NOI and EBITDA cells are labelled FY2026 but the values are 9M (Apr-Dec 2025) figures; not full-year — flagged as basis_note.",
+        "Market cap value is correct on an offer-price basis (₹100/unit x 3.4bn units = ₹34,000cr)."
+      ]
+    }
+  ],
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify+Gapfill"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "verify:embassy",
+      "phaseIndex": 1,
+      "phaseTitle": "Verify+Gapfill",
+      "agentId": "a227ea3e2804f83a8",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784276933086,
+      "queuedAt": 1784276928330,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "embassy",
+      "promptPreview": "Adversarial audit task. Repo root \"/Users/ishan/Downloads/INDIAN REITS\" (space in path — quote it). Read-only: Bash (pdftotext -f N -l N -layout, grep) + Read. Docs folder: \"Embassy/\" (KRT also has pre-extracted ar.txt / q4_earnings.txt).\n\nREIT: embassy. VERIFY each cell below against primary issuer filings. Percentages are stored as FRACTIONS (0.94 = 94%); WALE in years; NOI/EBITDA in ₹ crore (fi…",
+      "lastProgressAt": 1784277136990,
+      "tokens": 55522,
+      "toolCalls": 12,
+      "durationMs": 203903,
+      "resultPreview": "{\"reit\":\"embassy\",\"verdicts\":[{\"metric\":\"WALE\",\"period\":\"FY2019\",\"value\":7,\"verdict\":\"confirmed\",\"src\":\"4q-fy2019-earnings-presentation.pdf p.? (cover/portfolio)\",\"quote\":\"94% occupied, 7 years WALE\",\"corrected_value\":null,\"note\":\"'7 years WALE' on cover; portfolio table 'WALE 7' as at 31 Mar 2019\"},{\"metric\":\"WALE\",\"period\":\"FY2020\",\"value\":7,\"verdict\":\"confirmed\",\"src\":\"4q-fy2020-earnings-materi…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "verify:mindspace",
+      "phaseIndex": 1,
+      "phaseTitle": "Verify+Gapfill",
+      "agentId": "a21b18da716fd6c8f",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784276937030,
+      "queuedAt": 1784276928330,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "mindspace",
+      "promptPreview": "Adversarial audit task. Repo root \"/Users/ishan/Downloads/INDIAN REITS\" (space in path — quote it). Read-only: Bash (pdftotext -f N -l N -layout, grep) + Read. Docs folder: \"MindSpace/\" (KRT also has pre-extracted ar.txt / q4_earnings.txt).\n\nREIT: mindspace. VERIFY each cell below against primary issuer filings. Percentages are stored as FRACTIONS (0.94 = 94%); WALE in years; NOI/EBITDA in ₹ crore…",
+      "lastProgressAt": 1784277187121,
+      "tokens": 52792,
+      "toolCalls": 16,
+      "durationMs": 250091,
+      "resultPreview": "{\"reit\":\"mindspace\",\"verdicts\":[{\"metric\":\"WALE\",\"period\":\"FY2021\",\"value\":6,\"verdict\":\"confirmed\",\"corrected_value\":null,\"src\":\"Investor-Presentation_Q4-FY21-FY21-1-2.pdf p.13 (Portfolio Total)\",\"quote\":\"Portfolio Total 30.2 23.9 6.4 81.8% 84.2% 6.0 55.9\",\"note\":\"WALE 6.0 years; also headline '6.0 years WALE'\"},{\"metric\":\"WALE\",\"period\":\"FY2022\",\"value\":6.9,\"verdict\":\"confirmed\",\"corrected_value\"…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "verify:brookfield",
+      "phaseIndex": 1,
+      "phaseTitle": "Verify+Gapfill",
+      "agentId": "ab16bf52f213b6c1c",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784276933033,
+      "queuedAt": 1784276928331,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "brookfield",
+      "promptPreview": "Adversarial audit task. Repo root \"/Users/ishan/Downloads/INDIAN REITS\" (space in path — quote it). Read-only: Bash (pdftotext -f N -l N -layout, grep) + Read. Docs folder: \"Brookfield/\" (KRT also has pre-extracted ar.txt / q4_earnings.txt).\n\nREIT: brookfield. VERIFY each cell below against primary issuer filings. Percentages are stored as FRACTIONS (0.94 = 94%); WALE in years; NOI/EBITDA in ₹ cro…",
+      "lastProgressAt": 1784277353299,
+      "tokens": 69552,
+      "toolCalls": 28,
+      "durationMs": 420266,
+      "resultPreview": "{\"reit\":\"brookfield\",\"verdicts\":[{\"metric\":\"WALE\",\"period\":\"FY2022\",\"value\":7.1,\"verdict\":\"confirmed\",\"src\":\"Earning_Presentation_Q4_FY_2022_ae3f3543f8.pdf p3\",\"quote\":\"7.1 Yrs. WALE\",\"corrected_value\":null,\"note\":\"Leased-area WALE as on 31 Mar 2022\"},{\"metric\":\"WALE\",\"period\":\"FY2023\",\"value\":7.9,\"verdict\":\"confirmed\",\"src\":\"Earnings_Presentation_Q4_FY_2023_15c9463f7e.pdf p3\",\"quote\":\"7.9 Yrs. WA…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "verify:nexus",
+      "phaseIndex": 1,
+      "phaseTitle": "Verify+Gapfill",
+      "agentId": "a034616d81ba67369",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784276933731,
+      "queuedAt": 1784276928331,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "nexus",
+      "promptPreview": "Adversarial audit task. Repo root \"/Users/ishan/Downloads/INDIAN REITS\" (space in path — quote it). Read-only: Bash (pdftotext -f N -l N -layout, grep) + Read. Docs folder: \"Nexus/\" (KRT also has pre-extracted ar.txt / q4_earnings.txt).\n\nREIT: nexus. VERIFY each cell below against primary issuer filings. Percentages are stored as FRACTIONS (0.94 = 94%); WALE in years; NOI/EBITDA in ₹ crore (filing…",
+      "lastProgressAt": 1784277143889,
+      "tokens": 48200,
+      "toolCalls": 18,
+      "durationMs": 210158,
+      "resultPreview": "{\"reit\":\"nexus\",\"verdicts\":[{\"metric\":\"WALE\",\"period\":\"FY2024\",\"value\":5.1,\"verdict\":\"confirmed\",\"corrected_value\":null,\"src\":\"Earnings-Update-Q4-FY24-2.pdf retail update slide\",\"quote\":\"5.1 Years ... WALE\",\"note\":\"Retail portfolio WALE as-at 31 Mar 2024.\"},{\"metric\":\"WALE\",\"period\":\"FY2025\",\"value\":4.9,\"verdict\":\"confirmed\",\"corrected_value\":null,\"src\":\"Earning-Call-Transcript_Q4-FY25_vf.pdf port…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:krt",
+      "phaseIndex": 1,
+      "phaseTitle": "Verify+Gapfill",
+      "agentId": "a192e7f4fcd812bac",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784276933667,
+      "queuedAt": 1784276928331,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "krt",
+      "promptPreview": "Adversarial audit task. Repo root \"/Users/ishan/Downloads/INDIAN REITS\" (space in path — quote it). Read-only: Bash (pdftotext -f N -l N -layout, grep) + Read. Docs folder: \"KRT/\" (KRT also has pre-extracted ar.txt / q4_earnings.txt).\n\nREIT: krt. VERIFY each cell below against primary issuer filings. Percentages are stored as FRACTIONS (0.94 = 94%); WALE in years; NOI/EBITDA in ₹ crore (filings of…",
+      "lastProgressAt": 1784277058166,
+      "tokens": 50294,
+      "toolCalls": 13,
+      "durationMs": 124499,
+      "resultPreview": "{\"reit\":\"krt\",\"verdicts\":[{\"metric\":\"WALE\",\"period\":\"FY2026\",\"value\":8,\"verdict\":\"confirmed\",\"corrected_value\":null,\"quote\":\"8.0-year Weighted Average Lease Expiry (WALE) anchors revenue visibility; Sub-total (Office) ... 8.0\",\"src\":\"KRT-AnnualReport-FY2025-26.pdf (ar.txt L554/931/220 portfolio table, WALE 8.0 yrs)\",\"note\":\"Also matches portfolio table Sub-total (Office) WALE 8.0 yrs as at 31 Mar …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "verify:bagmane",
+      "phaseIndex": 1,
+      "phaseTitle": "Verify+Gapfill",
+      "agentId": "aab4995ecccca8fd6",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784276932816,
+      "queuedAt": 1784276928331,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "bagmane",
+      "promptPreview": "Adversarial audit task. Repo root \"/Users/ishan/Downloads/INDIAN REITS\" (space in path — quote it). Read-only: Bash (pdftotext -f N -l N -layout, grep) + Read. Docs folder: \"Bagmane/\" (KRT also has pre-extracted ar.txt / q4_earnings.txt).\n\nREIT: bagmane. VERIFY each cell below against primary issuer filings. Percentages are stored as FRACTIONS (0.94 = 94%); WALE in years; NOI/EBITDA in ₹ crore (fi…",
+      "lastProgressAt": 1784277074010,
+      "tokens": 44890,
+      "toolCalls": 13,
+      "durationMs": 141194,
+      "resultPreview": "{\"reit\":\"bagmane\",\"verdicts\":[{\"metric\":\"WALE\",\"period\":\"FY2026\",\"value\":7.4,\"verdict\":\"confirmed\",\"corrected_value\":null,\"src\":\"Final_Offer_Document (RHP).pdf p.332\",\"quote\":\"Sub-Total Office ... WALE (years) 7.4 ... Committed Occupancy 98.8% (as of December 31, 2025)\",\"note\":\"Portfolio Overview p.207 also states 'WALE (years) 7.4'. Proforma/combined, Dec 31 2025 cut-off.\"},{\"metric\":\"Committed O…"
+    }
+  ],
+  "totalTokens": 321250,
+  "totalToolCalls": 100
+}
