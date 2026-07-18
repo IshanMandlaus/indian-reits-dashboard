@@ -189,12 +189,16 @@ function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory
   const peaks = [...byFy.values()].map((g) => g.hi)
   const valleys = [...byFy.values()].map((g) => g.lo).filter((i) => !peaks.includes(i))
 
-  // Daily traded volume in lakh units (NSE RR + BSE combined).
+  // Daily traded volume in lakh units (NSE RR + BSE combined), plotted on a
+  // √ scale: y = √volume on a linear axis with ticks/tooltips in real units.
+  // Linear axes flatten normal sessions next to ~100× block-deal spikes; log
+  // does the reverse (every bar towers). √ keeps typical bars low while spikes
+  // of different magnitude stay visibly different heights.
   const vol =
     alt === 'vol'
       ? Object.entries(V?.secs[REIT_SEC[k]] ?? {})
           .sort(([a], [b]) => (a < b ? -1 : 1))
-          .map(([d, r]) => ({ x: dTs(d), y: r.v / 1e5 }))
+          .map(([d, r]) => ({ x: dTs(d), y: Math.sqrt(r.v / 1e5) }))
       : []
   const pb = alt === 'pb' ? pbSeries(D, k, LIVE, H) : []
   const xmin = Math.min(...price.map((p) => p.x), ...nav.map((p) => p.x))
@@ -204,9 +208,22 @@ function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory
     alt === 'vol'
       ? { type: 'bar' as const, label: 'Volume (NSE+BSE)', data: vol, backgroundColor: 'rgba(96,165,250,.45)', barThickness: 1, yAxisID: 'y2' }
       : { type: 'line' as const, label: 'P/B (price ÷ NAV)', data: pb, borderColor: CHART.violet, borderWidth: 1.4, borderDash: [5, 3], pointRadius: 0, yAxisID: 'y2' }
+  const volMaxSqrt = vol.length ? Math.max(...vol.map((p) => p.y || 0)) : 3
+  // tick marks at nice REAL volumes, positioned at their square roots
+  const VOL_TICKS = [0, 5, 25, 100, 250, 500, 1000, 2500, 5000, 10000]
   const y2 =
     alt === 'vol'
-      ? { position: 'right' as const, title: { display: true, text: 'Volume (lakh units)' }, grid: { display: false }, beginAtZero: true, suggestedMax: vol.length ? Math.max(...vol.map((p) => p.y || 0)) * 3 : 10 }
+      ? {
+          position: 'right' as const,
+          title: { display: true, text: 'Volume (lakh units, √ scale)' },
+          grid: { display: false },
+          beginAtZero: true,
+          max: volMaxSqrt * 1.05,
+          afterBuildTicks: (axis: { max: number; ticks: { value: number }[] }) => {
+            axis.ticks = VOL_TICKS.filter((r) => Math.sqrt(r) <= axis.max).map((r) => ({ value: Math.sqrt(r) }))
+          },
+          ticks: { callback: (v: unknown) => Math.round(Number(v) * Number(v)).toLocaleString('en-IN') },
+        }
       : { position: 'right' as const, title: { display: true, text: 'P/B ×' }, grid: { display: false }, grace: '10%' as const }
 
   const cfg: RangeConfig = {
@@ -240,7 +257,7 @@ function build(D: ReitData, k: ReitKey, LIVE: LivePrices | null, H: PriceHistory
                 return ['Price: ' + inr(py, 2), n ? 'vs NAV ' + inr(n, 2) + ' → ' + pct(py / n - 1) : '']
               }
               if (it.dataset.label?.startsWith('P/B')) return 'P/B: ' + py.toFixed(2) + '×'
-              if (it.dataset.label?.startsWith('Volume')) return 'Volume: ' + py.toFixed(2) + ' lakh units'
+              if (it.dataset.label?.startsWith('Volume')) return 'Volume: ' + (py * py).toFixed(2) + ' lakh units' // y is √volume
               return it.dataset.label + ': ' + inr(py, 2)
             },
           },

@@ -1519,3 +1519,13 @@ pp.28–31 "Properties at a Glance", PDF pp.15–16 — two printed pages per PD
 Verification notes: browser pane viewport can collapse to 0×0 after navigate — take a screenshot
 to wake it before export tests; verify exports by hooking URL.createObjectURL + swallowing
 anchor.click, then decode the embedded PNG (raster) or read the SVG text (vector pie).
+
+## 26. Chart 1 volume axis → √ scale — 2026-07-18
+
+Volume bars were invisible (axis scaled to 3× the record block-deal day, ~100× a normal session).
+Tried: linear p98 cap (spikes all clip identically), log (every bar towers — swamped price).
+Landed on **√ scale**: dataset y = √(volume in lakh); linear axis, `afterBuildTicks` places ticks
+at nice REAL volumes (5/25/100/250/500/1000/2500) via their square roots, tick callback squares
+back, tooltip shows (py*py) real units. Axis titled "Volume (lakh units, √ scale)".
+`LogarithmicScale` is now registered in chartSetup.ts (kept, harmless). Quiet days = low carpet,
+busy days ~⅓ height, block-deal spikes visibly ranked.
